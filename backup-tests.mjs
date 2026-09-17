@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import './dist/vendor/pako.min.js';
+import {createBackup,readBackup,MAX_BACKUP_BYTES} from './dist/backup.js';
+import {calendars,mergePlan,merge,id} from './dist/core.js';
+const people=[{id:id(),name:'آمنة Al-Sayed',day:calendars.g.toDay(1990,4,12),calendar:'h'},{id:id(),name:'Élodie 🌸',day:calendars.g.toDay(2018,9,22),calendar:'g'}];
+const text=createBackup(people);assert.deepEqual(readBackup(text),people);assert.ok(!text.includes('https://'),'Backups must not depend on a hosting origin');
+assert.deepEqual(readBackup(createBackup([people[1]])),[people[1]]);assert.deepEqual(readBackup(createBackup([])),[]);
+const plan=mergePlan([people[0]],readBackup(text));assert.equal(plan.duplicates.length,1);assert.deepEqual(merge([people[0]],plan),people);
+assert.throws(()=>readBackup('not JSON'),/valid Kin backup/);assert.throws(()=>readBackup(JSON.stringify({format:'kin-family',version:2,data:'#k1rAAAA'})),/supported/);assert.throws(()=>readBackup(JSON.stringify({format:'kin-family',version:1,data:'broken'})),/supported Kin family link/);assert.throws(()=>readBackup('x'.repeat(MAX_BACKUP_BYTES+1)),/too large/);
+assert.throws(()=>readBackup(JSON.stringify({format:'kin-family',version:1,data:JSON.parse(text).data.slice(0,-4)})));
+assert.throws(()=>readBackup('null'),/supported/);assert.throws(()=>readBackup('[]'),/supported/);assert.throws(()=>readBackup(JSON.stringify({format:'kin-family',version:1,data:123})),/supported/);
+console.log('PASS: Unicode backup round trips, selected people, independent hosting, merge review data, corrupt/oversized/wrong-version rejection.');

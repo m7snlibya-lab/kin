@@ -1,0 +1,13 @@
+{
+  "name": "kin-family",
+  "version": "0.7.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "test": "node tests.mjs && node locale-tests.mjs && node offline-tests.mjs && node backup-tests.mjs && node birthday-tests.mjs"
+  },
+  "devDependencies": {
+    "vite": "8.0.13"
+  },
+  "type": "module"
+}
