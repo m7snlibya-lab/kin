@@ -36,3 +36,7 @@ const fullPlan=mergePlan(rows,[{...rows[0],id:id(),name:'Additional person'}]);
 assert.equal(merge(rows,fullPlan,[],[]).length,150,'A full circle can decline extra people');
 assert.throws(()=>merge(rows,fullPlan),/150/);
 console.log('PASS: selective imports, independent calendar conflicts, no mutation, and selection at the family size limit.');
+
+for(const year of [1e9,Number.MAX_SAFE_INTEGER,Number.MAX_SAFE_INTEGER+1])assert.throws(()=>inputDay('g',year,1,1),'Out-of-range years must never return NaN');
+assert.throws(()=>encode([{...rows[0],name:'Broken \ud800 name'}]),/invalid/,'Reject names that would silently change during UTF-8 encoding');
+console.log('PASS: finite date bounds and lossless Unicode validation.');

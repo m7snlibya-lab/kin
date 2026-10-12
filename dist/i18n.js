@@ -1,5 +1,7 @@
 import {calendars} from './core.js';
 export const messages={
+"Skip to content":"انتقل إلى المحتوى",
+"Could not save right now. Try again or copy your current family link.":"تعذّر الحفظ الآن. حاول مرة أخرى أو انسخ رابط عائلتك الحالي.",
 "Export the birthdays shown. Gregorian birthdays can repeat yearly; Hijri birthdays are dated events. Calendar imports do not sync with Kin.":"صدّر أعياد الميلاد المعروضة. يمكن تكرار الميلادي سنويًا؛ والهجري أحداث بتواريخ محددة. لا تتزامن أحداث التقويم مع كِن.",
 "Open Birthdays, choose a range and calendar, and use Export calendar. Search limits which people are included. Gregorian birthdays repeat yearly by default; uncheck the repeat option for dated events. February 29 repeats on the last day of February. Hijri birthdays remain dated events in the chosen range. Imports do not sync with Kin; importing again may create duplicates.":"افتح «أعياد الميلاد»، واختر الفترة والتقويم، ثم «تصدير للتقويم». يحدد البحث الأفراد المشمولين. تتكرر أعياد الميلاد الميلادية سنويًا افتراضيًا؛ ألغِ خيار التكرار لأحداث بتواريخ محددة. يتكرر ميلاد ٢٩ فبراير في آخر يوم من فبراير. تبقى أعياد الميلاد الهجرية أحداثًا محددة ضمن الفترة المختارة. لا يتزامن الاستيراد مع كِن، وقد يؤدي تكراره إلى أحداث مكررة.",
 "Repeat Gregorian birthdays every year":"تكرار أعياد الميلاد الميلادية كل سنة",

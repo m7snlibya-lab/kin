@@ -1,11 +1,12 @@
 {
   "name": "kin-family",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "private": true,
   "scripts": {
     "dev": "vite",
     "start": "node scripts/serve.mjs",
-    "test": "node tests.mjs && node locale-tests.mjs && node offline-tests.mjs && node backup-tests.mjs && node birthday-tests.mjs",
+    "check:release": "node scripts/check-release.mjs",
+    "test": "npm run check:release && node tests.mjs && node locale-tests.mjs && node offline-tests.mjs && node backup-tests.mjs && node birthday-tests.mjs",
     "test:browser": "playwright test",
     "test:all": "npm test && npm run test:browser"
   },

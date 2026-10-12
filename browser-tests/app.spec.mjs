@@ -12,10 +12,15 @@ async function addPerson(page, name = 'Release Test', {day='18', month='4', year
   await expect(page.locator('.person-card h3', {hasText:name})).toBeVisible();
 }
 
+const pageErrors=new WeakMap();
 test.beforeEach(async ({page}) => {
+  pageErrors.set(page,[]);page.on('pageerror',error=>pageErrors.get(page).push(error.message));
   await page.goto('./');
   await expect(page.locator('#today-g')).not.toBeEmpty();
+  expect(await page.locator('.site-header').evaluate(el=>getComputedStyle(el).display)).toBe('flex');
 });
+
+test.afterEach(async({page})=>{expect(pageErrors.get(page)).toEqual([])});
 
 test('adds, edits, searches and removes a person with undo', async ({page}) => {
   const errors=[];
@@ -33,6 +38,7 @@ test('adds, edits, searches and removes a person with undo', async ({page}) => {
   await expect(page.locator('#birth-day')).toHaveValue('18');
   await page.locator('#person-name').fill('Updated Test');
   await page.locator('#save-person').click();
+  await expect(page.locator('#modal')).not.toBeVisible();
   await page.locator('#family-search').fill('missing');
   await expect(page.getByText('No matching names', {exact:true})).toBeVisible();
   await page.locator('#clear-search').click();
@@ -147,4 +153,121 @@ test('release works offline after service worker installation at /kin/', async (
   await addPerson(page, 'Saved Offline');
   await page.reload();
   await expect(page.locator('.person-card')).toHaveCount(2);
+});
+
+test('simultaneous saves are serialized and the stale draft is preserved', async ({page, context, baseURL}) => {
+  await addPerson(page, 'Original Person');
+  const other=await context.newPage();
+  await other.goto(baseURL);
+  await expect(other.locator('.person-card')).toHaveCount(1);
+  for(const [tab,name] of [[page,'First Draft'],[other,'Second Draft']]){
+    await tab.locator('#add-button').click();
+    await tab.locator('#person-name').fill(name);
+    await tab.locator('#birth-day').fill('18');
+    await tab.locator('#birth-month').selectOption('4');
+    await tab.locator('#birth-year').fill('1991');
+  }
+  await page.evaluate(()=>{
+    window.testLock=navigator.locks.request('kin.family.v1:'+location.pathname,()=>new Promise(resolve=>{window.releaseTestLock=resolve}));
+  });
+  await expect.poll(()=>page.evaluate(()=>typeof window.releaseTestLock)).toBe('function');
+  await Promise.all([page.locator('#save-person').click(),other.locator('#save-person').click()]);
+  await expect(page.locator('#save-person')).toBeDisabled();
+  await expect(other.locator('#save-person')).toBeDisabled();
+  await page.evaluate(()=>window.releaseTestLock());
+  await expect.poll(async()=>Number(await page.locator('#modal').isVisible())+Number(await other.locator('#modal').isVisible())).toBe(1);
+  const loser=await page.locator('#modal').isVisible()?page:other;
+  await expect(loser.locator('#person-name')).toHaveValue(/Draft$/);
+  await expect(loser.locator('#notice')).toContainText('changed in another tab');
+  const fresh=await context.newPage();
+  await fresh.goto(baseURL);
+  await expect(fresh.locator('.person-card')).toHaveCount(2);
+  await expect(fresh.locator('.person-card h3', {hasText:'Original Person'})).toBeVisible();
+  // Review combines the winner with the loser's existing snapshot, without
+  // discarding the winner or silently writing the unsaved editor draft.
+  loser.once('dialog',dialog=>dialog.accept());
+  await loser.locator('#close-modal').click();
+  await loser.locator('#notice button').click();
+  await loser.locator('#confirm-merge').click();
+  await expect(loser.locator('.person-card')).toHaveCount(2);
+});
+
+test('unavailable browser storage leaves a recoverable family URL', async ({page, context}) => {
+  await context.addInitScript(()=>{
+    Storage.prototype.getItem=()=>{throw new DOMException('Blocked','SecurityError')};
+    Storage.prototype.setItem=()=>{throw new DOMException('Blocked','SecurityError')};
+    Object.defineProperty(navigator,'locks',{value:{request:()=>Promise.reject(new DOMException('Blocked','SecurityError'))}});
+  });
+  await page.reload();
+  await addPerson(page, 'URL Recovery');
+  expect(page.url()).toContain('#k1');
+  await expect(page.locator('#notice')).toContainText('Browser storage is unavailable');
+  await page.reload();
+  await expect(page.locator('.person-card h3')).toHaveText('URL Recovery');
+});
+
+test('damaged incoming links cannot replace a saved family', async ({page, baseURL}) => {
+  await addPerson(page, 'Preserved Person');
+  await page.goto(baseURL+'#k1rBROKEN');
+  await expect(page.locator('#notice')).toContainText('Your local family has not been replaced');
+  await expect(page.locator('.person-card h3')).toHaveText('Preserved Person');
+  await page.locator('#notice button').click();
+  expect(page.url()).not.toContain('BROKEN');
+});
+
+test('untrusted names display as text and first install has no update banner', async ({page}) => {
+  await expect(page.locator('#offline-label')).toHaveText('Ready for offline', {timeout:30000});
+  await expect(page.locator('#update-notice')).not.toBeVisible();
+  const name='<img src=x onerror=alert(1)>';
+  await addPerson(page,name);
+  await expect(page.locator('.person-card img')).toHaveCount(0);
+  await page.locator('#share-button').click();
+  await expect(page.locator('.check-row bdi')).toHaveText(name);
+  await expect(page.locator('#modal img')).toHaveCount(0);
+});
+
+test('invalid year identifies and focuses the year field', async ({page}) => {
+  await page.locator('#add-button').click();
+  await page.locator('#person-name').fill('Invalid Year');
+  await page.locator('#birth-day').fill('1');
+  await page.locator('#birth-month').selectOption('1');
+  await page.locator('#birth-year').fill('9999');
+  await page.locator('#save-person').click();
+  await expect(page.locator('#birth-year')).toBeFocused();
+  await expect(page.locator('#birth-year')).toHaveAttribute('aria-invalid','true');
+});
+
+test('keyboard skip control keeps the saved family URL intact', async ({page}) => {
+  await addPerson(page);
+  const url=page.url();
+  await page.reload();
+  await page.keyboard.press('Tab');
+  await expect(page.locator('#skip-content')).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#main-content')).toBeFocused();
+  expect(page.url()).toBe(url);
+});
+
+test('a stalled save times out safely and the editor can retry',async({page})=>{
+ await page.locator('#add-button').click();
+ await page.locator('#person-name').fill('Retry Draft');
+ await page.locator('#birth-day').fill('18');
+ await page.locator('#birth-month').selectOption('4');
+ await page.locator('#birth-year').fill('1991');
+ await page.evaluate(()=>{
+  window.testLock=navigator.locks.request('kin.family.v1:'+location.pathname,()=>new Promise(resolve=>{window.releaseTestLock=resolve}));
+ });
+ await expect.poll(()=>page.evaluate(()=>typeof window.releaseTestLock)).toBe('function');
+ await page.clock.install();
+ await page.locator('#save-person').click();
+ await expect(page.locator('#close-modal')).toBeDisabled();
+ await page.clock.fastForward(10001);
+ await expect(page.locator('#save-person')).toBeEnabled();
+ await expect(page.locator('#person-name')).toHaveValue('Retry Draft');
+ await expect(page.locator('.person-card')).toHaveCount(0);
+ await page.evaluate(()=>window.releaseTestLock());
+ await page.clock.resume();
+ await page.locator('#save-person').click();
+ await expect(page.locator('#modal')).not.toBeVisible();
+ await expect(page.locator('.person-card h3')).toHaveText('Retry Draft');
 });

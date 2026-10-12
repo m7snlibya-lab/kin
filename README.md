@@ -12,7 +12,7 @@ For a production-like local preview, run `npm start` and open `http://127.0.0.1:
 
 ### Verification and GitHub Pages
 
-Run `npm test` for calendar, codec, merge, localization, backup, ICS and simulated offline checks. Run `npx playwright install chromium` once, then `npm run test:browser` for Chromium desktop and mobile browser checks. `npm run test:all` runs both suites. Set `KIN_BASE_URL` to an existing deployment URL (including its trailing slash) to run browser checks against that deployment instead of the local preview. Browser tests use isolated contexts and synthetic names; they do not modify another browser's family data.
+Run `npm test` for release integrity, calendar, codec, merge, localization, backup, ICS and simulated offline checks. Run `npx playwright install chromium firefox` once, then `npm run test:browser` for Chromium desktop/mobile, Firefox and development-server checks. `npm run test:all` runs both suites. Set `KIN_BASE_URL` to an existing deployment URL (including its trailing slash) to run release browser checks against that deployment instead of the local preview. Browser tests use isolated contexts and synthetic names; they do not modify another browser's family data.
 
 The GitHub Actions workflow in `.github/workflows/pages.yml` verifies every pull request and push to `main`. A successful `main` run publishes only `dist/` to GitHub Pages. Select **GitHub Actions** in the repository's **Settings → Pages → Source** when configuring a new copy of this repository. Future pushes publish automatically after verification; failed checks prevent deployment. No custom domain or paid hosting is required.
 
@@ -87,7 +87,7 @@ Run `node locale-tests.mjs` for localization, number input, plural forms, interp
 
 `npm test` runs the full calendar, data, localization and service-worker simulation checks. Gregorian input now rejects short years rather than accepting JavaScript's 1900-offset interpretation. Import planning deduplicates equivalent records within the incoming batch. Compression is imported as a module dependency before app startup; formatters are reused instead of recreated for every visible value.
 
-A save checks the local family revision before writing. If another tab has changed it, the stale save is blocked and the user can review the latest family against their current circle. This is optimistic conflict detection for the device-local convenience copy, not server synchronization or an atomic cross-tab transaction. Each tab's URL still holds its snapshot.
+A save checks the local family revision before writing. If another tab has changed it, the stale save is blocked and the user can review the latest family against their current circle. Version 0.8.0 serializes this check and write using Web Locks in supporting browsers, including a task checkpoint for Firefox storage propagation. Browsers without Web Locks, or with access denied by privacy settings, retain optimistic conflict detection. This protects the device-local convenience copy, not a shared server database. Each tab's URL still holds its snapshot.
 
 Service-worker installation requests fresh assets as a complete cache. Updates wait for an explicit Reload action before activation. Offline readiness has a timeout instead of staying in a permanent preparing state. Service-worker simulation verifies cached navigation, every runtime dependency, network isolation, installation failure, explicit activation, and old-cache cleanup.
 
@@ -123,3 +123,14 @@ Serialization follows [RFC 5545](https://www.rfc-editor.org/rfc/rfc5545.html): C
 Gregorian birthdays repeat yearly by default; the export dialog offers a one-time opt-out. The current agenda/search selects the initial birthdays to include, and their series continue beyond that range. Hijri events remain explicit dates. February 29 uses `FREQ=YEARLY;BYMONTH=2;BYMONTHDAY=-1`, preserving the last-day-of-February policy. Recurring descriptions omit static ages. Series UIDs remain stable across export years; imports still do not sync and some calendar apps may duplicate repeated imports. Remove old imported events when replacing them.
 
 Verified against RFC 5545 section 3.3.10, automated mixed-export/UID/deduplication tests, and independent Python dateutil expansion for 2023–2028. Actual Apple/Google/Outlook imports remain untested. No family URL fields were added.
+
+### Reliability and deployment hardening (0.8.0)
+
+- Cross-tab saves use a shared Web Lock, check for stale revisions, and keep the lock until storage changes are published. Waiting saves time out after ten seconds, preserve the draft, and allow retry. Storage failures keep the family recoverable from its URL.
+- Offline caches are isolated by installation path; updating one Kin installation cannot evict another. Cache read failures fall back to the network. The first installation no longer shows an update banner. Existing v1 family links and backup files remain compatible.
+- Development mode avoids caching Vite's transformed assets and retires legacy development workers without forcing an editor reload. The static preview remains the place to verify offline use.
+- Invalid years cannot produce non-finite dates; malformed Unicode names are rejected before lossy encoding. Damaged links opened in an existing tab provide the same recovery action as startup failures.
+- A localized keyboard skip control focuses the main content without overwriting the family fragment. Invalid years focus the correct field. Static pages restrict scripts, styles and network connections to the hosting origin through a content security policy.
+- Release checks verify the package/worker version, offline asset coverage, module imports, page references and install assets. CI audits dependencies, verifies desktop/mobile Chromium and Firefox, and preserves browser failure diagnostics for seven days. Changes to runtime assets require a new package/worker version before publishing.
+
+Native installation prompts, physical camera scanning and external calendar app imports still need device-specific checks. Legacy unscoped caches are left untouched during migration so other older installations on the same origin are not disrupted.
