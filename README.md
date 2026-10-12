@@ -2,9 +2,21 @@
 
 An installable, static, offline-first SPA for family ages and birthdays in Gregorian and Hijri (Umm al-Qura) calendars. No account, backend database, API calls, analytics, external fonts, or remote QR service are required by the application.
 
+Live app: **[m7snlibya-lab.github.io/kin](https://m7snlibya-lab.github.io/kin/)**
+
 ## Run or host
 
 Serve `dist/` from any static HTTPS host. For local development, run `npm ci` and `npm run dev`, or use `python -m http.server 8080 --directory dist`. Localhost and production HTTPS support service workers; plain HTTP on a non-localhost domain does not. There is no production build step; all runtime assets, including the QR generator and compression library, are checked in. `.openai/hosting.json` identifies the Sites deployment.
+
+For a production-like local preview, run `npm start` and open `http://127.0.0.1:4173/kin/`. This serves the unmodified static release at the GitHub Pages subdirectory, including its service worker. Use this preview to test offline behavior; the Vite development server includes development-only resources.
+
+### Verification and GitHub Pages
+
+Run `npm test` for calendar, codec, merge, localization, backup, ICS and simulated offline checks. Run `npx playwright install chromium` once, then `npm run test:browser` for Chromium desktop and mobile browser checks. `npm run test:all` runs both suites. Set `KIN_BASE_URL` to an existing deployment URL (including its trailing slash) to run browser checks against that deployment instead of the local preview. Browser tests use isolated contexts and synthetic names; they do not modify another browser's family data.
+
+The GitHub Actions workflow in `.github/workflows/pages.yml` verifies every pull request and push to `main`. A successful `main` run publishes only `dist/` to GitHub Pages. Select **GitHub Actions** in the repository's **Settings → Pages → Source** when configuring a new copy of this repository. Future pushes publish automatically after verification; failed checks prevent deployment. No custom domain or paid hosting is required.
+
+The browser suite checks person creation/editing/removal/undo, calendar switching, search, Arabic digits and RTL, horizontal layout on a phone, selected family links, QR rendering, backup download/restore, recurring and one-time calendar downloads, unsaved-edit guards, and real service-worker offline reloads at `/kin/`. It supplements the historical release notes below. Native device installation, camera scanning, and imports into Apple/Google/Outlook calendars still require testing in those products.
 
 Run the algorithm checks with `node tests.mjs`. Tests cover 100,406 date conversions against ICU, Hijri/Gregorian leap dates, date-based ages and countdowns, Unicode codec round trips, corruption rejection, size limits, merge conflicts, duplicate detection, and QR generation. Browser installation, offline navigation, and device QR scanning require browser/device verification; these were not tested in this environment.
 
