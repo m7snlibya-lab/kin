@@ -20,11 +20,11 @@ The browser suite checks person creation/editing/removal/undo, calendar switchin
 
 Run the algorithm checks with `node tests.mjs`. Tests cover 100,406 date conversions against ICU, Hijri/Gregorian leap dates, date-based ages and countdowns, Unicode codec round trips, corruption rejection, size limits, merge conflicts, duplicate detection, and QR generation. Browser installation, offline navigation, and device QR scanning require browser/device verification; these were not tested in this environment.
 
-## Startup language and simpler menus (1.3.1)
+## Startup language and simpler menus (1.3.2)
 
 A small blocking startup script resolves the saved language and direction before the HTML shell can paint. The localized app reveals after its first render. Delayed module loading shows a short message in the chosen language; failed or very slow loading offers a localized retry. Explicit English/Arabic preferences override the browser language. Offline installation includes the startup script.
 
-All calendar symbols use one local SVG definition, including a redrawn crescent. Copy, sharing, backup, import/restore, calendar export, installation, text size and offline status use distinct icons with text labels; offline status changes its symbol with its actual state.
+All calendar symbols use the official [Lucide Moon](https://lucide.dev/icons/moon) and [Sun](https://lucide.dev/icons/sun) SVGs, pinned to source revision dab294f313897bacaa968b725b3259fa37c17bd1. The original geometry is retained, and the Lucide/Feather license is bundled in dist/vendor/lucide-LICENSE.txt. Copy, sharing, backup, import/restore, calendar export, installation, text size and offline status use distinct icons with text labels; offline status changes its symbol with its actual state.
 
 Menus now have clear responsibilities:
 
