@@ -61,9 +61,10 @@ test('small screens and doubled text reflow in English and Arabic',async({page},
  for(const lang of ['en','ar']){
   if(lang==='ar')await page.locator('#language-button').click();
   await page.locator('#text-size-button').click();
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
-  for(const card of await page.locator('.person-card').all())expect(await card.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+  const layout=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth,overflow:[...document.querySelectorAll('body *')].filter(el=>{const r=el.getBoundingClientRect();return r.width>0&&(r.right>innerWidth+1||r.left< -1)&&!el.classList.contains('sr-only')}).map(el=>({tag:el.tagName,id:el.id,classes:el.className,text:el.textContent.slice(0,80),x:el.getBoundingClientRect().x,width:el.getBoundingClientRect().width}))}));
   await page.screenshot({path:info.outputPath('readable-'+lang+'.png'),fullPage:true});
+  expect(layout.scroll,JSON.stringify({lang,...layout})).toBeLessThanOrEqual(layout.width+1);
+  for(const card of await page.locator('.person-card').all())expect(await card.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
   await page.locator('#text-size-button').click();
  }
  await page.setViewportSize({width:640,height:900});

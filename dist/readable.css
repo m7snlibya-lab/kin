@@ -281,6 +281,16 @@ html[dir=rtl] .calendar-age .age-value { letter-spacing:0; }
  .toolbar-actions .button { padding:.6rem; }
 }
 @media(max-width:500px) {
+ /* Enlarged text needs full-width controls, regardless of system font metrics. */
+ html[data-large-text=true] .celebration-panel { display:block; }
+ html[data-large-text=true] .celebration-link { max-width:none; }
+ html[data-large-text=true] .toolbar-actions { grid-template-columns:1fr; }
+ html[data-large-text=true] .toolbar-actions .button { justify-content:flex-start; text-align:start; }
+ html[data-large-text=true] .discovery-bar { grid-template-columns:1fr; }
+ html[data-large-text=true] .discovery-bar>* { grid-column:1; grid-row:auto; min-width:0; }
+ html[data-large-text=true] .view-tabs { gap:.5rem; }
+ html[data-large-text=true] .view-tabs button { overflow-wrap:anywhere; }
+ html[data-large-text=true] .notice .button { white-space:normal; overflow-wrap:anywhere; }
  html[data-large-text=true] .age-grid.dual-ages { grid-template-columns:1fr; gap:1rem; }
  html[data-large-text=true] .calendar-age,
  html[dir=rtl][data-large-text=true] .calendar-age { padding:0; border:0; }
