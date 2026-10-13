@@ -4,8 +4,9 @@ import {t,language,number,date,months,calendarName,parseDigits} from './i18n.js'
 import {$,$$,esc,button,mountSelection,download} from './ui.js';
 import {createDeviceStore} from './device.js';
 import {ageText} from './views.js';
+import {icon} from './icons.js';
 
-export function createWorkbench(state,{modal,close,render,share,ics,toast}){
+export function createWorkbench(state,{modal,close,render,ics,toast}){
  let storage;try{storage=localStorage}catch{}
  const device=createDeviceStore(location.pathname,storage),prefs=device.value.preferences;
  for(const [key,allowed] of Object.entries({sort:['added','birthday','oldest','name'],view:['people','birthdays','timeline'],layout:['cards','table'],primaryCalendar:['g','h'],birthdayCalendar:['both','g','h']}))if(allowed.includes(prefs[key]))state[key]=prefs[key];
@@ -15,14 +16,13 @@ export function createWorkbench(state,{modal,close,render,share,ics,toast}){
  $('#birthday-panel').insertAdjacentHTML('afterend','<section id="timeline-panel" role="tabpanel" aria-labelledby="timeline-tab" hidden></section>');
  $('.heading-actions').insertAdjacentHTML('beforeend',`<button id="tools-button" class="button secondary" data-i18n="Tools">${t('Tools')}</button><button id="exports-button" class="button secondary" data-i18n="Export & print">${t('Export & print')}</button>`);
  $('.overview').insertAdjacentHTML('beforebegin',`<div id="reference-banner" class="notice" hidden role="status"></div><div id="backup-reminder" class="notice" hidden></div><p id="device-note" class="hint" hidden data-i18n="Device settings are temporary because browser storage is unavailable.">${t('Device settings are temporary because browser storage is unavailable.')}</p>`);
- document.body.insertAdjacentHTML('beforeend',`<button id="mobile-add" class="button primary mobile-add" data-i18n="+ Add person">${t('+ Add person')}</button>`);$('#mobile-add').onclick=()=>$('#add-button').click();
  $('.agenda-controls').insertAdjacentHTML('beforeend',`<button id="milestones-button" class="button secondary" data-i18n="Milestones">${t('Milestones')}</button>`);
  const visible=()=>filterPeople(state.people,{search:state.search,group:state.group,groups:device.value.groups,month:state.month,calendar:state.primaryCalendar,locale:language()});
  function persist(){for(const key of ['sort','view','layout','primaryCalendar','birthdayCalendar','birthdayRange'])prefs[key]=state[key];device.save()}
  for(const [selector,key] of [['#group-filter','group'],['#month-filter','month'],['#primary-calendar','primaryCalendar'],['#people-layout','layout']])$(selector).onchange=e=>{state[key]=e.target.value;persist();render()};
  $('#manage-groups').onclick=groupsDialog;
- $('#tools-button').onclick=()=>{modal('Ages & dates',`<p class="hint">${t('Choose what you would like to find out.')}</p><div class="tool-list">${button('compare-open','Compare people')}<p class="tool-description">${t('See how old one person was when another was born.')}</p>${button('reference-open','Family on this date')}<p class="tool-description">${t('See everyone’s age on a date in the past or future.')}</p>${button('groups-open','Manage groups')}<p class="tool-description">${t('Organize people into groups on this device.')}</p></div>`);$('#compare-open').onclick=compareDialog;$('#reference-open').onclick=referenceDialog;$('#groups-open').onclick=groupsDialog};
- $('#exports-button').onclick=()=>{modal('Export & print',`<div class="tool-list">${button('print-open','Printable calendar')}<p class="tool-description">${t('Print a year of family birthdays.')}</p>${button('ics-open','Add to calendar app')}<p class="tool-description">${t('Keep birthdays in your own calendar.')}</p>${button('card-open','Birthday image')}<p class="tool-description">${t('Make a birthday image to send or keep.')}</p>${button('backup-open','Data backup')}<p class="tool-description">${t('Download a copy of your family data.')}</p></div><p class="hint">${t('Exports start with the people in your current filters. Review your selection before downloading.')}</p>`);$('#print-open').onclick=()=>openDocuments();$('#ics-open').onclick=()=>{close();state.view='birthdays';render();ics()};$('#backup-open').onclick=()=>{close();share()};$('#card-open').onclick=cardPicker};
+ $('#tools-button').onclick=()=>{modal('Ages & dates',`<p class="hint">${t('Choose what you would like to find out.')}</p><div class="tool-list">${button('compare-open','Compare people')}<p class="tool-description">${t('See how old one person was when another was born.')}</p>${button('reference-open','Family on this date')}<p class="tool-description">${t('See everyone’s age on a date in the past or future.')}</p></div>`);$('#compare-open').onclick=compareDialog;$('#reference-open').onclick=referenceDialog};
+ $('#exports-button').onclick=()=>{modal('Calendars',`<div class="tool-list">${button('print-open','Printable calendar')}<p class="tool-description">${t('Print a year of family birthdays.')}</p>${button('ics-open','Add to calendar app')}<p class="tool-description">${t('Keep birthdays in your own calendar.')}</p></div><p class="hint">${t('Exports start with the people in your current filters. Review your selection before downloading.')}</p>`);$('#print-open').onclick=()=>openDocuments();$('#ics-open').onclick=()=>{close();state.view='birthdays';render();ics()}};
  let openDocuments=()=>{};
  function groupsDialog(){
   if(state.demo||state.viewOnly)return toast('Merge or save this family before managing groups.');
@@ -48,7 +48,7 @@ export function createWorkbench(state,{modal,close,render,share,ics,toast}){
   const update=()=>{const a=records.find(p=>p.id===$('#compare-a').value),b=records.find(p=>p.id===$('#compare-b').value);
    if(a.id===b.id){$('#comparison-result').textContent=t('Choose two different people.');return}
    const comparison=comparePeople(a,b);
-   $('#comparison-result').innerHTML=`<p class="form-preview">${t('Age gap: {days} days',{days:number(comparison.gapDays)})}</p>${['g','h'].map(c=>`<h3>${calendarName(c)}</h3><p>${t('When {name} was born',{name:'<bdi>'+esc(b.name)+'</bdi>'})}: <bdi>${esc(a.name)}</bdi> — ${ageText(comparison.atBirth[c].a)}</p><p>${t('When {name} was born',{name:'<bdi>'+esc(a.name)+'</bdi>'})}: <bdi>${esc(b.name)}</bdi> — ${ageText(comparison.atBirth[c].b)}</p>`).join('')}`;
+   $('#comparison-result').innerHTML=`<p class="form-preview">${t('Age gap: {days} days',{days:number(comparison.gapDays)})}</p>${['g','h'].map(c=>`<h3 class="has-icon">${icon(c==='g'?'sun':'moon')}${calendarName(c)}</h3><p>${t('When {name} was born',{name:'<bdi>'+esc(b.name)+'</bdi>'})}: <bdi>${esc(a.name)}</bdi> — ${ageText(comparison.atBirth[c].a)}</p><p>${t('When {name} was born',{name:'<bdi>'+esc(a.name)+'</bdi>'})}: <bdi>${esc(b.name)}</bdi> — ${ageText(comparison.atBirth[c].b)}</p>`).join('')}`;
   };$('#compare-a').onchange=$('#compare-b').onchange=update;update();
  }
  function referenceDialog(){
@@ -60,20 +60,15 @@ export function createWorkbench(state,{modal,close,render,share,ics,toast}){
   $('#reference-form').onsubmit=e=>{e.preventDefault();try{state.reference=read();close();render()}catch{$('#reference-error').textContent=t('Invalid reference date.')}};
   $('#reference-today').onclick=()=>{state.reference=null;close();render()};
  }
- function cardPicker(){
-  const records=visible(),events=eventsBetween(records,state.now,Math.min(MAX,state.now+365),state.primaryCalendar);
-  if(!events.length)return toast('No birthdays in this view');
-  modal('Birthday image',`<label class="form-field"><span>${t('Choose a birthday')}</span><select id="card-event">${events.map((e,i)=>`<option value="${i}">${esc(e.person.name)} · ${date(e.day,e.calendar)}</option>`).join('')}</select></label>${button('create-card','Create birthday card','primary')}`);
-  $('#create-card').onclick=()=>openDocuments(events[+$('#card-event').value]);
- }
+
  $('#milestones-button').onclick=()=>{modal('Milestones',`<p class="hint">${t('Milestones use the birthday calendar selected in the agenda.')}</p><div class="milestone-options">${MILESTONES.map(n=>`<label><input type="checkbox" value="${n}" ${state.milestones.includes(n)?'checked':''}>${number(n)}</label>`).join('')}</div><div class="dialog-actions">${button('clear-milestones','All birthdays')}${button('apply-milestones','Apply','primary')}</div>`);$('#clear-milestones').onclick=()=>{state.milestones=[];close();render()};$('#apply-milestones').onclick=()=>{state.milestones=$$('.milestone-options input:checked').map(i=>+i.value);close();render()}};
  function renderTimeline(){
   const panel=$('#timeline-panel');panel.hidden=state.view!=='timeline';if(panel.hidden)return;
   const records=visible();let events;
   if(state.timelineMode==='births')events=[...records].sort((a,b)=>a.day-b.day).map(p=>({day:p.day,person:p}));
   else{try{const {start,end}=yearBounds(state.primaryCalendar,calendars[state.primaryCalendar].parts(state.now)[0]);events=eventsBetween(records,start,end,state.birthdayCalendar)}catch{events=[]}}
-  panel.innerHTML=`<label class="form-field"><span>${t('Timeline')}</span><select id="timeline-mode"><option value="births">${t('Birth history')}</option><option value="birthdays">${t('Birthdays in this year')}</option></select></label><ol class="family-timeline">${events.map(e=>`<li><strong dir="auto">${esc(e.person.name)}</strong><span>${date(e.day,state.primaryCalendar)} · ${date(e.day,state.primaryCalendar==='g'?'h':'g')}${e.calendar?' · '+calendarName(e.calendar)+' · '+t('Turning {age}',{age:number(e.turns)}):''}</span>${e.calendar?`<button class="quiet" data-timeline-card="${events.indexOf(e)}">${t('Create birthday card')}</button>`:''}</li>`).join('')}</ol>${events.length?'':`<p class="hint">${t('No matching names')}</p>`}`;
-  $('#timeline-mode').value=state.timelineMode;$('#timeline-mode').onchange=e=>{state.timelineMode=e.target.value;renderTimeline()};$$('[data-timeline-card]').forEach(b=>b.onclick=()=>openDocuments(events[+b.dataset.timelineCard]));
+  panel.innerHTML=`<label class="form-field"><span>${t('Timeline')}</span><select id="timeline-mode"><option value="births">${t('Birth history')}</option><option value="birthdays">${t('Birthdays in this year')}</option></select></label><ol class="family-timeline">${events.map(e=>`<li><strong dir="auto">${esc(e.person.name)}</strong><span>${date(e.day,state.primaryCalendar)} · ${date(e.day,state.primaryCalendar==='g'?'h':'g')}${e.calendar?' · '+calendarName(e.calendar)+' · '+t('Turning {age}',{age:number(e.turns)}):''}</span></li>`).join('')}</ol>${events.length?'':`<p class="hint">${t('No matching names')}</p>`}`;
+  $('#timeline-mode').value=state.timelineMode;$('#timeline-mode').onchange=e=>{state.timelineMode=e.target.value;renderTimeline()};
  }
  function refresh(){
   persist();$('#device-note').hidden=device.available;
@@ -88,9 +83,9 @@ export function createWorkbench(state,{modal,close,render,share,ics,toast}){
   $('.date-item .eyebrow').textContent=t(state.reference===null?'TODAY, IN TWO CALENDARS':'REFERENCE DATE, IN TWO CALENDARS');
  const hash=state.people.length?encode(state.people):'';
   $('#backup-reminder').hidden=!hash||state.demo||state.viewOnly||device.value.keptHash===hash||device.value.dismissedHash===hash;
-  $('#backup-reminder').innerHTML=`<span>${t('Saved on this device. Keep a fresh family link or backup after changes.')}</span>${button('keep-copy','Copy my family link ↗')}${button('dismiss-reminder','Dismiss')}`;
-  $('#keep-copy').onclick=()=>$('#save-button').click();$('#dismiss-reminder').onclick=()=>{device.value.dismissedHash=hash;device.save();$('#backup-reminder').hidden=true};
+  $('#backup-reminder').innerHTML=`<span>${t('Saved on this device. Keep a fresh family link or backup after changes.')}</span>${button('keep-copy','Keep a copy')}${button('dismiss-reminder','Dismiss')}`;
+  $('#keep-copy').onclick=()=>$('#share-button').click();$('#dismiss-reminder').onclick=()=>{device.value.dismissedHash=hash;device.save();$('#backup-reminder').hidden=true};
   renderTimeline();
  }
- return {visible,refresh,device,persist,markKept(rows){if(rows.length===state.people.length&&encode(rows)===encode(state.people)){device.value.keptHash=encode(rows);device.save();refresh()}},setDocuments(fn){openDocuments=fn},showCard(event){openDocuments(event)},cardPicker};
+ return {visible,refresh,device,persist,markKept(rows){if(rows.length===state.people.length&&encode(rows)===encode(state.people)){device.value.keptHash=encode(rows);device.save();refresh()}},setDocuments(fn){openDocuments=fn},showCard(event){openDocuments(event)}};
 }

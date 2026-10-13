@@ -1,4 +1,13 @@
 export const featureMessages={
+ "Open Share & backup to copy a family link or download the selected people as a backup file. Restore a link or file through Import & restore. Backups are readable, not encrypted; keep them private.":"افتح «المشاركة والنسخ الاحتياطي» لنسخ رابط العائلة أو تنزيل الأفراد المحددين في ملف احتياطي. استعد الرابط أو الملف من «الاستيراد والاستعادة». النسخ قابلة للقراءة وغير مشفّرة؛ احتفظ بها في مكان آمن.",
+ "Open Birthdays to choose the date range, calendar and people. Then use Calendars → Add to calendar app. Gregorian birthdays repeat yearly by default; February 29 uses the last day of February. Hijri birthdays are dated events. Imports do not sync with Kin; importing again may create duplicates. Create a birthday image beside its birthday in the agenda.":"افتح «أعياد الميلاد» لاختيار الفترة والتقويم والأفراد، ثم «التقاويم ← الإضافة إلى تطبيق التقويم». تتكرر أعياد الميلاد الميلادية سنويًا افتراضيًا، ويستخدم ميلاد ٢٩ فبراير آخر يوم من فبراير. أعياد الميلاد الهجرية أحداث محددة بتاريخ. لا تتزامن الأحداث مع كِن، وقد يؤدي الاستيراد مجددًا إلى تكرارها. أنشئ صورة عيد الميلاد من زر المناسبة في قائمة أعياد الميلاد.",
+ "Install app":"تثبيت التطبيق",
+ "How URL fragments work":"كيف تعمل أجزاء الروابط",
+ "Calendars":"التقاويم",
+ "Share & backup":"المشاركة والنسخ الاحتياطي",
+ "Import & restore":"الاستيراد والاستعادة",
+ "Keep a copy":"الاحتفاظ بنسخة",
+ "QR code":"رمز QR",
  "Add person":"إضافة فرد",
  "Share family":"مشاركة العائلة",
  "Family table":"جدول العائلة",

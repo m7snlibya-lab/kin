@@ -71,7 +71,7 @@ test('selected sharing, QR and backup restore work in a fresh browser', async ({
   await page.locator('#share-button').click();
   await page.locator('.check-row', {hasText:'Excluded Test'}).locator('input').uncheck();
   const sharedURL=await page.locator('#share-url').inputValue();
-  await expect(page.locator('#qr')).toBeVisible();
+  await page.locator('.qr-options > summary').click();await expect(page.locator('#qr')).toBeVisible();
   const downloadPromise=page.waitForEvent('download');
   await page.locator('#download-backup').click();
   const download=await downloadPromise;
@@ -104,14 +104,14 @@ test('birthday agenda downloads recurring and one-time calendar files', async ({
   await page.locator('#birthday-range').selectOption('365');
   await page.locator('#birthday-calendar').selectOption('g');
   await expect(page.locator('.agenda-event')).toHaveCount(1);
-  await page.locator('#export-calendar').click();
+  await page.locator('#exports-button').click();await page.locator('#ics-open').click();
   await expect(page.locator('#repeat-gregorian')).toBeChecked();
   let downloadPromise=page.waitForEvent('download');
   await page.locator('#download-calendar').click();
   let content=await readFile(await (await downloadPromise).path(), 'utf8');
   expect(content).toContain('BEGIN:VCALENDAR\r\n');
   expect(content).toContain('RRULE:FREQ=YEARLY');
-  await page.locator('#export-calendar').click();
+  await page.locator('#exports-button').click();await page.locator('#ics-open').click();
   await page.locator('#repeat-gregorian').uncheck();
   downloadPromise=page.waitForEvent('download');
   await page.locator('#download-calendar').click();

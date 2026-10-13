@@ -3,7 +3,7 @@ import {icon} from './icons.js';
 export const $=s=>document.querySelector(s);
 export const $$=s=>[...document.querySelectorAll(s)];
 export const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const actionIcons={'compare-open':'compare','reference-open':'history','groups-open':'people','print-open':'printer','ics-open':'calendar','card-open':'image','backup-open':'download'};
+const actionIcons={'compare-open':'compare','reference-open':'history','print-open':'printer','ics-open':'export','copy-share':'copy','native-share':'share','download-backup':'backup','download-qr':'qr','download-calendar':'export','download-pdf':'download','download-image':'image','share-image':'share','previous-page':'previous','next-page':'next','new-group':'plus','save-group':'check','save-person':'check'};
 export const button=(id,key,kind='secondary',type='button')=>`<button id="${id}" type="${type}" class="button ${kind}${actionIcons[id]?' has-icon':''}">${actionIcons[id]?icon(actionIcons[id]):''}<span>${t(key)}</span></button>`;
 export function createDialogs(state){
  let opener=null,activation=null;

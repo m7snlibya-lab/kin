@@ -135,6 +135,60 @@ test('labeled calendar icons survive language changes and view switching',async(
  await page.locator('#people-layout').selectOption('cards');await expect(page.locator('.calendar-label .icon-moon')).toHaveCount(2);
 });
 
+test('saved language is resolved before delayed app code can reveal another language',async({browser,baseURL})=>{
+ for(const [saved,locale,dir,heading] of [['ar','en-US','rtl','دائرة عائلتك.'],['en','ar-SA','ltr','Your family circle.']]){
+ const context=await browser.newContext({locale,serviceWorkers:'block'});const page=await context.newPage();
+ let release;const gate=new Promise(resolve=>release=resolve);
+ try{
+  await context.addInitScript(value=>localStorage.setItem('kin.language',value),saved);
+  await page.route('**/app.js',async route=>{await gate;await route.continue()});
+  await page.goto(baseURL,{waitUntil:'commit'});
+  await expect(page.locator('html')).toHaveAttribute('lang',saved);
+  await expect(page.locator('html')).toHaveAttribute('dir',dir);
+  await expect(page.locator('html')).toHaveAttribute('data-booting','true');
+  await expect(page.locator('h1')).toBeAttached();await expect(page.locator('h1')).not.toBeVisible();
+  release();await expect(page.locator('html')).not.toHaveAttribute('data-booting','true');
+  await expect(page.locator('h1')).toHaveText(heading);
+  await page.reload();await expect(page.locator('html')).toHaveAttribute('lang',saved);
+  await expect(page.locator('h1')).toBeVisible();
+ }finally{release();await context.close()}
+ }
+});
+
+test('failed startup offers a localized retry without exposing the English shell',async({browser,baseURL})=>{
+ const context=await browser.newContext({locale:'en-US',serviceWorkers:'block'});const page=await context.newPage();
+ try{
+  await context.addInitScript(()=>localStorage.setItem('kin.language','ar'));
+  await page.clock.install();await page.route('**/app.js',route=>route.abort());
+  await page.goto(baseURL);await page.clock.fastForward(10001);
+  await expect(page.locator('#startup-recovery')).toBeVisible();
+  await expect(page.locator('#startup-recovery button')).toHaveText('إعادة المحاولة');
+  await expect(page.locator('h1')).not.toBeVisible();
+ }finally{await context.close()}
+});
+
+test('calendar symbols are identical in cards, the editor and birthday agenda',async({page})=>{
+ const symbols={};for(const type of ['sun','moon'])symbols[type]=await page.locator('.calendar-label .icon-'+type).first().innerHTML();
+ await page.locator('#add-button').click();
+ for(const type of ['sun','moon'])expect(await page.locator('.segmented .icon-'+type).innerHTML()).toBe(symbols[type]);
+ await page.locator('#close-modal').click();await page.locator('#birthdays-tab').click();await page.locator('#birthday-range').selectOption('365');
+ for(const type of ['sun','moon'])expect(await page.locator('.agenda-person .icon-'+type).first().innerHTML()).toBe(symbols[type]);
+});
+
+test('menus have one home for groups, backups and calendar outputs',async({page})=>{
+ await page.locator('#tools-button').click();
+ await expect(page.locator('#compare-open')).toBeVisible();await expect(page.locator('#reference-open')).toBeVisible();await expect(page.locator('#groups-open')).toHaveCount(0);
+ await page.locator('#close-modal').click();await page.locator('#exports-button').click();
+ await expect(page.locator('#print-open')).toBeVisible();await expect(page.locator('#ics-open')).toBeVisible();
+ await expect(page.locator('#card-open')).toHaveCount(0);await expect(page.locator('#backup-open')).toHaveCount(0);
+ await page.locator('#close-modal').click();await page.locator('#share-button').click();
+ await expect(page.locator('#download-backup')).toBeVisible();await expect(page.locator('#copy-share')).toBeVisible();
+ await expect(page.locator('.qr-options')).not.toHaveAttribute('open','');
+ await page.locator('.qr-options>summary').click();await expect(page.locator('#download-qr')).toBeVisible();
+ await page.locator('#close-modal').click();await page.locator('#family-options>summary').click();await expect(page.locator('#manage-groups')).toBeVisible();
+ for(const selector of ['#save-button','#calendar-help','#empty-add','#export-calendar','#mobile-add'])await expect(page.locator(selector)).toHaveCount(0);
+});
+
 test('visible card text has readable sizes and high text contrast',async({page})=>{
  const results=await page.locator('.person-card').first().evaluate(card=>{
   const rgb=s=>s.match(/[\d.]+/g)?.map(Number)||[];

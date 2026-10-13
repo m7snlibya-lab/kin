@@ -1,3 +1,20 @@
+html[data-booting] body { visibility:hidden; }
+html[data-booting]::after { content:attr(data-loading-label); display:block; position:fixed; inset:40% 1rem auto; text-align:center; font-size:1rem; color:#615c6b; }
+.startup-recovery { visibility:visible; position:fixed; inset:25% 1rem auto; margin:auto; max-width:30rem; padding:2rem; background:#fffefd; border:1px solid #ded9d5; border-radius:16px; text-align:center; }
+.qr-options { margin-top:1rem; border:1px solid var(--line); border-radius:10px; }
+.qr-options>summary { padding:.6rem 1rem; cursor:pointer; }
+.qr-options .qr-wrap { margin-top:0; }
+.reading-button { display:inline-flex; align-items:center; gap:.4rem; }
+.reading-symbol { display:inline-flex; }
+.segmented button.has-icon { display:flex; align-items:center; justify-content:center; gap:.5rem; }
+.icon-sun { color:#80603a; }
+.icon-moon { color:var(--sage); }
+.icon-previous,.icon-next { transform:none; }
+.agenda-person p .ui-icon { vertical-align:-.2em; margin-inline-end:.35rem; }
+.qr-options>summary { display:flex; justify-content:flex-start; gap:.5rem; }
+.qr-options>summary .icon-chevron { margin-inline-start:auto; }
+.qr-options[open]>summary .icon-chevron { transform:rotate(180deg); }
+html[dir=rtl] .icon-previous,html[dir=rtl] .icon-next { transform:scaleX(-1); }
 /* Kin's visual system: warm paper, quiet structure, two equally visible calendars. */
 :root {
  --ink:#2d2939; --muted:#615c6b; --deep:#403650; --purple:#665184;
