@@ -3,6 +3,7 @@ html[data-booting]::after { content:attr(data-loading-label); display:block; pos
 .startup-recovery { visibility:visible; position:fixed; inset:25% 1rem auto; margin:auto; max-width:30rem; padding:2rem; background:#fffefd; border:1px solid #ded9d5; border-radius:16px; text-align:center; }
 .qr-options { margin-top:1rem; border:1px solid var(--line); border-radius:10px; }
 .qr-options>summary { padding:.6rem 1rem; cursor:pointer; }
+.share-controls { position:sticky; bottom:-1.75rem; background:var(--surface); padding:.75rem 0; border-top:1px solid var(--line); }
 .qr-options .qr-wrap { margin-top:0; }
 .reading-button { display:inline-flex; align-items:center; gap:.4rem; }
 .reading-symbol { display:inline-flex; }
@@ -296,6 +297,8 @@ html[dir=rtl] .calendar-age .age-value { letter-spacing:0; }
  .date-fields input,.date-fields select { padding:.6rem .35rem; min-width:0; font-size:1rem; }
  .date-fields:has(#compare-a) { grid-template-columns:1fr; }
  dialog,.document-dialog { padding:1rem; }
+ .share-controls { bottom:-1rem; }
+ .share-controls .button { flex:1; white-space:normal; }
  .dialog-head { gap:.5rem; }
  .dialog-head h2 { font-size:1.5rem; }
  #close-modal { padding:.5rem; }

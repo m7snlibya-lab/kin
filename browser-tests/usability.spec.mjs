@@ -183,6 +183,8 @@ test('menus have one home for groups, backups and calendar outputs',async({page}
  await expect(page.locator('#card-open')).toHaveCount(0);await expect(page.locator('#backup-open')).toHaveCount(0);
  await page.locator('#close-modal').click();await page.locator('#share-button').click();
  await expect(page.locator('#download-backup')).toBeVisible();await expect(page.locator('#copy-share')).toBeVisible();
+ await expect(page.getByText('2 of 2 people',{exact:true})).toHaveCount(1);
+ await page.locator('.share-person').first().uncheck();await expect(page.getByText('1 of 2 people',{exact:true})).toHaveCount(1);
  await expect(page.locator('.qr-options')).not.toHaveAttribute('open','');
  await page.locator('.qr-options>summary').click();await expect(page.locator('#download-qr')).toBeVisible();
  await page.locator('#close-modal').click();await page.locator('#family-options>summary').click();await expect(page.locator('#manage-groups')).toBeVisible();
