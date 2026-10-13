@@ -26,6 +26,8 @@ Sorting and a matching-person count are visible without opening filters. Each ac
 
 On phones, family views precede occasional tools in both visual and reading order. Tool explanations are part of their large clickable buttons. Empty birthday agendas offer a one-step broader range when settings are restrictive; active milestones are labeled. Calendar exports explain an empty selection rather than failing silently, and keyboard focus stays with the birthday controls.
 
+The 1.4.1 refinement keeps filter chips readable with very long Arabic searches and larger text, and updates the reset label immediately when languages change.
+
 Read [UX decisions and prioritized next ideas](UX-NOTES.md). Existing family links, backups, dual-calendar ages, language startup, official Sun/Moon icons, offline behavior, and export privacy controls remain compatible.
 
 ## Startup language and simpler menus (1.3.2)

@@ -68,6 +68,17 @@ test('empty list recovery clears month filters as well as search',async({page})=
  await expect(page.locator('#family-search')).toHaveValue('');await expect(page.locator('#family-search')).toBeFocused();
 });
 
+test('long Arabic filter chips stay readable with larger text and localize their reset',async({page})=>{
+ await page.setViewportSize({width:320,height:850});await page.locator('#language-button').click();await page.locator('#text-size-button').click();
+ await page.locator('#family-options>summary').click();await page.locator('#month-filter').selectOption('4');await page.locator('#family-options>summary').click();
+ await page.locator('#family-search').fill('عبد الرحمن محمد الحسن <اختبار> '.repeat(5));
+ const search=page.locator('[data-remove-filter="search"]'),month=page.locator('[data-remove-filter="month"]');
+ expect((await search.boundingBox()).width).toBeGreaterThan(200);expect((await month.boundingBox()).width).toBeGreaterThan(150);
+ expect((await search.boundingBox()).height).toBeLessThan(110);await expect(page.locator('#clear-filters')).toHaveText('إلغاء التصفية');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+ await page.locator('#clear-filters').click();await expect(page.locator('.person-card')).toHaveCount(2);
+});
+
 test('mobile views come before tools and tool explanations are clickable',async({page})=>{
  await page.setViewportSize({width:393,height:851});
  for(const lang of ['en','ar']){

@@ -103,8 +103,9 @@ export function createComfort(state,{device,render}){
    state.search?{key:'search',label:t('Search: {query}',{query:state.search})}:null
   ].filter(Boolean);
   $('#filter-status').hidden=!active.length;
+  $('#clear-filters span').textContent=t('Clear filters');
   $('#filter-description').innerHTML=active.map(({key,label})=>
-   `<button type="button" class="filter-chip" data-remove-filter="${key}" aria-label="${esc(t('Remove filter: {filter}',{filter:label}))}"><bdi>${esc(label)}</bdi>${icon('close')}</button>`
+   `<button type="button" class="filter-chip" data-remove-filter="${key}" title="${esc(label)}" aria-label="${esc(t('Remove filter: {filter}',{filter:label}))}"><bdi>${esc(label)}</bdi>${icon('close')}</button>`
   ).join('');
   $('#results-toolbar').hidden=!state.people.length;
   $('#results-summary').textContent=t('Showing {shown} of {total} people',{shown:$('#list-count').textContent,total:number(state.people.length)});
