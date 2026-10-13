@@ -1,10 +1,10 @@
-const VERSION='1.2.0';
+const VERSION='1.2.1';
 // CacheStorage is shared by every application on this origin. Keep releases
 // and cleanup isolated to this installation's path.
 const SCOPE=new URL('./',self.location.href);
 const PREFIX='kin-shell-'+SCOPE.pathname+'-';
 const CACHE=PREFIX+VERSION;
-const FILES=['./','./index.html','./style.css','./readable.css','./comfort.js','./app.js','./i18n.js','./help.js','./core.js','./backup.js','./birthdays.js','./domain.js','./device.js','./family-store.js','./state.js','./ui.js','./views.js','./workbench.js','./documents.js','./document-ui.js','./features-i18n.js','./vendor/pdf-lib.min.js','./fonts/NotoSans.ttf','./fonts/NotoSansArabic.ttf','./hijri-data.js','./vendor/pako.min.js','./vendor/qr.js','./icon.svg','./icon-192.png','./icon-512.png','./manifest.webmanifest'];
+const FILES=['./','./index.html','./style.css','./readable.css','./comfort.js','./icons.js','./app.js','./i18n.js','./help.js','./core.js','./backup.js','./birthdays.js','./domain.js','./device.js','./family-store.js','./state.js','./ui.js','./views.js','./workbench.js','./documents.js','./document-ui.js','./features-i18n.js','./vendor/pdf-lib.min.js','./fonts/NotoSans.ttf','./fonts/NotoSansArabic.ttf','./hijri-data.js','./vendor/pako.min.js','./vendor/qr.js','./icon.svg','./icon-192.png','./icon-512.png','./manifest.webmanifest'];
 self.addEventListener('install',event=>event.waitUntil((async()=>{
  const cache=await caches.open(CACHE);
  // Reload from the network for a complete release, rather than copying stale HTTP-cache entries.

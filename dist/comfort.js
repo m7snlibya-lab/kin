@@ -1,5 +1,6 @@
 import {$,button} from './ui.js';
 import {t,months,number} from './i18n.js';
+import {icon,labelControl} from './icons.js';
 
 // Keep everyday information visible; organize advanced controls without removing them.
 export function createComfort(state,{device,render}){
@@ -52,6 +53,22 @@ export function createComfort(state,{device,render}){
  $('#text-size-button').onclick=()=>{prefs.largeText=!prefs.largeText;device.save();refresh()};
  $('#close-modal').innerHTML=`<span aria-hidden="true">×</span> <span data-i18n="Close">${t('Close')}</span>`;
 
+ for(const [selector,name,key] of [
+  ['#add-button','plus','Add person'],['#share-button','share','Share family'],
+  ['#tools-button','compare'],['#exports-button','printer'],['#import-button','import'],
+  ['#people-tab','people'],['#birthdays-tab','calendar'],['#timeline-tab','timeline'],['#about-button','help']
+ ])labelControl($(selector),name,key);
+ $('.search-field').insertAdjacentHTML('afterbegin',icon('search'));
+ const summary=$('#family-options > summary');summary.classList.add('has-icon');
+ summary.insertAdjacentHTML('afterbegin',icon('filter'));summary.insertAdjacentHTML('beforeend',icon('chevron'));
+ let observedTable=null;
+ const tableObserver=new ResizeObserver(updateScrollHint);
+ function updateScrollHint(){
+  const table=$('.table-scroll'),hint=$('#table-scroll-hint');if(!hint||!table)return;
+  const scrollable=table.scrollWidth>table.clientWidth+1;hint.hidden=!scrollable;table.tabIndex=scrollable?0:-1;
+  if(scrollable)table.setAttribute('aria-describedby','table-scroll-hint');else table.removeAttribute('aria-describedby');
+ }
+
  function refresh(){
   document.body.classList.toggle('has-family',state.people.length>0);
   $('.celebration-panel').hidden=state.people.length===0;
@@ -70,6 +87,9 @@ export function createComfort(state,{device,render}){
   $('#family-options').classList.toggle('has-filters',!!active.length);
   $('#manage-groups').textContent=t('Manage groups');
   $('#layout-control').hidden=state.view!=='people';
+  const table=$('.table-scroll');
+  if(table!==observedTable){tableObserver.disconnect();observedTable=table;if(table)tableObserver.observe(table)}
+  updateScrollHint();
  }
  return {refresh};
 }

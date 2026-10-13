@@ -1,4 +1,8 @@
 export const featureMessages={
+ "Add person":"إضافة فرد",
+ "Share family":"مشاركة العائلة",
+ "Family table":"جدول العائلة",
+ "Scroll sideways to see the full table. Names stay on one line.":"مرّر أفقيًا لرؤية الجدول كاملًا. تُعرض الأسماء في سطر واحد.",
  "Next from this date":"القادم من هذا التاريخ",
  "Try clearing the family filters.":"جرّب إلغاء تصفية العائلة.",
  "Next in your circle":"القادم في عائلتك",

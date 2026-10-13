@@ -96,6 +96,45 @@ test('birthday shortcut reveals the event even after restrictive agenda settings
  await expect(page.locator('#see-birthdays')).toBeVisible();
 });
 
+test('long names stay intact in a keyboard-accessible, contained table',async({page})=>{
+ const names=['AlexandertheGreat'.repeat(5).slice(0,80),'عبد الرحمن محمد الحسن'];
+ for(let i=0;i<records.length;i++){
+  await page.locator('[data-edit="'+records[i].id+'"]').click();
+  await page.locator('#person-name').fill(names[i]);await page.locator('#save-person').click();
+  await expect(page.locator('#modal')).toBeHidden();
+ }
+ const url=page.url();await page.locator('#people-layout').selectOption('table');
+ await page.setViewportSize({width:320,height:850});
+ for(const lang of ['en','ar']){
+  if(lang==='ar')await page.locator('#language-button').click();
+  await expect(page.locator('#table-scroll-hint')).toBeVisible();
+  for(const name of names){
+   const cell=page.locator('.table-name').filter({hasText:name});await expect(cell).toHaveText(name);
+   const size=await cell.evaluate(el=>{const r=document.createRange();r.selectNodeContents(el);return {height:r.getBoundingClientRect().height,line:parseFloat(getComputedStyle(el).lineHeight)}});
+   expect(size.height).toBeLessThanOrEqual(size.line+1);
+  }
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+  await page.locator('.table-scroll').focus();await expect(page.locator('.table-scroll')).toBeFocused();
+ }
+ expect(page.url()).toBe(url);
+});
+
+test('labeled calendar icons survive language changes and view switching',async({page})=>{
+ await expect(page.locator('.calendar-label .icon-sun')).toHaveCount(2);
+ await expect(page.locator('.calendar-label .icon-moon')).toHaveCount(2);
+ for(const lang of ['en','ar','en']){
+  if(await page.locator('html').getAttribute('lang')!==lang)await page.locator('#language-button').click();
+  await expect(page.locator('#next-event bdi')).toHaveCount(2);
+  for(const selector of ['#add-button','#share-button','#tools-button','#exports-button','#people-tab','#birthdays-tab','#timeline-tab']){
+   await expect(page.locator(selector+' .ui-icon')).toHaveCount(1);
+   await expect(page.locator(selector+' span')).not.toBeEmpty();
+   await expect(page.locator(selector+' .ui-icon')).toHaveAttribute('aria-hidden','true');
+  }
+ }
+ await page.locator('#people-layout').selectOption('table');await expect(page.locator('.family-table thead .icon-sun')).toBeVisible();
+ await page.locator('#people-layout').selectOption('cards');await expect(page.locator('.calendar-label .icon-moon')).toHaveCount(2);
+});
+
 test('visible card text has readable sizes and high text contrast',async({page})=>{
  const results=await page.locator('.person-card').first().evaluate(card=>{
   const rgb=s=>s.match(/[\d.]+/g)?.map(Number)||[];

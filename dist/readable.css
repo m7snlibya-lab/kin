@@ -11,6 +11,17 @@ body { font-size:1rem; line-height:1.6; }
 button,input,select,textarea { font-size:1rem; line-height:1.5; }
 button,select,input:not([type=checkbox]),summary { min-height:48px; }
 button { min-width:48px; }
+.ui-icon { display:inline-block; flex-shrink:0; width:1.2rem; height:1.2rem; pointer-events:none; }
+.has-icon { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; }
+.has-icon>span { min-width:0; }
+.view-tabs button.has-icon { display:inline-flex; align-items:center; gap:.45rem; }
+.search-field { position:relative; }
+.search-field>.ui-icon { position:absolute; inset-inline-start:1rem; top:50%; transform:translateY(-50%); color:var(--muted); }
+.search-field input { padding-inline-start:2.8rem!important; }
+.family-options>summary.has-icon { display:flex; justify-content:flex-start; list-style:none; }
+.family-options>summary::-webkit-details-marker { display:none; }
+.family-options>summary>.icon-chevron { margin-inline-start:auto; }
+.family-options[open]>summary>.icon-chevron { transform:rotate(180deg); }
 .button,.quiet,.language-button,.reading-button,.icon-button {
  font-size:1rem; min-height:48px; min-width:48px; padding:.65rem 1rem; border-radius:10px;
 }
@@ -57,6 +68,7 @@ main { max-width:1264px; padding:2.5rem 2rem 0; }
 }
 .celebration-panel .eyebrow { font-size:.8125rem; text-transform:uppercase; letter-spacing:.08em; color:#65566e; }
 .celebration-panel .next-event { font-size:1.25rem; font-weight:600; line-height:1.5; margin-top:.55rem; color:var(--deep); }
+.celebration-panel .next-event { unicode-bidi:normal; text-align:start; }
 .celebration-panel .muted { font-size:.9375rem; color:#65566e; margin-top:.3rem; overflow-wrap:anywhere; }
 .celebration-link { background:none; border:0; padding:.5rem 0; color:var(--deep); text-decoration:underline; text-underline-offset:4px; font-size:.9375rem; margin-top:.35rem; }
 .workspace { display:block; }
@@ -96,13 +108,14 @@ main { max-width:1264px; padding:2.5rem 2rem 0; }
 .avatar.tone-2 { background:#f3e6d9; color:#7b553c; }
 .avatar.tone-3 { background:#e3e9f1; color:#4f617d; }
 .edit-button { align-self:center; font-size:.9375rem; background:transparent; border:0; color:var(--muted); padding:.65rem .3rem; }
+.edit-button .ui-icon { width:1rem; height:1rem; }
 .edit-button:hover { background:#f2ede7; }
 .age-grid.dual-ages { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0; margin-bottom:1.1rem; }
 .calendar-age { min-width:0; background:transparent; border:0; padding:0 1rem 0 0; }
 .calendar-age+.calendar-age { padding:0 0 0 1.25rem; border-inline-start:1px solid var(--line); }
 .calendar-age .calendar-label { display:flex; align-items:center; gap:.4rem; font-size:1rem; font-weight:500; text-transform:none; letter-spacing:0; color:var(--muted); margin:0 0 .35rem; }
-.calendar-label::before { content:''; width:7px; height:7px; background:#7a6491; border-radius:50%; flex-shrink:0; }
-.age-h .calendar-label::before { background:var(--sage); }
+.calendar-label .icon-sun { color:#80603a; }
+.calendar-label .icon-moon { color:var(--sage); }
 .calendar-age .age-num { font-size:1rem; line-height:1.4; letter-spacing:0; font-weight:400; color:var(--deep); overflow-wrap:anywhere; }
 .calendar-age .age-value { font-size:2.9rem; font-weight:450; line-height:1.2; letter-spacing:-.045em; }
 .calendar-age .age-word { font-size:2rem; }
@@ -123,10 +136,19 @@ main { max-width:1264px; padding:2.5rem 2rem 0; }
 .person-details { padding-top:0; border-top:0; margin-top:.2rem; }
 .person-details summary { display:list-item; cursor:pointer; font-size:.9375rem; color:var(--muted); padding:.65rem 0; }
 .person-details p,.person-details .lived { font-size:1rem; color:var(--muted); }
-.family-table { font-size:1rem; }
+.family-table { font-size:1rem; min-width:68rem; width:max-content; table-layout:auto; }
 .family-table th,.family-table td { padding:1rem; }
+.family-table th { white-space:nowrap; }
+.family-table tbody th { min-width:12rem; max-width:none; overflow-wrap:normal; word-break:normal; }
+.table-name { white-space:nowrap; overflow-wrap:normal; word-break:normal; }
+.family-table td { min-width:10rem; max-width:18rem; overflow-wrap:normal; }
+.family-table td:last-child { min-width:7rem; }
+.family-table .table-date { display:block; white-space:nowrap; }
+.family-table thead .ui-icon { vertical-align:-.2em; margin-inline-end:.4rem; }
 .family-table thead { background:#f0ece5; }
-.table-scroll { border-color:var(--line); background:var(--surface); }
+.table-scroll { border-color:var(--line); background:var(--surface); max-width:100%; overscroll-behavior-inline:contain; }
+.table-scroll:focus-visible { outline:3px solid #6b5088; outline-offset:4px; }
+.table-scroll-hint { font-size:.9375rem; color:var(--muted); margin:0 0 .75rem; }
 .empty { background:var(--surface); border-color:#c9c1ce; min-height:320px; }
 .empty h3 { font-size:1.85rem; }
 .empty p { font-size:1rem; max-width:30rem; }
@@ -230,8 +252,10 @@ html[dir=rtl] .calendar-age .age-value { letter-spacing:0; }
  .has-family .page-heading p { display:none; }
  .toolbar-actions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.4rem; width:100%; }
  .toolbar-actions .button { font-size:.9375rem; padding:.5rem .2rem; white-space:normal; text-align:center; }
+ .toolbar-actions .button.has-icon { flex-direction:column; gap:.2rem; }
  .view-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; }
  .view-tabs button { white-space:normal; padding:.6rem 0; }
+ .view-tabs button.has-icon { flex-direction:column; gap:.2rem; }
  .discovery-bar { grid-template-columns:minmax(0,1fr) 7rem; gap:.6rem; padding-top:1rem; }
  .search-field { grid-column:1/-1; }
  .family-options { grid-column:1; grid-row:2; }
@@ -286,6 +310,7 @@ html[dir=rtl] .calendar-age .age-value { letter-spacing:0; }
  html[data-large-text=true] .celebration-link { max-width:none; }
  html[data-large-text=true] .toolbar-actions { grid-template-columns:1fr; }
  html[data-large-text=true] .toolbar-actions .button { justify-content:flex-start; text-align:start; }
+ html[data-large-text=true] .toolbar-actions .button.has-icon { flex-direction:row; }
  html[data-large-text=true] .discovery-bar { grid-template-columns:1fr; }
  html[data-large-text=true] .discovery-bar>* { grid-column:1; grid-row:auto; min-width:0; }
  html[data-large-text=true] .view-tabs { gap:.5rem; }

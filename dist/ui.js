@@ -1,8 +1,10 @@
 import {t} from './i18n.js';
+import {icon} from './icons.js';
 export const $=s=>document.querySelector(s);
 export const $$=s=>[...document.querySelectorAll(s)];
 export const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-export const button=(id,key,kind='secondary',type='button')=>`<button id="${id}" type="${type}" class="button ${kind}">${t(key)}</button>`;
+const actionIcons={'compare-open':'compare','reference-open':'history','groups-open':'people','print-open':'printer','ics-open':'calendar','card-open':'image','backup-open':'download'};
+export const button=(id,key,kind='secondary',type='button')=>`<button id="${id}" type="${type}" class="button ${kind}${actionIcons[id]?' has-icon':''}">${actionIcons[id]?icon(actionIcons[id]):''}<span>${t(key)}</span></button>`;
 export function createDialogs(state){
  let opener=null,activation=null;
  document.addEventListener('click',event=>{if(!$('#modal').contains(event.target))activation=event.target.closest?.('button,a,select,input,textarea,summary')||null},true);
