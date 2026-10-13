@@ -1,0 +1,20 @@
+{
+  "desktop": {
+    "top": 502,
+    "height": 450,
+    "viewport": 1440,
+    "overflow": false
+  },
+  "mobile": {
+    "top": 580,
+    "height": 486,
+    "viewport": 393,
+    "overflow": false
+  },
+  "arabic": {
+    "top": 654,
+    "height": 510,
+    "viewport": 393,
+    "overflow": false
+  }
+}

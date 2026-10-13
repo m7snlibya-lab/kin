@@ -20,6 +20,14 @@ The browser suite checks person creation/editing/removal/undo, calendar switchin
 
 Run the algorithm checks with `node tests.mjs`. Tests cover 100,406 date conversions against ICU, Hijri/Gregorian leap dates, date-based ages and countdowns, Unicode codec round trips, corruption rejection, size limits, merge conflicts, duplicate detection, and QR generation. Browser installation, offline navigation, and device QR scanning require browser/device verification; these were not tested in this environment.
 
+## Design revision (1.2.0)
+
+The 1.2 design restores an editorial hierarchy with warm ivory surfaces, plum and sage calendar accents, quieter borders and compact dual-calendar age cards. Add and Share are the main actions; comparison, print/export and import remain in the workspace toolbar. A visible next-birthday summary opens an unfiltered-by-milestone, full-year, both-calendar agenda. Family filters still apply.
+
+Both calendar ages and dates remain visible, while large touch targets, remembered larger text, clear keyboard focus, Arabic layouts and saved-data protection remain intact. No payload format, dependencies or tracking were added.
+
+Read the [UI/UX review](design-review/README.md), or open [the visual report](design-review/report.html) locally for the interactive three-version comparison. Screenshots use synthetic data. The report distinguishes measured layout changes from recommendations requiring participant testing.
+
 ## User behavior
 
 - Add and edit a name and birth date using either calendar. Switching calendars converts a complete valid date.

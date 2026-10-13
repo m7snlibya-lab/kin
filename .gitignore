@@ -5,3 +5,5 @@ __pycache__/
 node_modules/
 playwright-report/
 test-results/
+design-review/report-preview.png
+design-review/report-mobile-preview.png

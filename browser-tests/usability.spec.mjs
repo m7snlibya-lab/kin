@@ -73,6 +73,28 @@ test('small screens and doubled text reflow in English and Arabic',async({page},
  expect(await page.locator('#modal').evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
 });
 
+test('birthday shortcut reveals the event even after restrictive agenda settings',async({page})=>{
+ const url=page.url();
+ await page.locator('#birthdays-tab').click();
+ await page.locator('#birthday-calendar').selectOption('h');
+ await page.locator('#birthday-range').selectOption('30');
+ await page.locator('#milestones-button').click();
+ await page.locator('.milestone-options input').last().check();
+ await page.locator('#apply-milestones').click();
+ await page.locator('#people-tab').click();
+ await page.locator('#see-birthdays').click();
+ await expect(page.locator('#birthdays-tab')).toBeFocused();
+ await expect(page.locator('#birthday-calendar')).toHaveValue('both');
+ await expect(page.locator('#birthday-range')).toHaveValue('365');
+ await expect(page.locator('.agenda-event').first()).toBeVisible();
+ expect(page.url()).toBe(url);
+ await page.locator('#family-search').fill('nobody-by-this-name');
+ await expect(page.locator('#next-event')).toHaveText('No birthdays in this view');
+ await expect(page.locator('#see-birthdays')).toBeHidden();
+ await page.locator('#clear-filters').click();
+ await expect(page.locator('#see-birthdays')).toBeVisible();
+});
+
 test('visible card text has readable sizes and high text contrast',async({page})=>{
  const results=await page.locator('.person-card').first().evaluate(card=>{
   const rgb=s=>s.match(/[\d.]+/g)?.map(Number)||[];

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kin — A more thoughtful family space</title>
+<style>
+:root{font-family:ui-sans-serif,system-ui,sans-serif;color:#302b3a;background:#faf8f4;line-height:1.7;font-synthesis:none}
+*{box-sizing:border-box}body{margin:0}a{color:#61477b;text-underline-offset:4px}button,select{font:inherit}a:focus-visible,select:focus-visible{outline:3px solid #77568b;outline-offset:5px}header,main,footer{max-width:1180px;margin:auto;padding:0 40px}header{padding-top:36px;display:flex;justify-content:space-between;gap:20px;border-bottom:1px solid #ddd5d0;padding-bottom:22px}.logo{font:bold 32px Georgia,serif}.meta{font-size:13px;color:#665d6a;align-self:center}.hero{padding:64px 0 44px;display:grid;grid-template-columns:1.4fr 1fr;gap:60px;align-items:end}.kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:650;color:#6a5976}h1{font:normal clamp(40px,5vw,68px)/1.05 Georgia,serif;letter-spacing:-.04em;margin:18px 0 26px}h2{font:normal 34px/1.2 Georgia,serif;letter-spacing:-.025em;margin:0 0 20px}h3{font-size:17px;line-height:1.4;margin:0 0 12px}p{margin:0 0 18px}.lede{font-size:19px;line-height:1.65;color:#625969}.verdict{padding:30px;background:#eee7f2;border-radius:2px 24px 24px 24px;font-size:18px}.verdict strong{display:block;margin:12px 0}.section{padding:44px 0;border-top:1px solid #ddd5d0}.section-head{display:flex;justify-content:space-between;align-items:end;gap:24px;margin-bottom:24px}.section-head h2{margin:0}.small,figcaption{font-size:13px;color:#655e6b}.compare-controls label{font-size:13px;display:block;margin-bottom:5px}.compare-controls select{background:#fff;border:1px solid #c6bdcc;padding:10px;border-radius:7px;min-height:48px;max-width:100%}.screen{max-height:760px;overflow:auto;border:1px solid #ded7d1;border-radius:16px;background:#fff;box-shadow:0 8px 28px #40365009}.screen img{display:block;width:100%;height:auto}figure{margin:0}figcaption{margin-top:12px}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:32px}.metric{padding:22px 0;border-top:2px solid #a997b7}.metric strong{display:block;font:normal 42px Georgia,serif;color:#554061}.metric p{font-size:14px;margin:8px 0}.finding-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}.finding-num{display:block;color:#71617e;font-size:13px;letter-spacing:.1em;margin-bottom:16px}.finding-grid p{font-size:15px;color:#625a68}.phone-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:30px}.phone{border:7px solid #dfd9d3;border-radius:26px;overflow:auto;max-height:660px;background:#fff}.phone img{width:100%;height:auto;display:block}.palette{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.swatch{border:1px solid #ddd5d0;border-radius:12px;overflow:hidden}.swatch-color{height:65px}.swatch p{padding:12px;margin:0;font-size:14px}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:40px}.two-col p,.two-col li{font-size:15px;color:#625a68}ul,ol{padding-inline-start:22px}li{margin-bottom:10px}.evidence{width:100%;border-collapse:collapse;font-size:15px}.evidence th,.evidence td{text-align:left;border-bottom:1px solid #ddd5d0;padding:14px 12px}.evidence th{font-size:13px;color:#6b5b76}.table-wrap{overflow:auto}.callout{border-inline-start:3px solid #386758;padding:12px 22px;background:#eff2eb}.status{display:inline-block;font-size:13px;color:#35614f;background:#e7eee3;padding:5px 11px;border-radius:20px;margin-bottom:14px}footer{padding-top:28px;padding-bottom:40px;display:flex;justify-content:space-between;gap:20px;font-size:13px;color:#665c6b}details{border-top:1px solid #ddd5d0;padding:12px 0}summary{min-height:48px;cursor:pointer;font-weight:600;display:list-item;padding:10px 0}code{font-size:.9em}
+@media(max-width:760px){header,main,footer{padding-left:20px;padding-right:20px}.hero,.two-col{grid-template-columns:1fr;gap:20px}.hero{padding:40px 0}.section-head{display:block}.compare-controls{margin-top:18px}.finding-grid,.metrics{grid-template-columns:1fr;gap:16px}.phone-grid{grid-template-columns:1fr;max-width:360px;margin:auto}.palette{grid-template-columns:1fr 1fr}h2{font-size:29px}.metric{padding:16px 0}.section{padding:30px 0}.meta{max-width:160px;text-align:right}.phone{max-height:650px}.screen{max-height:650px}footer{display:block}}
+@media print{header,main,footer{max-width:none;padding-left:0;padding-right:0}.hero{padding:24px 0}h1{font-size:44px}.section{break-inside:avoid;padding:24px 0}.screen{max-height:650px;overflow:hidden;box-shadow:none}.phone{max-height:480px;overflow:hidden}.compare-controls{display:none}.finding-grid,.metrics{gap:16px}a{color:inherit}.small{font-size:11px}body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+</style>
+</head>
+<body>
+<header><span class="logo">kin.</span><span class="meta">Design review & implemented redesign<br>13 October 2026 · Release 1.2</span></header>
+<main>
+<section class="hero">
+<div><div class="kicker">Family, through time</div><h1>A more thoughtful<br>family space.</h1><p class="lede">Restore the warmth. Keep the clarity.<br>Make the people the most important thing on the page.</p></div>
+<div class="verdict"><span class="kicker">The design verdict</span><strong>The earlier design had better visual rhythm.</strong><p>The latest version solved legibility, but too many equally prominent controls and nested boxes made it feel like a form. The right move is to recover the earlier hierarchy while preserving the accessibility improvements.</p></div>
+</section>
+<section class="section">
+<div class="section-head"><div><span class="kicker">01 / See the difference</span><h2>Same family. A calmer experience.</h2></div><div class="compare-controls"><label for="version">Choose a version to compare</label><select id="version"><option value="after">Redesigned · 1.2</option><option value="before">Previous · 1.1</option><option value="original">Earlier · 0.8</option></select></div></div>
+<figure><div class="screen" tabindex="0" aria-label="Full desktop screenshot, scroll to inspect"><img id="comparison" src="assets/after-desktop.png" alt="Kin 1.2 desktop: warm ivory page, prominent dual-calendar ages and a visible next-birthday panel"></div><figcaption id="comparison-caption">Redesigned 1.2 · 1440 px desktop · scroll within the image to inspect the full screen.</figcaption></figure>
+<div class="metrics">
+<div class="metric"><strong>26% shorter</strong><p>First desktop person card: 604 → 450 px. Both ages, birth dates and next birthdays remain visible.</p></div>
+<div class="metric"><strong>5 → 2</strong><p>Actions in the hero. Add and Share stay prominent; occasional tools move to the workspace toolbar.</p></div>
+<div class="metric"><strong>109 px earlier</strong><p>First person on the English phone screen: 689 → 580 px from the top. Arabic improves from 726 → 654 px.</p></div>
+</div>
+<p class="small">Layout measurements are for the same four synthetic people, first listed person Omar Hassan, 13 October 2026, standard text, Chromium, 1440×1100 desktop and 393×851 phone. They measure geometry, not user task speed. Figures are rounded; 26% is the rounded desktop height reduction. Historical screenshots use commits 65d1852 (0.8) and b2c5a4e (1.1).</p>
+</section>
+<section class="section">
+<span class="kicker">02 / The diagnosis</span><h2>Readable had become visually heavy.</h2>
+<div class="finding-grid">
+<article><span class="finding-num">01 — HIERARCHY</span><h3>Everything asked for attention.</h3><p>The hero held Add, Import, Share, Ages & dates, and Export. The page then repeated a section heading, layout picker, navigation, search and filtering before showing a person.</p><p><strong>Implemented:</strong> Two hero actions, a compact utility toolbar, a clearer active tab, and search, view and filter controls grouped together.</p></article>
+<article><span class="finding-num">02 — DENSITY</span><h3>The cards became long forms.</h3><p>Two filled boxes inside every card, bold age phrases, separate lines for months and days, and repeated borders created bulk. The earlier cards were compact but their secondary text was too small.</p><p><strong>Implemented:</strong> Open columns divided by one rule; large numerals, quieter units; inline month/day detail; 15–16 px supporting card text.</p></article>
+<article><span class="finding-num">03 — PERSONALITY</span><h3>The family feeling receded.</h3><p>Uniform purple avatars and cool boxes flattened the page. Hiding the next birthday below the entire family removed a useful reason to return.</p><p><strong>Implemented:</strong> Warm paper, varied initials, plum Gregorian and sage Hijri numerals, and an actionable next-birthday summary.</p></article>
+</div>
+</section>
+<section class="section">
+<span class="kicker">03 / Small screens and Arabic</span><h2>One experience, with room to read.</h2>
+<p class="lede">The phone layout has labeled controls, no floating button over the family, and no essential information that depends on hovering.</p>
+<div class="phone-grid">
+<figure><div class="phone" tabindex="0" aria-label="English phone screenshot, scroll to inspect"><img src="assets/after-mobile.png" alt="English phone view with two visible calendar ages"></div><figcaption>English · 393 px. Ages remain side by side at standard text size.</figcaption></figure>
+<figure><div class="phone" tabindex="0" aria-label="Arabic phone screenshot, scroll to inspect"><img src="assets/after-arabic.png" alt="Arabic right-to-left phone view with Gregorian and Hijri ages"></div><figcaption>Arabic · mirrored spacing, Arabic dates and grammatical age labels.</figcaption></figure>
+<figure><div class="phone" tabindex="0" aria-label="Arabic add-person dialog screenshot"><img src="assets/after-form.png" alt="Arabic add-person form with visible focus, calendar choice and large controls"></div><figcaption>Clear form focus, visible Close, and persistent date-entry guidance.</figcaption></figure>
+</div>
+<p class="small">These review screenshots intentionally disable the service worker to make historical comparisons reproducible; the “Offline setup unavailable” footer in the captures is a capture condition. Real offline behavior is tested separately with the worker enabled.</p>
+</section>
+<section class="section">
+<span class="kicker">04 / A coherent visual system</span><h2>Warmth without decoration for its own sake.</h2>
+<div class="palette">
+<div class="swatch"><div class="swatch-color" style="background:#faf8f4"></div><p>Warm paper<br>#FAF8F4</p></div>
+<div class="swatch"><div class="swatch-color" style="background:#403650"></div><p>Plum · actions & Gregorian<br>#403650</p></div>
+<div class="swatch"><div class="swatch-color" style="background:#386758"></div><p>Sage · Hijri<br>#386758</p></div>
+<div class="swatch"><div class="swatch-color" style="background:#efeaf3"></div><p>Lavender · coming up<br>#EFEAF3</p></div>
+</div>
+<div class="two-col" style="margin-top:30px">
+<div><h3>Type and spacing</h3><p>A serif headline provides character. Familiar system fonts handle tasks and numbers without new font downloads. Card names lead; age numerals dominate; secondary dates remain readable. The existing Larger text control is remembered, and narrow screens stack the calendars in that mode.</p></div>
+<div><h3>Interaction and trust</h3><p>Both calendars stay explicitly labeled: color is supplementary. The birthday shortcut clears restrictive agenda settings so the announced event can be found. Empty-filter feedback no longer asks an existing family to add its first person. Import remains available on an empty installation.</p></div>
+</div>
+</section>
+<section class="section">
+<span class="kicker">05 / Verification</span><h2>Beauty needs working foundations.</h2>
+<div class="status">Release checks complete</div>
+<div class="table-wrap"><table class="evidence"><thead><tr><th>Area</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Cross-browser behavior</td><td>118 local browser checks across desktop/mobile Chromium, Firefox, WebKit and development mode.</td></tr>
+<tr><td>Legibility & input</td><td>Sampled visible card text ≥15 px and ≥4.5:1 contrast; key controls ≥48×48 CSS px; dialog entry and return focus.</td></tr>
+<tr><td>Responsive layouts</td><td>English and Arabic at 320 px with Larger text; additional 200% text reflow check at 640 px. Desktop and phone visual inspection.</td></tr>
+<tr><td>Existing capabilities</td><td>Dual-calendar calculations, edits/undo, search, sharing/QR, restore, comparisons, timeline, PDF/PNG exports, and offline generation.</td></tr>
+<tr><td>Data integrity</td><td>100,406 date round trips; existing family payload unchanged. Cross-tab save protection and storage-failure recovery retained.</td></tr>
+</tbody></table></div>
+<p class="small" style="margin-top:18px">This is a specialist review, screenshot inspection and targeted automated verification—not an independent WCAG conformance audit or a study with children and older adults. Browser engines are not a substitute for physical-device testing. Native share sheets, physical printing and external calendar imports remain outside this review.</p>
+<p class="small">Accessibility references: <a href="https://www.w3.org/WAI/WCAG22/Understanding/target-size-enhanced.html">W3C enhanced target size</a> (44×44 CSS px guidance; key controls here use 48×48), <a href="https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html">minimum text contrast</a>, and <a href="https://www.w3.org/WAI/WCAG22/Understanding/reflow.html">reflow</a>. These informed the checks; they are not a conformance claim.</p>
+</section>
+<section class="section">
+<span class="kicker">06 / What I would do next</span><h2>Validate the human side before adding more.</h2>
+<div class="two-col">
+<div><h3>First: observe real use</h3><ol><li><strong>Test with younger and older family members.</strong> Ask them to add a person, read both ages, identify the next birthday, and export a calendar. Observe mistakes and hesitation before explaining.</li><li><strong>Check the sharing mental model.</strong> Ask whether an old family link changes when someone edits a date. If people expect synchronization, improve the sharing explanation before adding features.</li><li><strong>Validate on actual phones.</strong> Include iPhone/Android, Arabic system language, large system text, screen readers, and a real printed calendar.</li></ol></div>
+<div><h3>Then: targeted improvements</h3><p>For large families, consider a denser card option only if scrolling proves costly. A relationship view could be valuable, but first define how relationships are entered and maintained. For low-vision users, prioritize screen-reader and magnification findings over another visual theme.</p><div class="callout"><strong>My recommendation</strong><p style="margin:.5rem 0 0">Keep this direction: a quiet, personal family space. Do not grow the main screen into a dashboard of every available feature. New tools should earn their place through observed need.</p></div></div>
+</div>
+</section>
+<details><summary>Review method and reproducibility</summary><p class="small">The review compares rendered releases using identical synthetic data and a fixed date. Run <code>node scripts/design-review.mjs before b2c5a4e</code>, <code>node scripts/design-review.mjs original 65d1852</code>, and <code>node scripts/design-review.mjs after</code> while the release preview is running. Captures and raw geometry measurements are in <code>design-review/assets</code>. Run <code>npm run test:all</code> for release verification. No personal family data was used in this report.</p></details>
+</main>
+<footer><span>Kin · UI/UX review · 1.2</span><a href="https://m7snlibya-lab.github.io/kin/">Open the live app ↗</a></footer>
+<script>
+const names={after:'Redesigned 1.2',before:'Previous 1.1',original:'Earlier 0.8'};
+document.querySelector('#version').addEventListener('change',e=>{
+ const key=e.target.value,img=document.querySelector('#comparison');
+ img.src='assets/'+key+'-desktop.png';img.alt=names[key]+' desktop screenshot using the same synthetic family';
+ document.querySelector('#comparison-caption').textContent=names[key]+' · 1440 px desktop · scroll within the image to inspect the full screen.';
+ document.querySelector('.screen').scrollTop=0;
+});
+</script>
+</body></html>
