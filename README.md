@@ -12,7 +12,7 @@ For a production-like local preview, run `npm start` and open `http://127.0.0.1:
 
 ### Verification and GitHub Pages
 
-Run `npm test` for release integrity, calendar, codec, merge, localization, backup, ICS and simulated offline checks. Run `npx playwright install chromium firefox` once, then `npm run test:browser` for Chromium desktop/mobile, Firefox and development-server checks. `npm run test:all` runs both suites. Set `KIN_BASE_URL` to an existing deployment URL (including its trailing slash) to run release browser checks against that deployment instead of the local preview. Browser tests use isolated contexts and synthetic names; they do not modify another browser's family data.
+Run `npm test` for release integrity, calendar, codec, merge, localization, backup, ICS and simulated offline checks. Run `npx playwright install chromium firefox webkit` once, then `npm run test:browser` for Chromium desktop/mobile, Firefox, WebKit and development-server checks. `npm run test:all` runs both suites. Set `KIN_BASE_URL` to an existing deployment URL (including its trailing slash) to run release browser checks against that deployment instead of the local preview. Browser tests use isolated contexts and synthetic names; they do not modify another browser's family data.
 
 The GitHub Actions workflow in `.github/workflows/pages.yml` verifies every pull request and push to `main`. A successful `main` run publishes only `dist/` to GitHub Pages. Select **GitHub Actions** in the repository's **Settings → Pages → Source** when configuring a new copy of this repository. Future pushes publish automatically after verification; failed checks prevent deployment. No custom domain or paid hosting is required.
 
@@ -29,6 +29,27 @@ Run the algorithm checks with `node tests.mjs`. Tests cover 100,406 date convers
 - Sharing selects a subset and generates its URL and QR entirely offline. Large links receive a warning; links above 2,000 characters use copy/share instead of a dense QR.
 - Opening an incoming link with an existing local family requires a merge review, with a view-only alternative. Explicit imports always show a review. Merge is additive; conflicts default to local values. No shared deletion propagation.
 - Up to 150 people per link; Unicode names up to 120 UTF-8 bytes; birth dates from 1900-01-01 through the current local date.
+
+## Family tools and printable exports (1.0.0)
+
+- People supports compact cards and a horizontally scrollable table, primary-calendar selection, birth-month filtering, name search, and device-only groups. Sorting, view, calendar and export layout preferences are remembered where browser storage is available.
+- Tools → Compare people shows each person's age when the other was born, in both calendars, with explicit “not born yet” and same-date behavior. Tools → Family on this date temporarily changes ages, countdowns, sorting and the overview. A persistent banner returns to today; family dates and URLs are never changed.
+- Timeline provides birth history and the selected reference year's birthdays. The agenda offers selectable milestone ages and a birthday-card action for each actual birthday event.
+- Export & print → Printable calendar supports complete Gregorian or Hijri years, either/both birthday types, annual month-by-month overview or month-per-page layouts, A4/A3, both orientations, English/Arabic, ink-friendly output, and optional turning ages.
+- PDF and PNG share a browser-canvas page model with locally bundled Noto fonts. PDF pages use 300-dpi-equivalent images at the physical paper size; text is not selectable or tagged. An accessible text preview remains available in the app. Dense months spill into labeled continuation pages without losing names. PNG exports one page at a time; PDF includes every page.
+- A selected-family QR is optional and off by default. QR links contain full selected names and birth dates even when the printed calendar hides ages; the dialog explains this. Overlarge QR payloads are rejected before export.
+- Birthday cards reuse the renderer, with celebratory/minimal designs, square 1080×1080 or portrait 1080×1350 PNG output, chosen language and optional age. File sharing uses the device share sheet where supported, otherwise download.
+- Groups stay in this installation's device metadata and are deliberately excluded from family links and JSON backups. Membership survives edits by stable person ID. Clearing browser storage loses groups; restored family data does not restore them.
+- Save status distinguishes the device copy, copied link and initiated backup download. Only a successful full-family clipboard copy or full-family backup export satisfies the latest-family reminder. Kin cannot confirm that a downloaded file was kept safely.
+- No accounts, server-side synchronization, background notifications, relationship inference, custom life events, photos or external rendering services were introduced.
+
+### Architecture and verification
+
+The application state is shared by the views; protected family storage, device metadata, dialog/selection controls, date/event services, people views, workspace tools, document layout/rendering and export interaction are separate modules. All saved-family changes still use cross-tab conflict checks and Web Locks; display/export operations never rewrite the portable payload. Existing v1 links and backups remain compatible.
+
+The additional tests cover comparison/reference boundaries, device metadata isolation, preference/group preservation across tabs, 32 dense calendar-layout combinations, PDF page sizes, PNG dimensions, Arabic/RTL, export cancellation/retry, milestone filtering and real offline PDF generation. Bundled fonts and PDF runtime are included in release integrity and service-worker coverage. Native OS sharing, physical printers and imports into Apple/Google/Outlook calendars require device/product-specific checks; browser-engine testing is not a claim to have tested those integrations.
+
+Bundled export assets: [PDF-LIB 1.17.1](https://github.com/Hopding/pdf-lib/releases/tag/v1.17.1), MIT (license under dist/vendor), and Noto Sans / Noto Sans Arabic from [Google Fonts](https://github.com/google/fonts), SIL OFL (licenses under dist/fonts). Exporting uses only these local assets and makes no third-party requests.
 
 ## URL format (v1)
 

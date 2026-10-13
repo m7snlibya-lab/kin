@@ -1,5 +1,6 @@
 import {calendars} from './core.js';
-export const messages={
+import {featureMessages} from './features-i18n.js';
+export const messages={...featureMessages,
 "Skip to content":"انتقل إلى المحتوى",
 "Could not save right now. Try again or copy your current family link.":"تعذّر الحفظ الآن. حاول مرة أخرى أو انسخ رابط عائلتك الحالي.",
 "Export the birthdays shown. Gregorian birthdays can repeat yearly; Hijri birthdays are dated events. Calendar imports do not sync with Kin.":"صدّر أعياد الميلاد المعروضة. يمكن تكرار الميلادي سنويًا؛ والهجري أحداث بتواريخ محددة. لا تتزامن أحداث التقويم مع كِن.",
@@ -71,16 +72,16 @@ let lang=(typeof navigator!=='undefined'&&(navigator.language||'').toLowerCase()
 try{const saved=localStorage.getItem('kin.language');if(['ar','en'].includes(saved))lang=saved}catch{}
 export const language=()=>lang;
 export function setLanguage(value){lang=value==='ar'?'ar':'en';try{localStorage.setItem('kin.language',lang)}catch{}}
-export function t(key,values={}){return (lang==='ar'?(messages[key]??key):key).replace(/\{(\w+)\}/g,(_,key)=>String(values[key]??''))}
+export function t(key,values={},locale=lang){return (locale==='ar'?(messages[key]??key):key).replace(/\{(\w+)\}/g,(_,key)=>String(values[key]??''))}
 const numberFormats={en:new Intl.NumberFormat('en'),ar:new Intl.NumberFormat('ar-u-nu-arab')};
 const arabicPlurals=new Intl.PluralRules('ar');
 const weekdayFormats={en:new Intl.DateTimeFormat('en',{weekday:'long',timeZone:'UTC'}),ar:new Intl.DateTimeFormat('ar',{weekday:'long',timeZone:'UTC'})};
-export const number=n=>numberFormats[lang].format(n);
-export function quantity(n,unit){if(lang==='en')return `${number(n)} ${unit}${n===1?'':'s'}`;const forms={day:['يوم','يوم واحد','يومان','أيام','يومًا','يوم'],month:['شهر','شهر واحد','شهران','أشهر','شهرًا','شهر'],year:['سنة','سنة واحدة','سنتان','سنوات','سنة','سنة']}[unit];const category=arabicPlurals.select(n),index={zero:0,one:1,two:2,few:3,many:4,other:5}[category];return index===1||index===2?forms[index]:`${number(n)} ${forms[index]}`}
+export const number=(n,locale=lang)=>numberFormats[locale].format(n);
+export function quantity(n,unit,locale=lang){if(locale==='en')return `${number(n,locale)} ${unit}${n===1?'':'s'}`;const forms={day:['يوم','يوم واحد','يومان','أيام','يومًا','يوم'],month:['شهر','شهر واحد','شهران','أشهر','شهرًا','شهر'],year:['سنة','سنة واحدة','سنتان','سنوات','سنة','سنة']}[unit];const category=arabicPlurals.select(n),index={zero:0,one:1,two:2,few:3,many:4,other:5}[category];return index===1||index===2?forms[index]:`${number(n,locale)} ${forms[index]}`}
 const arabicMonths={g:['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'],h:['محرّم','صفر','ربيع الأول','ربيع الآخر','جمادى الأولى','جمادى الآخرة','رجب','شعبان','رمضان','شوّال','ذو القعدة','ذو الحجة']};
-export const months=c=>lang==='ar'?arabicMonths[c]:calendars[c].months;
-export const calendarName=c=>t(c==='g'?'Gregorian':'Hijri');
-export function date(n,c='g',short=false){const [y,m,d]=calendars[c].parts(n);return `${number(d)} ${months(c)[m-1]}${short?'':' '+number(y).replace(/[٬,]/g,'')+(c==='h'?(lang==='ar'?' هـ':' AH'):'')}`}
+export const months=(c,locale=lang)=>locale==='ar'?arabicMonths[c]:calendars[c].months;
+export const calendarName=(c,locale=lang)=>t(c==='g'?'Gregorian':'Hijri',{},locale);
+export function date(n,c='g',short=false,locale=lang){const [y,m,d]=calendars[c].parts(n);return `${number(d,locale)} ${months(c,locale)[m-1]}${short?'':' '+number(y,locale).replace(/[٬,]/g,'')+(c==='h'?(locale==='ar'?' هـ':' AH'):'')}`}
 export const weekday=n=>weekdayFormats[lang].format(new Date(n*86400000));
 export const parseDigits=s=>{const normalized=String(s).trim().replace(/[٠-٩]/g,x=>String(x.charCodeAt(0)-1632)).replace(/[۰-۹]/g,x=>String(x.charCodeAt(0)-1776));return /^\d+$/.test(normalized)?Number(normalized):NaN};
 export function errorText(e){return messages[e.message]?t(e.message):t('This link could not be read. Check that you copied the entire link.')}

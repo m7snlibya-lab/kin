@@ -8,7 +8,7 @@ const root = fileURLToPath(new URL('../dist/', import.meta.url));
 const port = Number(process.env.PORT || 4173);
 const types = {'.html':'text/html; charset=utf-8', '.js':'text/javascript; charset=utf-8',
   '.css':'text/css; charset=utf-8', '.json':'application/json',
-  '.webmanifest':'application/manifest+json', '.svg':'image/svg+xml', '.png':'image/png', '.txt':'text/plain'};
+  '.webmanifest':'application/manifest+json', '.svg':'image/svg+xml', '.png':'image/png', '.txt':'text/plain', '.ttf':'font/ttf'};
 
 createServer(async (request, response) => {
   if (!['GET', 'HEAD'].includes(request.method)) {

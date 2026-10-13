@@ -13,7 +13,7 @@ async function check(path){
   const full=resolve(path,entry.name);
   if(entry.isDirectory()){await check(full);continue}
   const asset=relative(root,full).split(sep).join('/');
-  if(/\.(?:html|css|js|png|svg|webmanifest)$/.test(asset)&&asset!=='sw.js')assert.ok(cached.has(asset),`Offline asset missing: ${asset}`);
+  if(/\.(?:html|css|js|png|svg|webmanifest|ttf|woff2)$/.test(asset)&&asset!=='sw.js')assert.ok(cached.has(asset),`Offline asset missing: ${asset}`);
   if(asset.endsWith('.js')){
    const code=await read(asset);
    for(const match of code.matchAll(/(?:import|export)\s+(?:[^'"\n]*?\sfrom\s*)?['"](\.\.?\/[^'"]+)['"]/g)){

@@ -1,14 +1,10 @@
 import {calendars,today,validate,MAX,MIN} from './core.js';
+import {eventsBetween} from './domain.js';
 // Include today and the next days-1 dates. Enumerate calendar years rather than
 // adding 365 days: two Hijri birthdays can occur within one Gregorian year.
 export function listBirthdays(records,{from=today(),days=90,calendar='both'}={}){
- validate(records);if(!Number.isInteger(from)||from<MIN||from>MAX||!Number.isInteger(days)||days<1||days>366||!['both','g','h'].includes(calendar))throw Error('Invalid birthday range.');
- const end=Math.min(from+days-1,MAX),events=[];
- for(const person of records)for(const c of calendar==='both'?['g','h']:[calendar]){
-  const cal=calendars[c],[birthYear,month,day]=cal.parts(person.day),[startYear]=cal.parts(from),[endYear]=cal.parts(end);
-  for(let year=startYear;year<=endYear;year++){const eventDay=cal.toDay(year,month,Math.min(day,cal.days(year,month)));if(eventDay>=from&&eventDay<=end&&eventDay>=person.day)events.push({person,calendar:c,day:eventDay,inDays:eventDay-from,turns:year-birthYear})}
- }
- return events.sort((a,b)=>a.day-b.day||a.person.name.localeCompare(b.person.name,'en')||a.calendar.localeCompare(b.calendar));
+ if(!Number.isInteger(days)||days<1||days>366)throw Error('Invalid birthday range.');
+ return eventsBetween(records,from,Math.min(from+days-1,MAX),calendar);
 }
 const text=value=>String(value).replace(/\\/g,'\\\\').replace(/\r\n|\r|\n/g,'\\n').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,'');
 const dateCode=day=>new Date(day*86400000).toISOString().slice(0,10).replaceAll('-','');

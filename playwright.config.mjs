@@ -2,7 +2,7 @@ import {defineConfig, devices} from '@playwright/test';
 
 export default defineConfig({
   testDir:'./browser-tests',
-  testMatch:'**/app.spec.mjs',
+  testMatch:'**/{app,features}.spec.mjs',
   fullyParallel:true,
   forbidOnly:!!process.env.CI,
   retries:process.env.CI ? 1 : 0,
@@ -14,6 +14,7 @@ export default defineConfig({
     {name:'desktop', use:{...devices['Desktop Chrome']}},
     {name:'mobile', use:{...devices['Pixel 7']}},
     {name:'firefox', use:{...devices['Desktop Firefox']}},
+    {name:'webkit', use:{...devices['Desktop Safari']}},
     ...(!process.env.KIN_BASE_URL?[{name:'development',testMatch:'**/development.spec.mjs',use:{...devices['Desktop Chrome'],baseURL:'http://127.0.0.1:5175/'}}]:[])
   ],
   webServer:process.env.KIN_BASE_URL ? undefined : [{name:'release',
