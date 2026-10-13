@@ -38,6 +38,47 @@ test('advanced filters are optional and active filters have a clear reset',async
  await expect(page.locator('#family-search')).toBeFocused();await expect(page.locator('#filter-status')).toBeHidden();
 });
 
+test('sorting and result counts are visible without opening filters',async({page})=>{
+ const original=page.url();
+ await expect(page.locator('#sort')).toBeVisible();await expect(page.locator('#results-summary')).toHaveText('Showing 2 of 2 people');
+ await page.locator('#sort').selectOption('name');await expect(page.locator('.person-card h3').first()).toHaveText('Amina أحمد');
+ await page.locator('#family-search').fill('Omar');await expect(page.locator('#results-summary')).toHaveText('Showing 1 of 2 people');
+ await page.locator('#people-layout').selectOption('table');await page.locator('#clear-filters').click();
+ await page.reload();await expect(page.locator('#people-layout')).toHaveValue('table');await expect(page.locator('#sort')).toHaveValue('name');
+ expect(page.url()).toBe(original);
+});
+
+test('individual filter chips preserve other filters and keyboard focus',async({page})=>{
+ const original=page.url();await page.locator('#family-search').fill('Amina');
+ await page.locator('#family-options>summary').click();await page.locator('#month-filter').selectOption('9');
+ await page.locator('#family-options>summary').click();
+ await expect(page.locator('#results-summary')).toHaveText('Showing 0 of 2 people');
+ await page.locator('[data-remove-filter="month"]').focus();await page.keyboard.press('Enter');
+ await expect(page.locator('.person-card')).toHaveCount(1);await expect(page.locator('#family-search')).toHaveValue('Amina');
+ await expect(page.locator('[data-remove-filter="search"]')).toBeFocused();
+ await page.keyboard.press('Enter');await expect(page.locator('.person-card')).toHaveCount(2);await expect(page.locator('#family-search')).toBeFocused();
+ await expect(page.locator('#filter-status')).toBeHidden();expect(page.url()).toBe(original);
+});
+
+test('empty list recovery clears month filters as well as search',async({page})=>{
+ await page.locator('#family-options>summary').click();await page.locator('#month-filter').selectOption('1');
+ await page.locator('#family-search').fill('Omar');
+ await expect(page.locator('.search-empty')).toBeVisible();await page.locator('#clear-search').click();
+ await expect(page.locator('.person-card')).toHaveCount(2);await expect(page.locator('#month-filter')).toHaveValue('');
+ await expect(page.locator('#family-search')).toHaveValue('');await expect(page.locator('#family-search')).toBeFocused();
+});
+
+test('mobile views come before tools and tool explanations are clickable',async({page})=>{
+ await page.setViewportSize({width:393,height:851});
+ for(const lang of ['en','ar']){
+  if(lang==='ar')await page.locator('#language-button').click();
+  const tabs=await page.locator('.view-tabs').boundingBox(),tools=await page.locator('.section-toolbar').boundingBox();expect(tabs.y+tabs.height).toBeLessThanOrEqual(tools.y+1);
+  expect(await page.locator('.view-tabs').evaluate(el=>!!(el.compareDocumentPosition(document.querySelector('.section-toolbar'))&Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
+  await page.locator('#tools-button').click();await page.locator('#compare-open .tool-copy>span').click();
+  await expect(page.locator('#comparison-result')).toBeVisible();await page.locator('#close-modal').click();
+ }
+});
+
 test('larger text is remembered without changing family links',async({page})=>{
  const url=page.url();await page.locator('#text-size-button').click();await expect(page.locator('#text-size-button')).toHaveAttribute('aria-pressed','true');
  expect(await page.locator('.calendar-label').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(20);
@@ -94,6 +135,20 @@ test('birthday shortcut reveals the event even after restrictive agenda settings
  await expect(page.locator('#see-birthdays')).toBeHidden();
  await page.locator('#clear-filters').click();
  await expect(page.locator('#see-birthdays')).toBeVisible();
+});
+
+test('empty birthday recovery is actionable and calendar export explains an empty selection',async({page})=>{
+ const original=page.url();await page.locator('#family-search').fill('Amina');await page.locator('#birthdays-tab').click();
+ await page.locator('#birthday-range').selectOption('30');await page.locator('#milestones-button').click();
+ await page.locator('.milestone-options input').last().check();await page.locator('#apply-milestones').click();
+ await expect(page.locator('#milestones-button')).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('#agenda-summary')).toContainText('Milestone ages:');await expect(page.locator('#broaden-birthdays')).toBeVisible();
+ await page.locator('#exports-button').click();await page.locator('#ics-open').click();
+ await expect(page.locator('#toast-text')).toHaveText('No birthdays to export. Adjust the birthday range or family filters.');
+ await expect(page.locator('#birthday-range')).toBeFocused();await page.locator('#broaden-birthdays').click();
+ await expect(page.locator('#birthday-range')).toHaveValue('365');await expect(page.locator('#birthday-calendar')).toHaveValue('both');
+ await expect(page.locator('#milestones-button')).toHaveAttribute('aria-pressed','false');await expect(page.locator('#family-search')).toHaveValue('Amina');
+ await expect(page.locator('.agenda-event').first()).toBeVisible();expect(page.url()).toBe(original);
 });
 
 test('long names stay intact in a keyboard-accessible, contained table',async({page})=>{

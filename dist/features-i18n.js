@@ -146,5 +146,16 @@ export const featureMessages={
  "A4": "A4",
  "A3": "A3",
  "This name needs more space. Use the portrait card.": "يحتاج هذا الاسم إلى مساحة أكبر. استخدم البطاقة العمودية.",
+ "Milestones ({count})": "الأعمار المميزة ({count})",
+ "Milestone ages: {ages}": "الأعمار المحددة: {ages}",
+ "Show next year’s birthdays": "عرض أعياد الميلاد خلال سنة",
+ "No birthdays to export. Adjust the birthday range or family filters.": "لا توجد أعياد ميلاد للتصدير. عدّل الفترة أو مرشحات العائلة.",
+ "Showing {shown} of {total} people": "عرض {shown} من {total} فردًا",
+ "Group: {name}": "المجموعة: {name}",
+ "{calendar}: {month}": "{calendar}: {month}",
+ "Remove filter: {filter}": "إزالة المرشح: {filter}",
+ "No people match these filters": "لا يوجد أفراد يطابقون هذه المرشحات",
+ "Remove a filter above or reset to see everyone.": "أزل أحد المرشحات أعلاه أو أعد ضبطها لعرض الجميع.",
+ "Reset filters": "إعادة ضبط المرشحات",
  "Image export failed.": "تعذر تصدير الصورة."
 };

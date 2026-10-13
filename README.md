@@ -20,6 +20,14 @@ The browser suite checks person creation/editing/removal/undo, calendar switchin
 
 Run the algorithm checks with `node tests.mjs`. Tests cover 100,406 date conversions against ICU, Hijri/Gregorian leap dates, date-based ages and countdowns, Unicode codec round trips, corruption rejection, size limits, merge conflicts, duplicate detection, and QR generation. Browser installation, offline navigation, and device QR scanning require browser/device verification; these were not tested in this environment.
 
+## Lower-friction browsing (1.4.0)
+
+Sorting and a matching-person count are visible without opening filters. Each active group, calendar-specific month, or search has its own removable chip; removing one preserves the rest and keyboard focus. Empty-list recovery resets all family filters. Cards/Table and sorting remain remembered device preferences.
+
+On phones, family views precede occasional tools in both visual and reading order. Tool explanations are part of their large clickable buttons. Empty birthday agendas offer a one-step broader range when settings are restrictive; active milestones are labeled. Calendar exports explain an empty selection rather than failing silently, and keyboard focus stays with the birthday controls.
+
+Read [UX decisions and prioritized next ideas](UX-NOTES.md). Existing family links, backups, dual-calendar ages, language startup, official Sun/Moon icons, offline behavior, and export privacy controls remain compatible.
+
 ## Startup language and simpler menus (1.3.2)
 
 A small blocking startup script resolves the saved language and direction before the HTML shell can paint. The localized app reveals after its first render. Delayed module loading shows a short message in the chosen language; failed or very slow loading offers a localized retry. Explicit English/Arabic preferences override the browser language. Offline installation includes the startup script.

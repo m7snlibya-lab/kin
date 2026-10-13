@@ -40,7 +40,7 @@ test('adds, edits, searches and removes a person with undo', async ({page}) => {
   await page.locator('#save-person').click();
   await expect(page.locator('#modal')).not.toBeVisible();
   await page.locator('#family-search').fill('missing');
-  await expect(page.getByText('No matching names', {exact:true})).toBeVisible();
+  await expect(page.getByText('No people match these filters', {exact:true})).toBeVisible();
   await page.locator('#clear-search').click();
   await page.getByRole('button', {name:'Edit Updated Test', exact:true}).click();
   await page.locator('#remove-person').click();

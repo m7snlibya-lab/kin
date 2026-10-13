@@ -1,5 +1,5 @@
-import {$,button} from './ui.js';
-import {t,months,number} from './i18n.js';
+import {$,button,esc} from './ui.js';
+import {t,months,number,calendarName} from './i18n.js';
 import {icon,labelControl} from './icons.js';
 
 // Keep everyday information visible; organize advanced controls without removing them.
@@ -9,6 +9,8 @@ export function createComfort(state,{device,render}){
  const toolbar=$('.toolbar-actions');
  toolbar.append($('#tools-button'),$('#exports-button'),$('#import-button'));
  $('.section-toolbar h2').classList.add('sr-only');
+ // Match visual and reading order: family views before occasional utilities.
+ $('.view-tabs').after($('.section-toolbar'));
  const finder=document.createElement('div');finder.className='discovery-bar';
  $('.search-field').before(finder);finder.append($('.search-field'),layout);
  $('#layout-control > span').className='sr-only';
@@ -28,12 +30,21 @@ export function createComfort(state,{device,render}){
  $('#see-birthdays').onclick=()=>{state.view='birthdays';state.birthdayCalendar='both';state.birthdayRange=365;state.milestones=[];render();$('#birthdays-tab').focus();$('#birthday-panel').scrollIntoView({block:'start',behavior:'auto'})};
 
  const filters=$('.family-filters');
- $('.search-field').insertAdjacentHTML('afterend',`<details id="family-options" class="family-options"><summary><span data-i18n="Filter & organize">${t('Filter & organize')}</span><span id="filter-count" class="count-pill" hidden></span></summary></details><div id="filter-status" class="filter-status" hidden><span id="filter-description"></span>${button('clear-filters','Clear filters')}</div>`);
+ $('.search-field').insertAdjacentHTML('afterend',`<details id="family-options" class="family-options"><summary><span data-i18n="Filter & organize">${t('Filter & organize')}</span><span id="filter-count" class="count-pill" hidden></span></summary></details><div id="filter-status" class="filter-status" hidden><div id="filter-description" class="filter-chips"></div>${button('clear-filters','Clear filters')}</div>`);
  $('#family-options').append(filters);finder.append($('#family-options'));finder.after($('#filter-status'));
- filters.prepend($('.sort-label'));
+ const results=document.createElement('div');results.className='results-toolbar';results.id='results-toolbar';
+ results.innerHTML='<p id="results-summary" role="status" aria-live="polite" aria-atomic="true"></p>';
+ $('#filter-status').after(results);results.append($('.sort-label'));
  $('#primary-calendar').previousElementSibling.dataset.i18n='Calendar for filters & dates';
  filters.insertAdjacentHTML('beforeend',`<p class="hint filter-explanation" data-i18n="Ages are always shown in both calendars. This choice only changes filters and date-based tools.">${t('Ages are always shown in both calendars. This choice only changes filters and date-based tools.')}</p>`);
  $('#clear-filters').onclick=()=>{state.group='';state.month='';state.search='';$('#family-search').value='';render();$('#family-search').focus()};
+ $('#filter-description').onclick=e=>{
+  const chip=e.target.closest('[data-remove-filter]');if(!chip)return;
+  const key=chip.dataset.removeFilter,index=[...chip.parentElement.children].indexOf(chip);
+  state[key]='';if(key==='search')$('#family-search').value='';render();
+  const remaining=[...$('#filter-description').children];
+  (remaining[Math.min(index,remaining.length-1)]||(key==='search'?$('#family-search'):$('#family-options>summary'))).focus();
+ };
 
  const overview=$('.overview'),peek=document.createElement('details');
  peek.className='overview-peek';peek.id='family-overview';
@@ -86,9 +97,17 @@ export function createComfort(state,{device,render}){
   $('#text-size-button').setAttribute('aria-pressed',String(prefs.largeText===true));
   $('#text-size-label').textContent=t('Larger text');
   $('#text-size-button > span[aria-hidden]').innerHTML=icon(prefs.largeText?'check':'text');
-  const active=[state.group?device.value.groups.find(g=>g.id===state.group)?.name:null,state.month?months(state.primaryCalendar)[+state.month-1]:null,state.search?t('Search: {query}',{query:state.search}):null].filter(Boolean);
+  const active=[
+   state.group?{key:'group',label:t('Group: {name}',{name:device.value.groups.find(g=>g.id===state.group)?.name||''})}:null,
+   state.month?{key:'month',label:t('{calendar}: {month}',{calendar:calendarName(state.primaryCalendar),month:months(state.primaryCalendar)[+state.month-1]})}:null,
+   state.search?{key:'search',label:t('Search: {query}',{query:state.search})}:null
+  ].filter(Boolean);
   $('#filter-status').hidden=!active.length;
-  $('#filter-description').textContent=active.join(' · ');
+  $('#filter-description').innerHTML=active.map(({key,label})=>
+   `<button type="button" class="filter-chip" data-remove-filter="${key}" aria-label="${esc(t('Remove filter: {filter}',{filter:label}))}"><bdi>${esc(label)}</bdi>${icon('close')}</button>`
+  ).join('');
+  $('#results-toolbar').hidden=!state.people.length;
+  $('#results-summary').textContent=t('Showing {shown} of {total} people',{shown:$('#list-count').textContent,total:number(state.people.length)});
   $('#filter-count').hidden=!active.length;$('#filter-count').textContent=number(active.length);
   $('#family-options').classList.toggle('has-filters',!!active.length);
 
