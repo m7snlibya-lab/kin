@@ -13,7 +13,7 @@ test.beforeEach(async({page})=>{errors.set(page,[]);page.on('pageerror',e=>error
 test('backup reminder and temporary device groups do not imply cloud sync',async({page})=>{
  await expect(page.locator('#backup-reminder')).toBeVisible();await page.locator('#dismiss-reminder').click();await page.reload();await expect(page.locator('#backup-reminder')).toBeHidden();
  await page.evaluate(()=>{const get=Storage.prototype.getItem,set=Storage.prototype.setItem;Storage.prototype.getItem=function(key){if(key.startsWith('kin.device.'))throw new DOMException('Blocked','SecurityError');return get.call(this,key)};Storage.prototype.setItem=function(key,value){if(key.startsWith('kin.device.'))throw new DOMException('Blocked','SecurityError');return set.call(this,key,value)}});
- await page.locator('#sort').selectOption('oldest');await expect(page.locator('#device-note')).toBeVisible();await tools(page,'#groups-open');await page.locator('#new-group').click();await page.locator('#group-name').fill('Temporary');await page.locator('#save-group').click();await page.locator('#group-filter').selectOption({label:'Temporary'});await expect(page.locator('.person-card')).toHaveCount(3);
+ await page.locator('#family-options > summary').click();await page.locator('#sort').selectOption('oldest');await expect(page.locator('#device-note')).toBeVisible();await tools(page,'#groups-open');await page.locator('#new-group').click();await page.locator('#group-name').fill('Temporary');await page.locator('#save-group').click();await page.locator('#group-filter').selectOption({label:'Temporary'});await expect(page.locator('.person-card')).toHaveCount(3);
 });
 test('dense Arabic exports preserve all names and cancellation permits retry',async({page},info)=>{
  test.setTimeout(60000);
@@ -34,10 +34,10 @@ async function print(page){await page.locator('#exports-button').click();await p
 test('groups remain device-only and filter sharing and exports',async({page})=>{
  const original=page.url();await tools(page,'#groups-open');await page.locator('#new-group').click();await page.locator('#group-name').fill('Parents');
  await page.locator('#group-selection .selection-all').uncheck();await page.locator('#group-selection [value="cDAwMDAx"]').check();await page.locator('#save-group').click();
- await page.locator('#group-filter').selectOption({label:'Parents'});await expect(page.locator('.person-card')).toHaveCount(1);expect(page.url()).toBe(original);
+ await page.locator('#family-options > summary').click();await page.locator('#group-filter').selectOption({label:'Parents'});await expect(page.locator('.person-card')).toHaveCount(1);expect(page.url()).toBe(original);
  await page.locator('#share-button').click();await expect(page.locator('.share-person:checked')).toHaveCount(1);await page.locator('#close-modal').click();
  await print(page);await expect(page.locator('.selection-person:checked')).toHaveCount(1);await page.locator('#close-modal').click();
- await page.reload();await page.locator('#group-filter').selectOption({label:'Parents'});await expect(page.locator('.person-card h3')).toHaveText('Parent Test');
+ await page.reload();await page.locator('#family-options > summary').click();await page.locator('#group-filter').selectOption({label:'Parents'});await expect(page.locator('.person-card h3')).toHaveText('Parent Test');
  await tools(page,'#groups-open');await page.locator('[data-group]').click();await page.locator('#group-name').fill('Family elders');await page.locator('#save-group').click();
  await tools(page,'#groups-open');await page.locator('[data-group]').click();page.once('dialog',d=>d.accept());await page.locator('#delete-group').click();await expect(page.locator('.person-card')).toHaveCount(3);expect(page.url()).toBe(original);
 });

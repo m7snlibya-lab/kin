@@ -4,12 +4,15 @@ export const $$=s=>[...document.querySelectorAll(s)];
 export const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const button=(id,key,kind='secondary',type='button')=>`<button id="${id}" type="${type}" class="button ${kind}">${t(key)}</button>`;
 export function createDialogs(state){
+ let opener=null,activation=null;
+ document.addEventListener('click',event=>{if(!$('#modal').contains(event.target))activation=event.target.closest?.('button,a,select,input,textarea,summary')||null},true);
+ function restoreFocus(){if($('#modal').open)return;const editId=opener?.dataset?.edit;const target=opener?.isConnected&&opener!==document.body?opener:editId?document.querySelector('[data-edit="'+editId+'"]'):null;(target||$('#add-button')).focus()}
  function confirmLeave(){if(state.saving)return false;if(state.pendingDraft?.()&&!window.confirm(t('Discard your unsaved changes?')))return false;state.pendingDraft=null;return true}
- function close(){if(!confirmLeave())return false;$('#modal').close();return true}
- function modal(title,html){state.onDialogClose?.();state.pendingDraft=null;$('#modal').onclose=null;$('#modal-title').textContent=t(title);$('#modal-body').innerHTML=html;if(!$('#modal').open)$('#modal').showModal()}
+ function close(){if(!confirmLeave())return false;$('#modal').close();queueMicrotask(restoreFocus);return true}
+ function modal(title,html){if(!$('#modal').open){opener=activation?.isConnected?activation:document.activeElement;activation=null;}state.onDialogClose?.();state.pendingDraft=null;$('#modal').onclose=null;$('#modal-title').textContent=t(title);$('#modal-body').innerHTML=html;if(!$('#modal').open)$('#modal').showModal();const first=[...$('#modal-body').querySelectorAll('input:not([type=checkbox]):not([readonly]),select,textarea:not([readonly]),button,summary')].find(el=>!el.disabled&&el.getClientRects().length);(first||$('#close-modal')).focus()}
  $('#close-modal').onclick=close;
  $('#modal').addEventListener('cancel',e=>{e.preventDefault();close()});
- $('#modal').addEventListener('close',()=>state.onDialogClose?.());
+ $('#modal').addEventListener('close',()=>{state.onDialogClose?.();restoreFocus()});
  $('#modal').addEventListener('click',e=>{if(e.target===$('#modal')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)close()}});
  window.addEventListener('beforeunload',e=>{if(state.pendingDraft?.()){e.preventDefault();e.returnValue=''}});
  return {modal,close,confirmLeave};

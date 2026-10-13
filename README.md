@@ -51,6 +51,16 @@ The additional tests cover comparison/reference boundaries, device metadata isol
 
 Bundled export assets: [PDF-LIB 1.17.1](https://github.com/Hopding/pdf-lib/releases/tag/v1.17.1), MIT (license under dist/vendor), and Noto Sans / Noto Sans Arabic from [Google Fonts](https://github.com/google/fonts), SIL OFL (licenses under dist/fonts). Exporting uses only these local assets and makes no third-party requests.
 
+## Readable, age-first interface (1.1.0)
+
+- Every person card shows Gregorian **and** Hijri years, months, days and birth dates without expanding anything. Both next birthdays and countdowns are visible together. More details only contains secondary information such as the birth weekday and total days lived.
+- Everyday controls stay visible: add, share, age tools, export, search and cards/table. Sorting, groups and month filtering are under a labeled Filter & organize section. Active filters remain visible when collapsed and can be cleared with one action.
+- Optional overview/help sections and the noncritical backup reminder appear after the family list. Storage errors, incoming-link warnings and historical-date banners remain prominent. Promotional copy is reduced once a family is present.
+- Default text, contrast and control sizes are increased; major controls have a minimum 48-pixel target. Larger text is remembered only on the device, with a labeled on/off toggle to return to standard size. The layout reflows at narrow widths and increased text sizes.
+- Dialogs focus the first usable field/action and restore focus to the launcher, including edited cards that have been re-rendered. Motion is disabled when reduced motion is requested.
+- Automated usability coverage checks dual-calendar visibility, active-filter recovery, text-size persistence, target sizes, focus, important card-text contrast, 320-pixel English/Arabic layouts and doubled root text. These checks supplement, but do not constitute, a complete accessibility conformance audit or usability study with real participants.
+- Design references: [WAI target sizing](https://www.w3.org/WAI/WCAG22/Understanding/target-size-enhanced.html) and [text resizing](https://www.w3.org/WAI/WCAG22/Understanding/resize-text.html).
+
 ## URL format (v1)
 
 `#k1r<base64url>` stores raw bytes; `#k1z<base64url>` stores zlib DEFLATE bytes. Compression level 9 is applied only when smaller than the raw representation. The fixed prefix permits future schema versions and codecs.

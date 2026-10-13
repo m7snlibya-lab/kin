@@ -9,6 +9,7 @@ import {$,$$,esc,button,createDialogs,mountSelection} from './ui.js';
 import {createFamilyStore} from './family-store.js';
 import {state} from './state.js';
 import {createWorkbench} from './workbench.js';
+import {createComfort} from './comfort.js';
 import {personCard,peopleTable} from './views.js';
 import {nextEvent} from './domain.js';
 const STORE='kin.family.v1:'+location.pathname;
@@ -18,6 +19,7 @@ const initials=name=>name.trim().split(/\s+/).map(x=>Array.from(x)[0]).slice(0,2
 const familyURL=rows=>location.origin+location.pathname+encode(rows);
 const {modal,close,confirmLeave}=createDialogs(state);
 const workbench=createWorkbench(state,{modal,close,render,share,toast,ics:()=>$('#export-calendar').onclick()});
+const comfort=createComfort(state,{device:workbench.device,render});
 workbench.setDocuments(async event=>{if(state.demo)return toast('Example data is not saved. Start your own family first.');try{const {openDocumentDialog}=await import('./document-ui.js');openDocumentDialog(state,{modal,close,toast,visible:workbench.visible,device:workbench.device},event)}catch{toast('Export could not be created. Try again.')}});
 function drawNotice(){const n=$('#notice');n.hidden=!noticeState;if(!noticeState)return;n.textContent=typeof noticeState.message==='function'?noticeState.message():t(noticeState.message);if(noticeState.action){const b=document.createElement('button');b.textContent=t(noticeState.label);b.onclick=noticeState.action;n.append(b)}}
 function notice(message,action,label){noticeState={message,action,label};drawNotice()}
@@ -49,7 +51,7 @@ const events=workbench.visible().flatMap(p=>['g','h'].map(c=>{const e=nextEvent(
 if(events.length){const e=events[0];$('#next-event').textContent=`${e.p.name} · ${e.inDays===0?t('Today!'):t('{days} away',{days:quantity(e.inDays,'day')})}`;$('#next-detail').textContent=t('{calendar} birthday · {date}',{calendar:calendarName(e.c),date:date(e.day)})}else{$('#next-event').textContent=t('A birthday to look forward to');$('#next-detail').textContent=t('Add your first person below')}
 $('#share-button').disabled=$('#save-button').disabled=!state.people.length;const visible=sorted();$('#list-count').textContent=number(visible.length);
 $('#people').innerHTML=state.people.length?(visible.length?(state.layout==='table'?peopleTable(visible,state):visible.map(card).join('')):`<div class="empty search-empty"><h3>${t('No matching names')}</h3><p>${t('Try another name or clear your search.')}</p>${button('clear-search','Clear search')}</div>`):`<div class="empty"><div class="empty-symbol" aria-hidden="true">k.</div><h3>${t('Your story starts with a name.')}</h3><p>${t('Add someone you love. We’ll keep track of the years, the days, and the next reason to celebrate.')}</p>${button('empty-add','+ Add your first person','primary')}<button class="quiet" id="demo-button">${t('Take a look with an example family')}</button></div>`;
-renderAgenda();workbench.refresh();
+renderAgenda();workbench.refresh();comfort.refresh();
 $('#empty-add')?.addEventListener('click',()=>editPerson());$('#demo-button')?.addEventListener('click',showDemo);$('#clear-search')?.addEventListener('click',()=>{state.search='';$('#family-search').value='';render();$('#family-search').focus()});$$('[data-edit]').forEach(b=>b.onclick=()=>editPerson(state.people.find(p=>p.id===b.dataset.edit)));
 }
 
