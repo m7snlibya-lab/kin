@@ -559,8 +559,10 @@ test('a first shared family offers plain choices and can return to an empty devi
 test('unavailable web fonts do not block Arabic entry or readable fallback',async({browser,baseURL})=>{
  const context=await browser.newContext({serviceWorkers:'block',locale:'ar',viewport:{width:320,height:850}});const page=await context.newPage();
  try{
-  await page.route('**/*.woff2',route=>route.abort());await page.goto(baseURL);await expect(page.locator('#startup-status')).toBeHidden();await page.evaluate(()=>document.fonts.ready);
-  expect(await page.evaluate(()=>document.fonts.check('400 16px "Kin Plex"','عائلتي'))).toBe(false);await expect(page.locator('h1')).toHaveText('أفراد العائلة');
+  let blocked=0;await page.route('**/*.woff2',route=>{blocked++;return route.abort()});await page.goto(baseURL);await expect(page.locator('h1')).toHaveText('أفراد العائلة');await expect(page.locator('#startup-status')).toBeHidden();
+  // FontFaceSet.check() can be true once a failed face has fallen back. Verify actual failure states instead.
+  const failures=await page.evaluate(async()=>{const faces=[...document.fonts].filter(f=>f.family.replaceAll('"','')==='Kin Plex');await Promise.all(faces.map(f=>f.load().catch(()=>{})));return faces.map(f=>f.status)});
+  expect(failures).toEqual(['error','error','error']);expect(blocked).toBeGreaterThanOrEqual(3);
   await page.locator('#add-button').click();await page.locator('#person-name').fill('اختبار الخط البديل');await page.locator('#birth-day').fill('١');await page.locator('#birth-month').selectOption('1');await page.locator('#birth-year').fill('٢٠٠٠');await page.locator('#save-person').click();await expect(page.locator('#modal')).toBeHidden();await expect(page.locator('.person-card h3')).toHaveText('اختبار الخط البديل');
   await page.evaluate(()=>document.documentElement.style.fontSize='150%');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
  }finally{await context.close()}
