@@ -24,6 +24,7 @@ export function openDocumentDialog(state,{modal,close,toast,visible,device},even
  const setDisabled=disabled=>controls.forEach(b=>b.disabled=disabled);
  const status=text=>{if(active())statusElement.textContent=text};
  const selections=card?null:mountSelection($('#document-selection'),state.people,{selected:visible().map(p=>p.id),changed:()=>schedule()});
+ if(!card){$('#document-selection .selection-all').focus({preventScroll:true});$('#modal').scrollTop=0}
  const fieldMap=card?{'#doc-shape':'shape','#doc-theme':'theme','#doc-language':'locale'}:{'#doc-layout-calendar':'layoutCalendar','#doc-birthdays':'birthdayCalendar','#doc-layout':'layout','#doc-size':'size','#doc-orientation':'orientation','#doc-language':'locale'};
  for(const [selector,key] of Object.entries(fieldMap))$(selector).value=initial[key];
  function options(){const value={...initial};for(const [selector,key] of Object.entries(fieldMap))value[key]=$(selector).value;value.showAges=$('#doc-ages').checked;if(!card){value.year=parseDigits($('#doc-year').value);value.ink=$('#doc-ink').checked;value.qr=$('#doc-qr').checked}return value}

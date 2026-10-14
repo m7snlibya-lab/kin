@@ -72,6 +72,14 @@ test('embedded exports fit Arabic larger text and explain QR only when enabled',
  expect(await page.locator('.document-text').evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
 });
 
+test('embedded dialogs open at people selection instead of jumping to lower actions',async({page})=>{
+ await page.setViewportSize({width:320,height:850});await page.locator('#language-button').click();await page.locator('#text-size-button').click();
+ await page.locator('#share-button').click();await expect(page.locator('#select-all')).toBeFocused();
+ expect(await page.locator('#modal').evaluate(el=>el.scrollTop)).toBe(0);await page.locator('#close-modal').click();
+ await print(page);await expect(page.locator('#document-selection .selection-all')).toBeFocused();
+ expect(await page.locator('#modal').evaluate(el=>el.scrollTop)).toBe(0);
+});
+
 test('export selection, invalid year, QR and overflow are explicit',async({page})=>{
  await print(page);await page.getByText('Choose people',{exact:true}).click();await page.locator('#document-selection .selection-all').uncheck();await expect(page.locator('#download-pdf')).toBeDisabled();await expect(page.locator('#document-status')).toContainText('Select at least one person');
  await page.locator('#document-selection [value="cDAwMDAx"]').check();await expect(page.locator('#download-pdf')).toBeEnabled();await page.locator('#doc-year').fill('9999');await expect(page.locator('#download-pdf')).toBeDisabled();await expect(page.locator('#document-status')).toContainText('Invalid reference date');
