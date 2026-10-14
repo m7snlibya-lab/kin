@@ -82,6 +82,11 @@ export function createComfort(state,{device,render}){
   ['#tools-button','compare'],['#exports-button','calendar'],['#import-button','folder'],
   ['#people-tab','people'],['#birthdays-tab','calendar'],['#timeline-tab','timeline'],['#about-button','help'],['#install-button','install','Install app'],['#manage-groups','people']
  ])labelControl($(selector),name,key);
+ for(const [id,key] of [['tools-button','Compare ages or explore another date.'],['exports-button','Print birthdays or add them to a calendar.'],['timeline-tab','See your family’s births through time.'],['backup-button','Download a private file to keep safe.'],['import-button','Review a family link or restore a file.']]){
+  const tile=$('#'+id),label=tile.querySelector('span'),copy=document.createElement('span');copy.className='tool-copy';
+  label.before(copy);copy.append(label);
+  const description=document.createElement('span');description.className='tool-description';description.dataset.i18n=key;description.textContent=t(key);copy.append(description);
+ }
  $('.search-field').insertAdjacentHTML('afterbegin',icon('search'));
  const summary=$('#family-options > summary');summary.classList.add('has-icon');
  summary.insertAdjacentHTML('afterbegin',icon('filter'));summary.insertAdjacentHTML('beforeend',icon('chevron'));

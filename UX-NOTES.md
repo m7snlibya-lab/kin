@@ -46,6 +46,12 @@ Make the next useful action obvious without making the family list feel like a s
 - Localize selection counts and editable dates, use neutral Arabic count headings where plural grammar would otherwise be wrong, and keep Arabic terminology consistent around family members.
 - Make RTL keyboard movement mirror the visual tab order; use logical spacing and isolate preview content according to its selected language. Explain selection searches with no matches without clearing checked people.
 
+## Print refinement in 1.9.0
+
+Purpose-led presets reduce repetitive setup without changing who or what is shared. Preview, people and settings remain available as sections rather than generic Show more disclosures. A compact section menu avoids three stacked navigation buttons at enlarged phone text sizes. Desktop uses a mirrored side-by-side workspace only when font-relative space permits it.
+
+Calendar and birthday-image preferences must not overwrite each other. Turning-age disclosure is remembered separately for each task; a calendar age preference does not silently reveal ages on a birthday image. QR remains an explicit choice for every new print session.
+
 ## Earlier app-like direction (implemented in 1.8.0 where noted above)
 
 The compact app shell, List/person detail, plain edit titles, purpose-led sharing/backup and preview-first printing are now implemented. The items below preserve the original rationale; quick group shortcuts and participant/physical-device testing remain future work.

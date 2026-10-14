@@ -23,7 +23,7 @@ test('dense Arabic exports preserve all names and cancellation permits retry',as
  const model=await page.evaluate(async()=>{const {state}=await import('./state.js');const {createCalendarDocument,createMeasure,loadExportFonts}=await import('./documents.js');await loadExportFonts();return createCalendarDocument(state.people,{year:new Date().getFullYear(),layoutCalendar:'g',birthdayCalendar:'both',locale:'ar'},createMeasure())});
  expect(model.events.length).toBeGreaterThanOrEqual(300);expect(model.pages.flatMap(p=>p.events)).toHaveLength(model.events.length);expect(model.pages.length).toBeGreaterThan(1);
  let pending=page.waitForEvent('download');await page.locator('#download-image').click();await (await pending).saveAs(info.outputPath('dense-arabic.png'));
- await page.locator('#download-pdf').click();await page.locator('#cancel-document').click();await expect(page.locator('#download-pdf')).toBeEnabled({timeout:30000});await expect(page.locator('#modal')).toBeVisible();
+ await page.locator('#download-pdf').click();await expect(page.locator('.document-jumps')).toHaveAttribute('inert','');await page.locator('#cancel-document').click();await expect(page.locator('.document-jumps')).not.toHaveAttribute('inert','');await expect(page.locator('#download-pdf')).toBeEnabled({timeout:30000});await expect(page.locator('#modal')).toBeVisible();
  await expect(page.locator('#document-selection')).toBeVisible();await page.locator('#document-selection .selection-all').uncheck();await page.locator('#document-selection .selection-person').first().check();await expect(page.locator('#download-pdf')).toBeEnabled();
  pending=page.waitForEvent('download');await page.locator('#download-pdf').click();await (await pending).saveAs(info.outputPath('arabic-calendar.pdf'));
 });
@@ -103,4 +103,60 @@ test('birthday cards and milestone filtering share actual event ages',async({pag
 test('offline export includes bundled fonts and PDF runtime',async({page,context})=>{
  await expect(page.locator('#offline-label')).toHaveText('Ready for offline',{timeout:30000});await page.evaluate(async()=>{await navigator.serviceWorker.ready;if(!navigator.serviceWorker.controller)await new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}))});await context.setOffline(true);await page.reload();await print(page);
  const pending=page.waitForEvent('download');await page.locator('#download-pdf').click();const pdf=await PDFDocument.load(await readFile(await (await pending).path()));expect(pdf.getPageCount()).toBeGreaterThan(0);
+});
+
+test('print presets preserve selection, dates, language and privacy choices',async({page})=>{
+ const original=page.url();await print(page);
+ await page.locator('#document-selection .selection-person').first().uncheck();
+ await page.locator('#doc-year').fill('2028');await page.locator('#doc-birthdays').selectOption('h');await page.locator('#doc-language').selectOption('ar');await page.locator('#doc-ages').check();await page.locator('#doc-qr').check();
+ await page.locator('#doc-preset').selectOption('monthly');await expect(page.locator('#download-pdf')).toBeEnabled();
+ await expect(page.locator('#doc-layout')).toHaveValue('monthly');await expect(page.locator('#doc-size')).toHaveValue('A4');await expect(page.locator('#doc-orientation')).toHaveValue('portrait');await expect(page.locator('#doc-ink')).toBeChecked();
+ await expect(page.locator('#doc-year')).toHaveValue('2028');await expect(page.locator('#doc-birthdays')).toHaveValue('h');await expect(page.locator('#doc-language')).toHaveValue('ar');
+ await expect(page.locator('#doc-qr')).toBeChecked();await expect(page.locator('#doc-ages')).toBeChecked();await expect(page.locator('.selection-person:checked')).toHaveCount(2);
+ await expect(page.locator('#page-count')).toHaveText('Page 1 of 13');await expect(page.locator('.preview-controls')).toBeVisible();await expect(page.locator('#doc-jump-people')).toHaveText('People (2)');
+ await page.locator('#doc-preset').selectOption('wall');await expect(page.locator('#download-pdf')).toBeEnabled();
+ await expect(page.locator('#doc-size')).toHaveValue('A3');await expect(page.locator('#doc-layout')).toHaveValue('annual');await expect(page.locator('#doc-orientation')).toHaveValue('landscape');await expect(page.locator('#doc-ink')).not.toBeChecked();
+ await page.locator('#doc-orientation').selectOption('portrait');await expect(page.locator('#doc-preset')).toHaveValue('custom');expect(page.url()).toBe(original);
+});
+
+test('print preferences survive reopening but QR remains opt-in',async({page})=>{
+ await print(page);await page.locator('#doc-preset').selectOption('monthly');await page.locator('#doc-ages').check();await page.locator('#doc-qr').check();await expect(page.locator('#download-pdf')).toBeEnabled();
+ await page.locator('#close-modal').click();await print(page);
+ await expect(page.locator('#doc-preset')).toHaveValue('monthly');await expect(page.locator('#doc-ink')).toBeChecked();await expect(page.locator('#doc-ages')).toBeChecked();await expect(page.locator('#doc-qr')).not.toBeChecked();
+ await expect(page.locator('#doc-qr-note')).toBeHidden();await page.locator('#doc-preset').selectOption('year');await expect(page.locator('#download-pdf')).toBeEnabled();
+ await expect(page.locator('.preview-controls')).toBeHidden();await expect(page.locator('#document-summary')).toContainText('A4');
+});
+
+test('print section shortcuts reach visible controls in Arabic enlarged text',async({page},info)=>{
+ await page.setViewportSize({width:393,height:851});await page.locator('#language-button').click();await page.evaluate(()=>document.documentElement.style.fontSize='150%');await print(page);
+ const visibleBelowNavigation=async selector=>{const control=await page.locator(selector).boundingBox(),nav=await page.locator('.document-jumps').boundingBox();expect(control.y).toBeGreaterThanOrEqual(nav.y+nav.height-2);expect(control.y+control.height).toBeLessThanOrEqual(851)};
+ await page.locator('#doc-section').selectOption('people');await expect(page.locator('#document-selection .selection-all')).toBeFocused();await visibleBelowNavigation('#document-selection .selection-all');
+ await page.locator('#document-selection .selection-person').first().uncheck();await expect(page.locator('#doc-jump-people')).toHaveText('الأفراد (٢)');
+ await page.locator('#doc-section').selectOption('settings');await expect(page.locator('#doc-preset')).toBeFocused();await visibleBelowNavigation('#doc-preset');
+ await page.locator('#doc-preset').selectOption('monthly');await expect(page.locator('#download-pdf')).toBeEnabled();
+ await page.locator('#doc-section').selectOption('preview');await expect(page.locator('#document-preview')).toBeFocused();
+ expect(await page.locator('#modal').evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+ await page.screenshot({path:info.outputPath('print-mobile-ar.png')});
+});
+
+test('wide print workspace is side by side and enlarged type falls back to a column',async({page},info)=>{
+ await page.setViewportSize({width:1440,height:1000});await print(page);
+ const stage=await page.locator('.document-stage').boundingBox(),settings=await page.locator('.document-settings').boundingBox();
+ expect(Math.abs(stage.y-settings.y)).toBeLessThan(5);expect(stage.x+stage.width).toBeLessThanOrEqual(settings.x+1);
+ await page.screenshot({path:info.outputPath('print-desktop.png')});
+ await page.locator('#close-modal').click();await page.locator('#language-button').click();await print(page);
+ const rtlStage=await page.locator('.document-stage').boundingBox(),rtlSettings=await page.locator('.document-settings').boundingBox();expect(rtlSettings.x+rtlSettings.width).toBeLessThanOrEqual(rtlStage.x+1);
+ await page.screenshot({path:info.outputPath('print-desktop-ar.png')});
+ await page.evaluate(()=>document.documentElement.style.fontSize='200%');
+ const stacked=await page.locator('.document-settings').boundingBox(),preview=await page.locator('.document-stage').boundingBox();expect(stacked.y).toBeGreaterThanOrEqual(preview.y+preview.height-1);
+ expect(await page.locator('#modal').evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+});
+
+test('birthday image preferences do not replace calendar presets or expose ages by default',async({page})=>{
+ await print(page);await page.locator('#doc-preset').selectOption('monthly');await page.locator('#doc-ages').check();await expect(page.locator('#download-pdf')).toBeEnabled();await page.locator('#close-modal').click();
+ await page.locator('#birthdays-tab').click();await page.locator('#birthday-range').selectOption('365');await page.locator('[data-agenda-card]').first().click();await expect(page.locator('#download-image')).toBeEnabled();
+ await expect(page.locator('#doc-ages')).not.toBeChecked();await page.locator('#doc-shape').selectOption('portrait');await page.locator('#doc-theme').selectOption('minimal');await expect(page.locator('#download-image')).toBeEnabled();await page.locator('#close-modal').click();
+ await print(page);await expect(page.locator('#doc-preset')).toHaveValue('monthly');await expect(page.locator('#doc-ink')).toBeChecked();await expect(page.locator('#doc-ages')).toBeChecked();await page.locator('#close-modal').click();
+ await page.locator('#birthdays-tab').click();await page.locator('[data-agenda-card]').first().click();await expect(page.locator('#download-image')).toBeEnabled();
+ await expect(page.locator('#doc-shape')).toHaveValue('portrait');await expect(page.locator('#doc-theme')).toHaveValue('minimal');await expect(page.locator('#doc-ages')).not.toBeChecked();
 });

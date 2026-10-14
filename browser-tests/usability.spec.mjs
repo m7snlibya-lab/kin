@@ -305,7 +305,7 @@ test('labeled calendar icons survive language changes and view switching',async(
   await expect(page.locator('#next-event bdi')).toHaveCount(2);
   for(const selector of ['#add-button','#share-button','#tools-button','#exports-button','#people-tab','#birthdays-tab','#timeline-tab']){
    await expect(page.locator(selector+' .ui-icon')).toHaveCount(1);
-   await expect(page.locator(selector+' span')).not.toBeEmpty();
+   await expect(page.locator(selector+' span[data-i18n]').first()).not.toBeEmpty();
    await expect(page.locator(selector+' .ui-icon')).toHaveAttribute('aria-hidden','true');
   }
  }

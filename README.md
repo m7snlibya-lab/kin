@@ -20,6 +20,15 @@ The browser suite checks person creation/editing/removal/undo, calendar switchin
 
 Run the algorithm checks with `node tests.mjs`. Tests cover 100,406 date conversions against ICU, Hijri/Gregorian leap dates, date-based ages and countdowns, Unicode codec round trips, corruption rejection, size limits, merge conflicts, duplicate detection, and QR generation. Browser installation, offline navigation, and device QR scanning require browser/device verification; these were not tested in this environment.
 
+## Print workspace and reusable setups (1.9.0)
+
+- Printable calendars offer A4 year overview, monthly pages and A3 wall presets. Manual changes are recognized as Custom; a preset does not change selected people, year, calendar, language, ages or QR choices.
+- Wide dialogs show settings and a sticky preview side by side, mirrored correctly in RTL. Narrow screens and enlarged text fall back to one column.
+- Section shortcuts reach Preview, People and Print settings without hiding any settings. Narrow layouts use a compact labelled section menu; focus and scroll positions account for sticky controls.
+- Single-page outputs omit disabled page navigation. Selection, paper and layout are summarized beside the preview; page counts remain explicit for multi-page and QR outputs.
+- Calendar and birthday-image preferences are separate. Ink and turning-age choices are remembered in their own flow; QR is never included automatically on reopening.
+- Tools tiles describe their destination in Arabic and English. Core data, no-zoom behavior, dual ages and existing reading preferences are unchanged.
+
 ## Calmer app navigation and purpose-led flows (1.8.0)
 
 - Phone navigation is now People, Birthdays and Tools. Add person stays in the header; occasional utilities no longer take a row above every family. Desktop uses the same destinations without fixed bottom navigation.
