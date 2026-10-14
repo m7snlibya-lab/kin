@@ -101,7 +101,7 @@ test('birthday cards and milestone filtering share actual event ages',async({pag
  await page.locator('#milestones-button').click();await page.locator('.milestone-options input[value="100"]').check();await page.locator('#apply-milestones').click();await expect(page.locator('.agenda-event')).toHaveCount(0);await page.locator('#milestones-button').click();await page.locator('#clear-milestones').click();await expect(page.locator('.agenda-event').first()).toBeVisible();
 });
 test('offline export includes bundled fonts and PDF runtime',async({page,context})=>{
- await expect(page.locator('#offline-label')).toHaveText('Ready for offline',{timeout:30000});await page.evaluate(async()=>{await navigator.serviceWorker.ready;if(!navigator.serviceWorker.controller)await new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}))});await context.setOffline(true);await page.reload();await print(page);
+ await expect(page.locator('#offline-label')).toHaveText('Ready for offline',{timeout:30000});await page.evaluate(async()=>{await navigator.serviceWorker.ready;if(!navigator.serviceWorker.controller)await new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}))});await context.setOffline(true);await page.reload();await page.locator('#language-button').click();await page.evaluate(()=>document.fonts.ready);expect(await page.evaluate(()=>document.fonts.check('400 16px "Kin Plex"','عائلتي'))).toBe(true);await print(page);
  const pending=page.waitForEvent('download');await page.locator('#download-pdf').click();const pdf=await PDFDocument.load(await readFile(await (await pending).path()));expect(pdf.getPageCount()).toBeGreaterThan(0);
 });
 

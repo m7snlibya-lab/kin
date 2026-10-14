@@ -114,7 +114,7 @@ export function createComfort(state,{device,render}){
   $('#filter-status').hidden=tools;
   $('#family-mode').textContent=t(state.demo?'Example family':state.viewOnly?'Shared family · view only':state.people.length?(state.storageAvailable===false?'Only in this link':'Saved on this device'):'No account needed');
   $('#add-button').hidden=state.demo||state.viewOnly;
-  $('#share-button').hidden=state.demo;
+  $('#share-button').hidden=state.demo||!state.people.length;
   $('#backup-button').hidden=state.demo||state.viewOnly||!state.people.length;
   $('#import-button').hidden=state.demo||state.viewOnly;
   $('#data-tools-title').hidden=$('#data-tools-help').hidden=state.demo||state.viewOnly;

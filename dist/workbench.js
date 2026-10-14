@@ -62,9 +62,9 @@ export function createWorkbench(state,{modal,close,render,ics,toast}){
   };$('#compare-a').onchange=$('#compare-b').onchange=update;update();
  }
  function referenceDialog(){
-  const [y,m,d]=calendars.g.parts(state.reference??today());
+  const initialCalendar=state.primaryCalendar;const [y,m,d]=calendars[initialCalendar].parts(state.reference??today());
   modal('Family on this date',`<p class="hint">${t('Explore ages in the past or future. Birth dates and family links will not change.')}</p><form id="reference-form"><label class="form-field"><span>${t('Calendar')}</span><select id="reference-calendar"><option value="g">${calendarName('g')}</option><option value="h">${calendarName('h')}</option></select></label><div class="date-fields"><label>${t('Day')}<input id="reference-day" inputmode="numeric" value="${number(d)}" required></label><label>${t('Month')}<select id="reference-month"></select></label><label>${t('Year')}<input id="reference-year" inputmode="numeric" value="${number(y).replace(/[٬,]/g,'')}" required></label></div><p id="reference-error" class="form-error" role="alert"></p><div class="dialog-actions">${button('reference-today','Back to today')}${button('reference-apply','Show family','primary','submit')}</div></form>`);
-  let c='g';function fill(month){$('#reference-month').innerHTML=months(c).map((n,i)=>`<option value="${i+1}">${n}</option>`).join('');$('#reference-month').value=String(month)}fill(m);
+  $('#reference-calendar').value=initialCalendar;let c=initialCalendar;function fill(month){$('#reference-month').innerHTML=months(c).map((n,i)=>`<option value="${i+1}">${n}</option>`).join('');$('#reference-month').value=String(month)}fill(m);
   const read=()=>referenceDay(c,parseDigits($('#reference-year').value),parseDigits($('#reference-month').value),parseDigits($('#reference-day').value));
   $('#reference-calendar').onchange=e=>{try{const day=read();c=e.target.value;const [y,m,d]=calendars[c].parts(day);$('#reference-year').value=number(y).replace(/[٬,]/g,'');$('#reference-day').value=number(d);fill(m);$('#reference-error').textContent=''}catch{$('#reference-calendar').value=c;$('#reference-error').textContent=t('Invalid reference date.')}};
   $('#reference-form').onsubmit=e=>{e.preventDefault();try{state.reference=read();state.view='people';close();render()}catch{$('#reference-error').textContent=t('Invalid reference date.')}};
@@ -92,7 +92,7 @@ export function createWorkbench(state,{modal,close,render,ics,toast}){
   for(const [s,k] of [['#primary-calendar','primaryCalendar'],['#people-layout','layout'],['#sort','sort'],['#birthday-range','birthdayRange'],['#birthday-calendar','birthdayCalendar']])$(s).value=String(state[k]);
   $('#layout-control').hidden=state.view!=='people';
   const banner=$('#reference-banner');banner.hidden=state.reference===null;
-  banner.innerHTML=state.reference===null?'':`${t('Viewing family on {date}',{date:date(state.now)})} · ${date(state.now,'h')} ${button('back-today','Back to today')}`;
+  banner.innerHTML=state.reference===null?'':`${t('Viewing family on {date}',{date:date(state.now,state.primaryCalendar)})} · ${date(state.now,state.primaryCalendar==='g'?'h':'g')} ${button('back-today','Back to today')}`;
   $('#back-today')?.addEventListener('click',()=>{state.reference=null;render()});
   $('.date-item .eyebrow').textContent=t(state.reference===null?'TODAY, IN TWO CALENDARS':'REFERENCE DATE, IN TWO CALENDARS');
  const hash=state.people.length?encode(state.people):'';

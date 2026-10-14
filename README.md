@@ -20,6 +20,18 @@ The browser suite checks person creation/editing/removal/undo, calendar switchin
 
 Run the algorithm checks with `node tests.mjs`. Tests cover 100,406 date conversions against ICU, Hijri/Gregorian leap dates, date-based ages and countdowns, Unicode codec round trips, corruption rejection, size limits, merge conflicts, duplicate detection, and QR generation. Browser installation, offline navigation, and device QR scanning require browser/device verification; these were not tested in this environment.
 
+## Arabic typography and calendar consistency (1.10.0)
+
+- The app now uses self-hosted IBM Plex Sans Arabic (regular, medium and semibold) across headings, names, forms and controls. It retains native text sizing and fallbacks; no font service or npm font package is called. PDF/image exports retain their existing bundled Noto fonts.
+- Hijri-only birthday lists use Hijri month headings, day badges and date ranges. Both-calendar lists follow the chosen primary calendar. Every event also shows its actual date in both calendars.
+- Table dates carry the same sun/moon symbols and accessible calendar labels; the next-birthday date now matches the selected calendar. Read-only/demo tables omit the unused Edit column.
+- Birth entry remembers the calendar used by the last successful save. Existing records keep their own calendar; date exploration starts in the chosen primary calendar.
+- Shared snapshots have a Return to my family action that restores the saved local family and previous search/filter/reference context. Cancelling a merge review leaves the snapshot visible, without saving it.
+- First-time family review uses plain View/Keep choices without irrelevant conflict statistics. Import/backup wording does not offer a viewing choice where none exists. Keeping an empty selection is disabled on an empty device; sharing is hidden until there are people to share.
+- Regression coverage includes real offline font loading, missing-font fallback, Arabic forms, enlarged text, shared-return safety and calendar presentation.
+
+Font provenance: unmodified [IBM Plex Sans Arabic sources at revision 3927691](https://github.com/IBM/plex/tree/39276912b05f700ee1dd491950c35d8697214208/packages/plex-sans-arabic/fonts/complete/woff2), redistributed under [SIL OFL](dist/fonts/OFL-Plex.txt). The UI font files are pinned assets, not a runtime dependency. Automated checks are not a substitute for physical-device and participant testing.
+
 ## Print workspace and reusable setups (1.9.0)
 
 - Printable calendars offer A4 year overview, monthly pages and A3 wall presets. Manual changes are recognized as Custom; a preset does not change selected people, year, calendar, language, ages or QR choices.

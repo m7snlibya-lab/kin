@@ -70,6 +70,18 @@ Test each prototype with a younger and an older relative: add a date, find a per
 
 No new account, cloud sync, automatic notifications, hidden icon-only actions, destructive bulk editing, or automatic view switching. Those add permissions, complexity, or data risk and need a separate product decision.
 
+## Corrective review in 1.10.0
+
+A visually consistent screen can still mislead. The review found calendar semantics diverging from the selection: a Hijri-only agenda grouped events under Gregorian months, and the table calculated a Hijri next birthday but formatted its date as Gregorian. Calendar selection must affect grouping, date badges and ranges together. Events now include both dates, while the selected calendar governs their organization.
+
+Typography now uses a single self-hosted IBM Plex Sans Arabic family with real regular, medium and semibold files. This replaces the Arabic Tahoma fallback, including form controls and headings, without overriding native root text sizing. Both ages and both current dates retain equal prominence. Export typography is unchanged.
+
+Shared-family reading is reversible: Return to my family restores the local family and previous reading context without writing shared people to storage. A cancelled merge review stays in shared-view mode. On an empty device, recipients see plain View/Keep choices rather than zero-valued conflict summaries; pasted imports/backups have appropriate saving language. Empty-selection saving and empty-family sharing no longer present misleading actions.
+
+Remembering the last successfully used birth-entry calendar removes repeated switching without guessing from the person's name or interface language. Existing records retain their own calendar; the reference-date tool begins in the preferred calendar.
+
+Remaining evidence gaps: physical iOS/Android accessibility settings, browser/hardware Back with modal drafts, live Arabic VoiceOver/TalkBack, and task completion with younger/older relatives. These are not certified by viewport emulation. Keep the requested no-zoom viewport, but do not call this accessibility conformance. Product naming, notifications and cloud sync remain separate decisions, not features to add during this corrective pass.
+
 ## Verification
 
 Regression checks cover English/Arabic, RTL, narrow screens, larger text, keyboard focus, remembered preferences, filtered sharing/exports, and unchanged family links. Unit checks additionally cover date conversion, backup/import safety, offline caching, and dense printable layouts. Deployment is gated by the complete automated suite.

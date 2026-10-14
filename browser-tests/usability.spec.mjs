@@ -1,7 +1,9 @@
 import {test,expect} from '@playwright/test';
 import '../dist/vendor/pako.min.js';
 import {encode,calendars,age,today} from '../dist/core.js';
-import {quantity} from '../dist/i18n.js';
+import {quantity,date,months} from '../dist/i18n.js';
+import {listBirthdays} from '../dist/birthdays.js';
+import {nextEvent} from '../dist/domain.js';
 const records=[
  {id:'cDAwMDAx',name:'Amina أحمد',calendar:'g',day:calendars.g.toDay(1990,4,18)},
  {id:'cDAwMDAy',name:'Omar',calendar:'h',day:calendars.g.toDay(2010,9,22)}
@@ -459,7 +461,7 @@ test('opening a shared link never silently saves it and demo cannot leak into it
  await page.locator('#tools-tab').click();await expect(page.locator('#backup-button')).toBeHidden();
  await page.locator('#exports-button').click();await page.locator('#print-open').click();
  await expect(page.locator('#download-pdf')).toBeEnabled();
- await page.locator('#close-modal').click();await page.locator('#notice button').click();await page.locator('#confirm-merge').click();
+ await page.locator('#close-modal').click();await page.locator('#notice button').filter({hasText:'Keep this family'}).click();await page.locator('#confirm-merge').click();
  await expect(page.locator('#family-mode')).toHaveText('Saved on this device');await expect(page.locator('#add-button')).toBeVisible();
  expect(await page.evaluate(()=>localStorage.getItem('kin.family.v1:'+location.pathname))).toBe(encode(records));
 });
@@ -490,4 +492,76 @@ test('failed save feedback stays visible until dismissed or retried',async({page
  await page.clock.fastForward(20000);await expect(page.locator('#dialog-feedback')).toBeVisible();await expect(page.locator('#person-name')).toHaveValue('Draft Test');
  await page.evaluate(()=>Object.defineProperty(navigator,'locks',{configurable:true,value:undefined}));
  await page.locator('#save-person').click();await expect(page.locator('#modal')).toBeHidden();await expect(page.locator('.person-card')).toHaveCount(3);
+});
+
+test('Arabic typography is self-hosted and applied consistently to app controls',async({page},info)=>{
+ await page.locator('#language-button').click();await page.evaluate(()=>document.fonts.ready);
+ const fonts=await page.evaluate(()=>({loaded:document.fonts.check('400 16px "Kin Plex"','عائلتي'),faces:[...document.fonts].filter(f=>f.family.replaceAll('"','')==='Kin Plex').map(f=>f.status)}));
+ expect(fonts.loaded).toBe(true);expect(fonts.faces).toContain('loaded');
+ for(const selector of ['body','h1','.person-card h3','.calendar-label','#add-button','#family-search'])expect(await page.locator(selector).first().evaluate(el=>getComputedStyle(el).fontFamily),selector).toContain('Kin Plex');
+ await page.screenshot({path:info.outputPath('arabic-people.png'),fullPage:true});
+ await page.locator('#add-button').click();
+ for(const selector of ['#modal-title','#person-name','#birth-month','#save-person'])expect(await page.locator(selector).evaluate(el=>getComputedStyle(el).fontFamily),selector).toContain('Kin Plex');
+ await page.locator('#close-modal').click();await page.evaluate(()=>document.documentElement.style.fontSize='150%');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+ await page.screenshot({path:info.outputPath('arabic-large-text.png')});
+});
+
+test('birthday agenda uses the selected calendar for months and shows both event dates',async({page},info)=>{
+ const original=page.url(),first=listBirthdays(records,{from:today(),days:365,calendar:'h'})[0];
+ await page.locator('#birthdays-tab').click();await page.locator('#birthday-range').selectOption('365');await page.locator('#birthday-calendar').selectOption('h');
+ const [y,m,d]=calendars.h.parts(first.day);
+ await expect(page.locator('.agenda-month').first()).toHaveText(months('h')[m-1]+' '+y+' AH');
+ await expect(page.locator('.agenda-day strong').first()).toHaveText(String(d));
+ await expect(page.locator('#agenda-summary')).toContainText(date(today(),'h'));
+ for(const c of ['g','h'])await expect(page.locator('.agenda-event').first().locator('[data-event-date='+c+'] bdi')).toHaveText(date(first.day,c));
+ await page.locator('#language-button').click();await expect(page.locator('.agenda-month').first()).toContainText('هـ');
+ await expect(page.locator('.agenda-occurrence').first()).not.toContainText('Turning');
+ await page.screenshot({path:info.outputPath('arabic-hijri-agenda.png'),fullPage:true});expect(page.url()).toBe(original);
+});
+
+test('table next dates and date exploration honor the preferred calendar',async({page})=>{
+ const original=page.url();await page.locator('#family-options>summary').click();await page.locator('#primary-calendar').selectOption('h');await page.locator('#family-options>summary').click();await page.locator('#people-layout').selectOption('table');
+ const row=page.locator('.family-table tbody tr').filter({hasText:'Omar'});
+ await expect(row.locator('td').nth(3)).toContainText(date(nextEvent(records[1],today(),'h').day,'h'));
+ await expect(row.locator('td').first().locator('.icon-sun')).toBeVisible();await expect(row.locator('td').first().locator('.icon-moon')).toBeVisible();
+ await page.locator('#tools-tab').click();await page.locator('#tools-button').click();await page.locator('#reference-open').click();
+ await expect(page.locator('#reference-calendar')).toHaveValue('h');await expect(page.locator('#reference-year')).toHaveValue(String(calendars.h.parts(today())[0]));
+ await page.locator('#reference-apply').click();await expect(page.locator('#reference-banner')).toBeVisible();expect(page.url()).toBe(original);
+});
+
+test('successful birth entry remembers its calendar without changing existing records',async({page})=>{
+ await page.locator('#add-button').click();await page.locator('[data-calendar=h]').click();await page.locator('#person-name').fill('Hijri Entry');
+ await page.locator('#birth-day').fill('1');await page.locator('#birth-month').selectOption('9');await page.locator('#birth-year').fill('1420');await page.locator('#save-person').click();await expect(page.locator('#modal')).toBeHidden();
+ await page.reload();await page.locator('#add-button').click();await expect(page.locator('[data-calendar=h]')).toHaveAttribute('aria-pressed','true');await expect(page.locator('#birth-year')).toBeEmpty();await page.locator('#close-modal').click();
+ await page.locator('[data-edit=cDAwMDAx]').click();await expect(page.locator('[data-calendar=g]')).toHaveAttribute('aria-pressed','true');await expect(page.locator('#birth-year')).toHaveValue('1990');
+});
+
+test('view-only families have a safe return and no empty edit column',async({page})=>{
+ const original=page.url(),shared=[{id:'c2hhcmVk',name:'Shared Person',calendar:'h',day:calendars.g.toDay(2001,2,3)}];
+ await page.locator('#family-search').fill('Omar');await page.evaluate(hash=>{location.hash=hash},encode(shared));await page.locator('#view-link').click();await expect(page.locator('#modal')).toBeHidden();
+ await expect(page.locator('#family-search')).toBeEmpty();await page.locator('#people-layout').selectOption('table');await expect(page.locator('.family-table thead th')).toHaveCount(5);await expect(page.locator('.family-table tbody td')).toHaveCount(4);
+ await page.locator('#notice button').filter({hasText:'Merge with my family'}).click();await page.locator('#cancel-merge').click();await expect(page.locator('#family-mode')).toHaveText('Shared family · view only');
+ const sharedURL=page.url();await page.evaluate(()=>{window.kinOriginalGet=Storage.prototype.getItem;Storage.prototype.getItem=function(key){if(key.startsWith('kin.family.'))throw new DOMException('Blocked','SecurityError');return window.kinOriginalGet.call(this,key)}});await page.locator('#return-family').click();
+ await expect(page.locator('#family-mode')).toHaveText('Shared family · view only');await expect(page.locator('#toast')).toHaveAttribute('role','alert');expect(page.url()).toBe(sharedURL);
+ await page.evaluate(()=>{Storage.prototype.getItem=window.kinOriginalGet;delete window.kinOriginalGet});await page.locator('#return-family').click();await expect(page.locator('#family-search')).toHaveValue('Omar');await expect(page.locator('.table-name')).toHaveText('Omar');await expect(page.locator('#people-tab')).toBeFocused();
+ expect(page.url()).toBe(original);expect(await page.evaluate(()=>localStorage.getItem('kin.family.v1:'+location.pathname))).toBe(encode(records));
+});
+
+test('a first shared family offers plain choices and can return to an empty device',async({page})=>{
+ await page.evaluate(()=>localStorage.clear());await page.goto('about:blank');await page.goto('./'+encode(records));
+ await expect(page.locator('#modal-title')).toHaveText('Open a shared family');await expect(page.locator('#modal-body')).not.toContainText('conflicts');await expect(page.locator('.form-preview')).toHaveCount(0);
+ for(const input of await page.locator('.merge-person').all())await input.uncheck();await expect(page.locator('#confirm-merge')).toBeDisabled();await page.locator('.merge-person').first().check();await expect(page.locator('#confirm-merge')).toBeEnabled();
+ await page.locator('#view-link').click();await expect(page.locator('#modal')).toBeHidden();await expect(page.locator('#notice button').filter({hasText:'Keep this family'})).toBeVisible();await page.locator('#return-family').click();
+ await expect(page.locator('#demo-button')).toBeVisible();await expect(page.locator('#share-button')).toBeHidden();await expect(page.locator('#add-button')).toBeVisible();expect(new URL(page.url()).hash).toBe('');expect(await page.evaluate(()=>localStorage.getItem('kin.family.v1:'+location.pathname))).toBeNull();
+});
+
+test('unavailable web fonts do not block Arabic entry or readable fallback',async({browser,baseURL})=>{
+ const context=await browser.newContext({serviceWorkers:'block',locale:'ar',viewport:{width:320,height:850}});const page=await context.newPage();
+ try{
+  await page.route('**/*.woff2',route=>route.abort());await page.goto(baseURL);await expect(page.locator('#startup-status')).toBeHidden();await page.evaluate(()=>document.fonts.ready);
+  expect(await page.evaluate(()=>document.fonts.check('400 16px "Kin Plex"','عائلتي'))).toBe(false);await expect(page.locator('h1')).toHaveText('أفراد العائلة');
+  await page.locator('#add-button').click();await page.locator('#person-name').fill('اختبار الخط البديل');await page.locator('#birth-day').fill('١');await page.locator('#birth-month').selectOption('1');await page.locator('#birth-year').fill('٢٠٠٠');await page.locator('#save-person').click();await expect(page.locator('#modal')).toBeHidden();await expect(page.locator('.person-card h3')).toHaveText('اختبار الخط البديل');
+  await page.evaluate(()=>document.documentElement.style.fontSize='150%');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+ }finally{await context.close()}
 });

@@ -1,3 +1,8 @@
+/* Self-hosted, unmodified IBM Plex Sans Arabic: source revision 39276912b05f700ee1dd491950c35d8697214208.
+   OFL license: fonts/OFL-Plex.txt. No external font or package/telemetry request. */
+@font-face { font-family:"Kin Plex"; src:url("./fonts/IBMPlexSansArabic-Regular.woff2") format("woff2"); font-style:normal; font-weight:400; font-display:swap; }
+@font-face { font-family:"Kin Plex"; src:url("./fonts/IBMPlexSansArabic-Medium.woff2") format("woff2"); font-style:normal; font-weight:500; font-display:swap; }
+@font-face { font-family:"Kin Plex"; src:url("./fonts/IBMPlexSansArabic-SemiBold.woff2") format("woff2"); font-style:normal; font-weight:600 900; font-display:swap; }
 html[data-booting] body { visibility:hidden; }
 #startup-status { visibility:visible; position:fixed; inset:40% 1rem auto; display:flex; justify-content:center; align-items:center; gap:.75rem; color:var(--muted); font-size:1rem; }
 .loading-spinner,.is-busy::before,.export-status.is-loading::before { content:""; display:inline-block; width:1.2em; height:1.2em; flex-shrink:0; border:2px solid currentColor; border-inline-end-color:transparent; border-radius:50%; animation:kin-loading .8s linear infinite; }
@@ -16,6 +21,12 @@ html[data-booting] body { visibility:hidden; }
 .icon-sun { color:#80603a; }
 .icon-moon { color:var(--sage); }
 .icon-previous,.icon-next { transform:none; }
+.agenda-month { display:flex; align-items:center; gap:.5rem; }
+.agenda-dates { display:flex; flex-wrap:wrap; gap:.35rem 1rem; }
+.agenda-dates>span,.family-table .table-date { display:flex; align-items:baseline; gap:.4rem; }
+.agenda-dates>span { white-space:normal; }
+.family-table .table-date .ui-icon { align-self:center; }
+.agenda-person .agenda-occurrence { color:var(--ink); font-weight:500; }
 .agenda-person p .ui-icon { vertical-align:-.2em; margin-inline-end:.35rem; }
 
 html[dir=rtl] .icon-previous,html[dir=rtl] .icon-next { transform:scaleX(-1); }
@@ -25,7 +36,7 @@ html[dir=rtl] .icon-previous,html[dir=rtl] .icon-next { transform:scaleX(-1); }
  --line:#ded9d5; --lime:#e9edce; --paper:#faf8f4; --surface:#fffefd;
  --sage:#386758; --lavender:#f2edf7;
  background:var(--paper); color:var(--ink);
- font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+ font-family:"Kin Plex",ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
 /* Respect browser font preferences; opt touch Safari into system Dynamic Type.
    Desktop Safari keeps its normal root size (its system-body default is smaller). */
@@ -33,7 +44,10 @@ html { font-size:100%; -webkit-text-size-adjust:auto; text-size-adjust:auto; }
 @supports (font: -apple-system-body) {
  @media (hover:none) and (pointer:coarse) { html { font:-apple-system-body; } }
 }
-body { font-size:1rem; line-height:1.6; }
+body { font-family:"Kin Plex",ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:1rem; line-height:1.7; }
+html[dir=rtl] h1,html[dir=rtl] .empty h3,html[dir=rtl] .dialog-head h2 { font-family:inherit; }
+.empty h3 { font-family:inherit; font-weight:600; }
+html[dir=rtl] .calendar-age .age-value { font-weight:500; }
 button,input,select,textarea { font-size:1rem; line-height:1.5; }
 button,select,input:not([type=checkbox]),summary { min-height:48px; }
 button { min-width:48px; }
@@ -186,10 +200,10 @@ html:not([data-booting]) .results-toolbar { visibility:visible; }
 .table-name { white-space:nowrap; overflow-wrap:normal; word-break:normal; }
 .family-table td { min-width:10rem; max-width:18rem; overflow-wrap:normal; }
 .family-table td:last-child { min-width:7rem; }
-.family-table .table-date { display:block; white-space:nowrap; }
+.family-table .table-date { display:flex; white-space:nowrap; }
 .family-table thead .ui-icon { vertical-align:-.2em; margin-inline-end:.4rem; }
 .family-table thead { background:#f0ece5; }
-.table-scroll { border-color:var(--line); background:var(--surface); max-width:100%; overscroll-behavior-inline:contain; }
+.table-scroll { position:relative; border-color:var(--line); background:var(--surface); max-width:100%; overscroll-behavior-inline:contain; }
 .table-scroll:focus-visible { outline:3px solid #6b5088; outline-offset:4px; }
 .table-scroll-hint { font-size:.9375rem; color:var(--muted); margin:0 0 .75rem; }
 .empty { background:var(--surface); border-color:#c9c1ce; min-height:320px; }
