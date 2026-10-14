@@ -6,8 +6,7 @@ html[data-booting]::after { content:attr(data-loading-label); display:block; pos
 .qr-options .qr-wrap canvas { width:auto; max-width:min(100%,220px); }
 .share-controls { position:sticky; bottom:-1.75rem; background:var(--surface); padding:.75rem 0; border-top:1px solid var(--line); }
 .qr-options .qr-wrap { margin-top:0; }
-.reading-button { display:inline-flex; align-items:center; gap:.4rem; }
-.reading-symbol { display:inline-flex; }
+.qr-wrap .button { max-width:100%; white-space:normal; overflow-wrap:anywhere; }
 .segmented button.has-icon { display:flex; align-items:center; justify-content:center; gap:.5rem; }
 .icon-sun { color:#80603a; }
 .icon-moon { color:var(--sage); }
@@ -23,7 +22,12 @@ html[dir=rtl] .icon-previous,html[dir=rtl] .icon-next { transform:scaleX(-1); }
  background:var(--paper); color:var(--ink);
  font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
-html[data-large-text="true"] { font-size:125%; }
+/* Respect browser font preferences; opt touch Safari into system Dynamic Type.
+   Desktop Safari keeps its normal root size (its system-body default is smaller). */
+html { font-size:100%; -webkit-text-size-adjust:auto; text-size-adjust:auto; }
+@supports (font: -apple-system-body) {
+ @media (hover:none) and (pointer:coarse) { html { font:-apple-system-body; } }
+}
 body { font-size:1rem; line-height:1.6; }
 button,input,select,textarea { font-size:1rem; line-height:1.5; }
 button,select,input:not([type=checkbox]),summary { min-height:48px; }
@@ -39,7 +43,7 @@ button { min-width:48px; }
 .family-options>summary::-webkit-details-marker { display:none; }
 .family-options>summary>.icon-chevron { margin-inline-start:auto; }
 .family-options[open]>summary>.icon-chevron { transform:rotate(180deg); }
-.button,.quiet,.language-button,.reading-button,.icon-button {
+.button,.quiet,.language-button,.icon-button {
  font-size:1rem; min-height:48px; min-width:48px; padding:.65rem 1rem; border-radius:10px;
 }
 .button { font-weight:600; }
@@ -47,7 +51,7 @@ button { min-width:48px; }
 .secondary { background:var(--surface); border-color:var(--line); color:var(--ink); }
 button:hover:not(:disabled) { filter:none; }
 .primary:hover:not(:disabled) { background:#554464; }
-.secondary:hover:not(:disabled),.reading-button:hover,.language-button:hover { background:#f1ece6; }
+.secondary:hover:not(:disabled),.language-button:hover { background:#f1ece6; }
 .quiet:hover { color:var(--deep); }
 input:not([type=checkbox]),select,textarea {
  font-size:1rem; padding:.65rem .8rem; background:var(--surface); border-color:#c8c2cb;
@@ -67,8 +71,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .brand-line { font-size:.9375rem; color:var(--muted); padding-inline-start:1.5rem; }
 .site-header nav { gap:.5rem; align-items:center; flex-wrap:wrap; }
 .site-header .quiet { font-size:.9375rem; }
-.language-button,.reading-button { background:transparent; border:1px solid transparent; color:var(--deep); font-size:.9375rem; }
-.reading-button[aria-pressed=true] { background:var(--lavender); border-color:#b9a9cc; }
+.language-button { background:transparent; border:1px solid transparent; color:var(--deep); font-size:.9375rem; }
 main { max-width:1264px; padding:2.5rem 2rem 0; }
 .page-heading {
  display:grid; grid-template-columns:minmax(0,1.35fr) minmax(0,1fr); gap:3rem;
@@ -289,7 +292,7 @@ html[dir=rtl] .calendar-age .age-value { letter-spacing:0; }
  .people { grid-template-columns:1fr; }
  .site-header { min-height:68px; padding:.5rem 1rem; gap:.5rem; }
  .site-header .brand-line { display:none; }
- main { padding:1.5rem 1rem 0; }
+ main { padding:1.5rem 16px 0; }
  .page-heading { display:block; margin-bottom:1.25rem; }
  .page-heading h1,html[dir=rtl] .page-heading h1 { font-size:2.25rem; }
  .hero-copy>.eyebrow { display:none; }
@@ -320,7 +323,7 @@ html[dir=rtl] .calendar-age .age-value { letter-spacing:0; }
  .filter-chips { flex:none; }
  .filter-status #clear-filters { align-self:flex-start; }
  .filter-status #clear-filters { background:transparent; border-color:transparent; padding:.5rem; }
- .person-card { padding:1.1rem 1.1rem .5rem; }
+ .person-card { padding:clamp(16px,1.1rem,20px); padding-bottom:.5rem; }
  .person-title h3 { font-size:1.125rem; }
  .calendar-age { padding-inline-end:.7rem; }
  .calendar-age+.calendar-age { padding-inline-start:.85rem; }
@@ -339,7 +342,7 @@ html[dir=rtl] .calendar-age .age-value { letter-spacing:0; }
  .date-fields { grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr) minmax(0,1fr); gap:.4rem; }
  .date-fields input,.date-fields select { padding:.6rem .35rem; min-width:0; font-size:1rem; }
  .date-fields:has(#compare-a) { grid-template-columns:1fr; }
- dialog,.document-dialog { padding:1rem; }
+ dialog,.document-dialog { padding:clamp(16px,1rem,24px); }
  .share-controls { bottom:-1rem; }
  .share-controls .button { flex:1 1 9rem; white-space:normal; overflow-wrap:anywhere; }
  .dialog-head { gap:.5rem; }
@@ -356,7 +359,7 @@ html[dir=rtl] .calendar-age .age-value { letter-spacing:0; }
 @media(max-width:430px) {
  .site-header { gap:0; padding:.5rem .75rem; }
  .site-header nav { gap:0; }
- .site-header .quiet,.language-button,.reading-button { font-size:.875rem; padding:.5rem .55rem; }
+ .site-header .quiet,.language-button { font-size:.875rem; padding:.5rem .55rem; }
  .brand { font-size:1.6rem; }
  .brand-mark { display:none; }
  .person-top { gap:.65rem; }
@@ -367,25 +370,53 @@ html[dir=rtl] .calendar-age .age-value { letter-spacing:0; }
  .toolbar-actions { justify-content:flex-start; }
  .toolbar-actions .button { padding:.6rem; }
 }
-@media(max-width:500px) {
- /* Enlarged text needs full-width controls, regardless of system font metrics. */
- html[data-large-text=true] .dialog-head { flex-wrap:wrap; }
- html[data-large-text=true] .dialog-head h2 { flex-basis:100%; min-width:0; }
- html[data-large-text=true] .dialog-head #close-modal { margin-inline-start:auto; }
- html[data-large-text=true] .celebration-panel { display:block; }
- html[data-large-text=true] .celebration-link { max-width:none; }
- html[data-large-text=true] .toolbar-actions { grid-template-columns:1fr; }
- html[data-large-text=true] .toolbar-actions .button { justify-content:flex-start; text-align:start; }
- html[data-large-text=true] .toolbar-actions .button.has-icon { flex-direction:row; }
- html[data-large-text=true] .discovery-bar { grid-template-columns:1fr; }
- html[data-large-text=true] .discovery-bar>* { grid-column:1; grid-row:auto; min-width:0; }
- html[data-large-text=true] .view-tabs { gap:.5rem; }
- html[data-large-text=true] .view-tabs button { overflow-wrap:anywhere; }
- html[data-large-text=true] .notice .button { white-space:normal; overflow-wrap:anywhere; }
- html[data-large-text=true] .age-grid.dual-ages { grid-template-columns:1fr; gap:1rem; }
- html[data-large-text=true] .calendar-age,
- html[dir=rtl][data-large-text=true] .calendar-age { padding:0; border:0; }
- html[data-large-text=true] .calendar-age+.calendar-age { border-top:1px solid var(--line); padding-top:1rem; }
+/* Font-relative container queries react to actual text size, not a Kin toggle. */
+.family-section { container:family / inline-size; }
+.person-card { container:person / inline-size; }
+dialog { container:dialog / inline-size; max-width:calc(100% - 24px); }
+.page-heading { container:heading / inline-size; }
+.dialog-head { flex-wrap:wrap; }
+.dialog-head h2 { flex:1 1 12rem; min-width:0; overflow-wrap:anywhere; }
+#close-modal { margin-inline-start:auto; max-width:100%; white-space:normal; }
+.view-tabs button,.notice .button { white-space:normal; overflow-wrap:anywhere; }
+@container dialog (max-width:24em) {
+ .date-fields:has(#compare-a),.comparison-ages,.document-settings,.export-form { grid-template-columns:1fr; }
+ .segmented { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,9em),1fr)); }
+ .segmented button { min-width:0; white-space:normal; overflow-wrap:anywhere; }
+ .dialog-actions { flex-wrap:wrap; }
+ .dialog-actions .button { white-space:normal; overflow-wrap:anywhere; }
+ .export-form .check-row { grid-column:auto; }
+}
+@container dialog (max-width:14em) {
+ .dialog-head h2 { flex-basis:100%; }
+ .date-fields { grid-template-columns:1fr; }
+}
+@container heading (max-width:28em) {
+ .celebration-panel { display:block; }
+ .celebration-link { max-width:none; }
+}
+@container family (max-width:25em) {
+ .toolbar-actions { grid-template-columns:repeat(auto-fit,minmax(min(100%,7em),1fr)); }
+ .toolbar-actions .button { justify-content:flex-start; text-align:start; }
+ .toolbar-actions .button.has-icon { flex-direction:row; }
+ .discovery-bar { grid-template-columns:1fr; }
+ .discovery-bar>* { grid-column:1; grid-row:auto; min-width:0; }
+ .view-tabs { gap:.5rem; }
+ .view-tabs button { overflow-wrap:anywhere; }
+}
+@container person (max-width:14em) {
+ .age-grid.dual-ages { grid-template-columns:1fr; gap:1rem; }
+ .calendar-age,
+ html[dir=rtl] .calendar-age { padding:0; border:0; }
+ .calendar-age+.calendar-age { border-top:1px solid var(--line); padding-top:1rem; }
+}
+@container person (max-width:12em) {
+ .person-top { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:start; }
+ .person-title { min-width:0; }
+ .edit-button { grid-column:2; justify-self:start; white-space:normal; }
+ .birthday-preview .birthday-row { display:block; }
+ .birthday-preview .birthday-row strong { display:block; max-width:none; text-align:start; }
+ .birthday-preview .birthday-type { overflow-wrap:anywhere; }
 }
 @media(prefers-reduced-motion:reduce) {
  *,*::before,*::after { scroll-behavior:auto!important; animation:none!important; transition:none!important; }

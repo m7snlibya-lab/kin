@@ -5,7 +5,6 @@
  try{const saved=localStorage.getItem('kin.language');if(saved==='ar'||saved==='en')lang=saved}catch{}
  root.lang=lang;root.dir=lang==='ar'?'rtl':'ltr';root.dataset.booting='true';
  root.dataset.loadingLabel=lang==='ar'?'جارٍ فتح عائلتك…':'Opening your family…';
- try{const prefs=JSON.parse(localStorage.getItem('kin.device.v1:'+location.pathname)||'null')?.preferences;root.dataset.largeText=prefs?.largeText===true?'true':'false'}catch{}
  document.title=lang==='ar'?'كِن — عائلتك مع مرور الأيام':'Kin — Family, through time';
  let timer;
  function recovery(){

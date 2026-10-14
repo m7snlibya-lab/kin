@@ -4,7 +4,6 @@ import {icon,labelControl} from './icons.js';
 
 // Keep everyday information visible; organize advanced controls without removing them.
 export function createComfort(state,{device,render}){
- const prefs=device.value.preferences;
  const layout=$('#layout-control');
  const toolbar=$('.toolbar-actions');
  toolbar.append($('#tools-button'),$('#exports-button'),$('#import-button'));
@@ -61,8 +60,6 @@ export function createComfort(state,{device,render}){
  aside.append($('#install-button'));
  aside.prepend($('#backup-reminder'));aside.prepend(overview);
 
- $('#about-button').insertAdjacentHTML('beforebegin',`<button id="text-size-button" class="reading-button" aria-pressed="false"><span class="reading-symbol" aria-hidden="true">${icon('text')}</span> <span id="text-size-label"></span></button>`);
- $('#text-size-button').onclick=()=>{prefs.largeText=!prefs.largeText;device.save();refresh()};
  $('#close-modal').innerHTML=`<span aria-hidden="true">${icon('close')}</span> <span data-i18n="Close">${t('Close')}</span>`;
 
  for(const [selector,name,key] of [
@@ -88,10 +85,6 @@ export function createComfort(state,{device,render}){
   $('#tools-button').hidden=$('#exports-button').hidden=state.people.length===0;
   $('.discovery-bar').hidden=state.people.length===0;
   $('.view-tabs').hidden=state.people.length===0;
-  document.documentElement.dataset.largeText=prefs.largeText===true?'true':'false';
-  $('#text-size-button').setAttribute('aria-pressed',String(prefs.largeText===true));
-  $('#text-size-label').textContent=t('Larger text');
-  $('#text-size-button > span[aria-hidden]').innerHTML=icon(prefs.largeText?'check':'text');
   const active=[
    state.group?{key:'group',label:t('Group: {name}',{name:device.value.groups.find(g=>g.id===state.group)?.name||''})}:null,
    state.month?{key:'month',label:t('{calendar}: {month}',{calendar:calendarName(state.primaryCalendar),month:months(state.primaryCalendar)[+state.month-1]})}:null,

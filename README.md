@@ -20,6 +20,13 @@ The browser suite checks person creation/editing/removal/undo, calendar switchin
 
 Run the algorithm checks with `node tests.mjs`. Tests cover 100,406 date conversions against ICU, Hijri/Gregorian leap dates, date-based ages and countdowns, Unicode codec round trips, corruption rejection, size limits, merge conflicts, duplicate detection, and QR generation. Browser installation, offline navigation, and device QR scanning require browser/device verification; these were not tested in this environment.
 
+## Native text sizing and mobile reflow (1.6.2)
+
+- Removed the app-specific Larger text control and ignore its legacy preference without changing family data or other preferences.
+- Browser-relative type and font-relative container layouts adapt to enlarged text automatically. Touch Safari opts into system Dynamic Type; desktop Safari retains its normal text size. Android text enlargement depends on the browser's exposure of accessibility settings.
+- Mobile viewport requests no pinch zoom, as a product choice. Browsers can override this for accessibility; disabling zoom limits an accessibility fallback and is not a claim of WCAG conformance.
+- Automated tests approximate enlarged text at 100%, 150%, and 200%, in Arabic/English portrait and landscape, including forms, sharing, printing, and comparisons. Actual phone OS settings require device testing.
+
 ## Embedded information, fewer expanders (1.6.0–1.6.1)
 
 Person cards show the birth weekday beside the name and days lived in a quiet footer, without More details. The table includes both facts in existing cells; future reference dates before birth do not show negative days lived. Both calendar ages and upcoming birthdays remain visible.
@@ -111,9 +118,9 @@ Bundled export assets: [PDF-LIB 1.17.1](https://github.com/Hopding/pdf-lib/relea
 - Every person card shows Gregorian **and** Hijri years, months, days and birth dates without expanding anything. Both next birthdays and countdowns are visible together. More details only contains secondary information such as the birth weekday and total days lived.
 - Everyday controls stay visible: add, share, age tools, export, search and cards/table. Sorting, groups and month filtering are under a labeled Filter & organize section. Active filters remain visible when collapsed and can be cleared with one action.
 - Optional overview/help sections and the noncritical backup reminder appear after the family list. Storage errors, incoming-link warnings and historical-date banners remain prominent. Promotional copy is reduced once a family is present.
-- Default text, contrast and control sizes are increased; major controls have a minimum 48-pixel target. Larger text is remembered only on the device, with a labeled on/off toggle to return to standard size. The layout reflows at narrow widths and increased text sizes.
+- Default text, contrast and control sizes are increased; major controls have a minimum 48-pixel target. The former device-only Larger text toggle was removed in 1.6.2 in favor of native sizing. The layout reflows at narrow widths and increased text sizes.
 - Dialogs focus the first usable field/action and restore focus to the launcher, including edited cards that have been re-rendered. Motion is disabled when reduced motion is requested.
-- Automated usability coverage checks dual-calendar visibility, active-filter recovery, text-size persistence, target sizes, focus, important card-text contrast, 320-pixel English/Arabic layouts and doubled root text. These checks supplement, but do not constitute, a complete accessibility conformance audit or usability study with real participants.
+- Automated usability coverage checks dual-calendar visibility, active-filter recovery, native text sizing and legacy-preference compatibility, target sizes, focus, important card-text contrast, 320-pixel English/Arabic layouts and doubled root text. These checks supplement, but do not constitute, a complete accessibility conformance audit or usability study with real participants.
 - Design references: [WAI target sizing](https://www.w3.org/WAI/WCAG22/Understanding/target-size-enhanced.html) and [text resizing](https://www.w3.org/WAI/WCAG22/Understanding/resize-text.html).
 
 ## URL format (v1)

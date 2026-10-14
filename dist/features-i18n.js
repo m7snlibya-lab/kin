@@ -34,7 +34,6 @@ export const featureMessages={
  "Add from a link":"إضافة من رابط",
  "Help":"المساعدة",
  "Close":"إغلاق",
- "Larger text":"تكبير النص",
  "Standard text":"حجم النص المعتاد",
  "Saving, sharing & offline help":"المساعدة في الحفظ والمشاركة والعمل دون إنترنت",
  "Search: {query}":"البحث: {query}",

@@ -63,7 +63,7 @@ test('calendar exports valid PDF and print-resolution PNG from one preview',asyn
  await expect(page.locator('#page-count')).toContainText('12');await page.locator('#document-preview').screenshot({path:info.outputPath('arabic-month-preview.png')});
 });
 test('embedded exports fit Arabic larger text and explain QR only when enabled',async({page})=>{
- await page.setViewportSize({width:320,height:850});await page.locator('#language-button').click();await page.locator('#text-size-button').click();await print(page);
+ await page.setViewportSize({width:320,height:850});await page.locator('#language-button').click();await page.evaluate(()=>document.documentElement.style.fontSize='125%');await print(page);
  await expect(page.locator('#doc-qr-note')).toBeHidden();await page.locator('#doc-qr').check();await expect(page.locator('#doc-qr-note')).toBeVisible();
  await expect(page.locator('#download-pdf')).toBeEnabled();
  expect(await page.locator('#modal').evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
@@ -73,7 +73,7 @@ test('embedded exports fit Arabic larger text and explain QR only when enabled',
 });
 
 test('embedded dialogs open at people selection instead of jumping to lower actions',async({page})=>{
- await page.setViewportSize({width:320,height:850});await page.locator('#language-button').click();await page.locator('#text-size-button').click();
+ await page.setViewportSize({width:320,height:850});await page.locator('#language-button').click();await page.evaluate(()=>document.documentElement.style.fontSize='125%');
  await page.locator('#share-button').click();await expect(page.locator('#select-all')).toBeFocused();
  expect(await page.locator('#modal').evaluate(el=>el.scrollTop)).toBe(0);await page.locator('#close-modal').click();
  await print(page);await expect(page.locator('#document-selection .selection-all')).toBeFocused();

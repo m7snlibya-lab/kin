@@ -69,7 +69,7 @@ test('empty list recovery clears month filters as well as search',async({page})=
 });
 
 test('long Arabic filter chips stay readable with larger text and localize their reset',async({page})=>{
- await page.setViewportSize({width:320,height:850});await page.locator('#language-button').click();await page.locator('#text-size-button').click();
+ await page.setViewportSize({width:320,height:850});await page.locator('#language-button').click();await page.evaluate(()=>document.documentElement.style.fontSize='125%');
  await page.locator('#family-options>summary').click();await page.locator('#month-filter').selectOption('4');await page.locator('#family-options>summary').click();
  await page.locator('#family-search').fill('عبد الرحمن محمد الحسن <اختبار> '.repeat(5));
  const search=page.locator('[data-remove-filter="search"]'),month=page.locator('[data-remove-filter="month"]');
@@ -158,22 +158,33 @@ test('today and offline installation are embedded while long guidance remains in
 });
 
 test('embedded sharing keeps action labels readable with Arabic larger text',async({page})=>{
- await page.setViewportSize({width:320,height:850});await page.locator('#language-button').click();await page.locator('#text-size-button').click();await page.locator('#share-button').click();
+ await page.setViewportSize({width:320,height:850});await page.locator('#language-button').click();await page.evaluate(()=>document.documentElement.style.fontSize='125%');await page.locator('#share-button').click();
  await expect(page.locator('#share-url')).toHaveAttribute('type','url');await expect(page.locator('#modal summary')).toHaveCount(0);
  for(const button of await page.locator('.share-controls .button:visible').all())expect(await button.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
  expect(await page.locator('#modal').evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
  await page.locator('#qr').scrollIntoViewIfNeeded();await expect(page.locator('#qr')).toBeVisible();await expect(page.locator('#download-qr')).toBeVisible();
 });
 
-test('larger text is remembered without changing family links',async({page})=>{
- const url=page.url();await page.locator('#text-size-button').click();await expect(page.locator('#text-size-button')).toHaveAttribute('aria-pressed','true');
- expect(await page.locator('.calendar-label').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(20);
- await page.reload();await expect(page.locator('#text-size-button')).toHaveAttribute('aria-pressed','true');
- expect(page.url()).toBe(url);await page.locator('#text-size-button').click();await expect(page.locator('#text-size-button')).toHaveAttribute('aria-pressed','false');
+test('native text sizing replaces the app toggle and ignores legacy preferences',async({page})=>{
+ const url=page.url(),size=await page.locator('.calendar-label').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
+ await page.evaluate(()=>localStorage.setItem('kin.device.v1:'+location.pathname,JSON.stringify({version:1,groups:[],preferences:{largeText:true,sort:'name'}})));
+ await page.reload();await expect(page.locator('#text-size-button')).toHaveCount(0);
+ expect(await page.locator('.calendar-label').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBe(size);
+ await page.evaluate(()=>document.documentElement.style.fontSize='200%');
+ expect(await page.locator('.calendar-label').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(size*2);
+ expect(page.url()).toBe(url);await expect(page.locator('#sort')).toHaveValue('name');
+});
+
+test('mobile viewport requests app-like no zoom while retaining native text scaling',async({page})=>{
+ await expect(page.locator('meta[name=viewport]')).toHaveAttribute('content',/maximum-scale=1,user-scalable=no/);
+ expect(await page.evaluate(()=>getComputedStyle(document.documentElement).webkitTextSizeAdjust||getComputedStyle(document.documentElement).textSizeAdjust)).not.toBe('none');
+ // Real OS accessibility settings are not exposed by Playwright; check the opt-in
+ // on touch WebKit and use root-font enlargement below as a reflow approximation.
+ expect(await page.evaluate(()=>[...document.styleSheets].flatMap(s=>[...s.cssRules]).some(r=>r.cssText.includes('-apple-system-body')))).toBe(true);
 });
 
 test('key controls have large targets and dialogs restore keyboard focus',async({page})=>{
- for(const selector of ['#add-button','#share-button','#text-size-button','#tools-button','#exports-button','.edit-button','#family-options>summary']){
+ for(const selector of ['#add-button','#share-button','#tools-button','#exports-button','.edit-button','#family-options>summary']){
   const box=await page.locator(selector).first().boundingBox();expect(Math.round(box.height)).toBeGreaterThanOrEqual(48);expect(Math.round(box.width)).toBeGreaterThanOrEqual(48);
  }
  await page.locator('#add-button').click();await expect(page.locator('#person-name')).toBeFocused();
@@ -187,18 +198,44 @@ test('small screens and doubled text reflow in English and Arabic',async({page},
  await page.setViewportSize({width:320,height:850});
  for(const lang of ['en','ar']){
   if(lang==='ar')await page.locator('#language-button').click();
-  await page.locator('#text-size-button').click();
+  await page.evaluate(()=>document.documentElement.style.fontSize='125%');
   const layout=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth,overflow:[...document.querySelectorAll('body *')].filter(el=>{const r=el.getBoundingClientRect();return r.width>0&&(r.right>innerWidth+1||r.left< -1)&&!el.classList.contains('sr-only')}).map(el=>({tag:el.tagName,id:el.id,classes:el.className,text:el.textContent.slice(0,80),x:el.getBoundingClientRect().x,width:el.getBoundingClientRect().width}))}));
   await page.screenshot({path:info.outputPath('readable-'+lang+'.png'),fullPage:true});
   expect(layout.scroll,JSON.stringify({lang,...layout})).toBeLessThanOrEqual(layout.width+1);
   for(const card of await page.locator('.person-card').all())expect(await card.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
-  await page.locator('#text-size-button').click();
+  await page.evaluate(()=>document.documentElement.style.fontSize='125%');
  }
  await page.setViewportSize({width:640,height:900});
  await page.evaluate(()=>document.documentElement.style.fontSize='200%');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
  await page.locator('#tools-button').click();await page.locator('#compare-open').click();
  expect(await page.locator('#modal').evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+});
+
+test('native enlarged text reflows on phones without page zoom',async({page},info)=>{
+ test.setTimeout(60000);const original=page.url();
+ const fits=async selector=>{const result=await page.locator(selector).first().evaluate(el=>({fits:el.scrollWidth<=el.clientWidth+1,size:getComputedStyle(document.documentElement).fontSize,details:[...el.querySelectorAll('*')].filter(n=>n.scrollWidth>n.clientWidth+2&&!['INPUT','SELECT','TEXTAREA'].includes(n.tagName)).slice(0,12).map(n=>({tag:n.tagName,id:n.id,class:n.className,width:n.clientWidth,scroll:n.scrollWidth}))}));expect(result.fits,selector+JSON.stringify(result)).toBe(true)};
+ for(const lang of ['en','ar']){
+  if(lang==='ar')await page.locator('#language-button').click();
+  for(const size of ['100%','150%','200%']){
+   await page.setViewportSize({width:320,height:850});
+   await page.evaluate(size=>document.documentElement.style.fontSize=size,size);
+   await fits('html');
+   for(const card of await page.locator('.person-card').all())expect(await card.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+   await expect(page.locator('.calendar-age')).toHaveCount(4);
+   if(size==='100%')await page.screenshot({path:info.outputPath('native-text-'+lang+'-100.png'),fullPage:true});
+   await page.locator('#add-button').click();await fits('#modal');await fits('.date-fields');await page.locator('#close-modal').click();
+   await page.locator('#share-button').click();await fits('#modal');
+   for(const button of await page.locator('.share-controls .button:visible').all())expect(await button.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+   await page.locator('#close-modal').click();
+  }
+  await page.screenshot({path:info.outputPath('native-text-'+lang+'-200.png'),fullPage:true});
+  await page.locator('#exports-button').click();await page.locator('#print-open').click();await expect(page.locator('#download-pdf')).toBeEnabled();await fits('#modal');await fits('.document-settings');
+  await page.locator('#close-modal').click();
+  await page.setViewportSize({width:851,height:393});await fits('html');await fits('.person-card');
+  await page.locator('#tools-button').click();await page.locator('#compare-open').click();await fits('#modal');await fits('.comparison-ages');await page.locator('#close-modal').click();
+ }
+ expect(page.url()).toBe(original);
 });
 
 test('birthday shortcut reveals the event even after restrictive agenda settings',async({page})=>{

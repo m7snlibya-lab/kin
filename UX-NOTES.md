@@ -30,6 +30,14 @@ Make the next useful action obvious without making the family list feel like a s
 - Sharing and printing focus the initial selection checkbox and reset the dialog to the top, so embedding content does not cause a jump to a lower action or open the phone keyboard.
 - The family filter toggle remains: it controls optional tools, not essential reading content. Dual ages, reference-date behavior, and portable data are unchanged.
 
+## Native sizing and mobile behavior in 1.6.2
+
+- Remove a second text-size preference from the header; use relative text sizes and automatic, font-relative reflow instead. Legacy largeText values no longer override native settings; other saved preferences and family links remain intact.
+- Touch Safari opts into Dynamic Type through its system-body style. Do not apply that style to desktop Safari, which has a smaller system-body baseline. Allow browser text adjustment; Android system font settings are browser-dependent.
+- Container queries respond to actual text size, stacking dual ages and controls only when their space requires it. Do not hide either calendar.
+- At the user's explicit request, the viewport disables mobile pinch zoom where the browser honors it. Browser accessibility overrides may still allow zoom. This removes an accessibility fallback and should not be represented as WCAG conformance.
+- Automated enlarged-root tests are a layout approximation, not proof of real iOS/Android settings. Physical phone accessibility settings remain a device-specific verification item.
+
 ## Next ideas, in recommended order (not implemented)
 
 1. **Quick group switching, only when useful.** Show Everyone plus a compact group chooser once a family has groups. Avoid displaying an empty group system to first-time users. Keep all group management in one place and retain device-only labeling.
