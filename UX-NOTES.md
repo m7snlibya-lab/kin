@@ -38,13 +38,23 @@ Make the next useful action obvious without making the family list feel like a s
 - At the user's explicit request, the viewport disables mobile pinch zoom where the browser honors it. Browser accessibility overrides may still allow zoom. This removes an accessibility fallback and should not be represented as WCAG conformance.
 - Automated enlarged-root tests are a layout approximation, not proof of real iOS/Android settings. Physical phone accessibility settings remain a device-specific verification item.
 
-## Next ideas, in recommended order (not implemented)
+## Calendar equality, feedback and Arabic in 1.7.0
 
-1. **Quick group switching, only when useful.** Show Everyone plus a compact group chooser once a family has groups. Avoid displaying an empty group system to first-time users. Keep all group management in one place and retain device-only labeling.
-2. **A more guided first addition.** Put the name first, then an explicitly labeled Gregorian/Hijri birth-date choice, and show the converted date before Save. Test with older family members before adding extra instructions or steps.
-3. **A compact large-family list.** Explore a list between full cards and the wide table: name, both ages, and next birthday. Do not remove the existing card detail or silently choose a layout on someone's behalf.
-4. **Purpose-led sharing.** Explore clear choices for a family link, a printable year, or one birthday image. Any redesign should replace existing menu entries, not create another sharing menu; selection and privacy review must remain explicit.
-5. **Usability testing with real relatives.** Ask a younger and an older person to add a birth date, find someone, compare ages, and print a calendar in Arabic. Measure wrong turns and completion, not just visual preference. These automated checks do not replace that evidence.
+- Legacy today-g styling was semantically promoting Gregorian dates. Replace both variants with identical date-value typography and explicit, equally styled calendar labels. Preserve both date values in reference mode as well.
+- Use a real live-status loading indicator rather than a family-specific startup sentence. Stop the spinner for reduced motion and remove it on success or failure; retain pre-paint language selection and retry recovery.
+- Give save/export work a visible status rather than only a disabled button. Restore labels on failure, announce results inside active dialogs, and preserve drafts, cancellation, duplicate-save protection, and undo.
+- Localize selection counts and editable dates, use neutral Arabic count headings where plural grammar would otherwise be wrong, and keep Arabic terminology consistent around family members.
+- Make RTL keyboard movement mirror the visual tab order; use logical spacing and isolate preview content according to its selected language. Explain selection searches with no matches without clearing checked people.
+
+## App-like direction, in recommended order (not implemented)
+
+1. **A compact phone app shell.** Explore bottom navigation with People, Birthdays, and Tools, plus one clearly labeled Add person action. Replace the existing mobile navigation/tool rows rather than duplicating them. Put occasional timeline/export/group operations in Tools. Respect safe areas and the on-screen keyboard; keep desktop navigation appropriate to desktop. Validate with younger and older relatives before shipping.
+2. **A compact family list with a person sheet.** Name, both ages, and the next birthday make the list scannable; tap a person for their full details and edit/share actions. Keep both ages visible and preserve existing card/table choices. Do not make swipe or long-press the only way to find an action.
+3. **One calm add/edit flow.** Use plain labels, calendar choice beside the date, and a converted-date confirmation beside Save. Reduce repeated explanations; use inline errors and explicit save success. Do not add mandatory multi-step onboarding or guess a person's calendar from their name/language.
+4. **Purpose-led sharing.** Present clear destinations: send a family link, print a year, or send one birthday image. Replace overlapping existing entries, preserve selected people across the flow, and show the privacy review before sharing. No silent cloud upload.
+5. **Useful filters only when needed.** Keep search direct; add quick group switching once groups exist and a clear current selection. Retain result counts and removable filter chips. Hide irrelevant controls without silently changing saved choices.
+
+Test each prototype with a younger and an older relative: add a date, find a person, compare ages, share a link, and print a year. Measure wrong turns and completion before adding gestures, reminders, accounts, or new preferences.
 
 ## Deliberate exclusions
 

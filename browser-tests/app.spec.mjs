@@ -174,6 +174,7 @@ test('simultaneous saves are serialized and the stale draft is preserved', async
   await Promise.all([page.locator('#save-person').click(),other.locator('#save-person').click()]);
   await expect(page.locator('#save-person')).toBeDisabled();
   await expect(other.locator('#save-person')).toBeDisabled();
+  await expect(page.locator('#save-person')).toHaveText('Saving…');await expect(page.locator('#save-person')).toHaveAttribute('aria-busy','true');
   await page.evaluate(()=>window.releaseTestLock());
   await expect.poll(async()=>Number(await page.locator('#modal').isVisible())+Number(await other.locator('#modal').isVisible())).toBe(1);
   const loser=await page.locator('#modal').isVisible()?page:other;
@@ -264,6 +265,7 @@ test('a stalled save times out safely and the editor can retry',async({page})=>{
  await page.clock.fastForward(10001);
  await expect(page.locator('#save-person')).toBeEnabled();
  await expect(page.locator('#person-name')).toHaveValue('Retry Draft');
+ await expect(page.locator('#save-person')).toHaveText('Add to my circle');await expect(page.locator('#save-person')).not.toHaveAttribute('aria-busy','true');await expect(page.locator('#dialog-feedback')).toBeVisible();
  await expect(page.locator('.person-card')).toHaveCount(0);
  await page.evaluate(()=>window.releaseTestLock());
  await page.clock.resume();

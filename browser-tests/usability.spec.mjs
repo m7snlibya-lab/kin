@@ -315,7 +315,7 @@ test('labeled calendar icons survive language changes and view switching',async(
 
 test('saved language is resolved before delayed app code can reveal another language',async({browser,baseURL})=>{
  for(const [saved,locale,dir,heading] of [['ar','en-US','rtl','دائرة عائلتك.'],['en','ar-SA','ltr','Your family circle.']]){
- const context=await browser.newContext({locale,serviceWorkers:'block'});const page=await context.newPage();
+ const context=await browser.newContext({locale,serviceWorkers:'block',reducedMotion:'reduce'});const page=await context.newPage();
  let release;const gate=new Promise(resolve=>release=resolve);
  try{
   await context.addInitScript(value=>localStorage.setItem('kin.language',value),saved);
@@ -325,7 +325,10 @@ test('saved language is resolved before delayed app code can reveal another lang
   await expect(page.locator('html')).toHaveAttribute('dir',dir);
   await expect(page.locator('html')).toHaveAttribute('data-booting','true');
   await expect(page.locator('h1')).toBeAttached();await expect(page.locator('h1')).not.toBeVisible();
-  release();await expect(page.locator('html')).not.toHaveAttribute('data-booting','true');
+  await expect(page.locator('#startup-status')).toBeVisible();await expect(page.locator('#startup-status')).toHaveAttribute('role','status');
+  await expect(page.locator('#startup-status')).toHaveText(saved==='ar'?'جارٍ التحميل…':'Loading…');
+  await expect(page.locator('#startup-status .loading-spinner')).toBeVisible();expect(await page.locator('#startup-status .loading-spinner').evaluate(el=>getComputedStyle(el).animationName)).toBe('none');
+  release();await expect(page.locator('html')).not.toHaveAttribute('data-booting','true');await expect(page.locator('#startup-status')).toHaveCount(0);
   await expect(page.locator('h1')).toHaveText(heading);
   await page.reload();await expect(page.locator('html')).toHaveAttribute('lang',saved);
   await expect(page.locator('h1')).toBeVisible();
@@ -339,10 +342,48 @@ test('failed startup offers a localized retry without exposing the English shell
   await context.addInitScript(()=>localStorage.setItem('kin.language','ar'));
   await page.clock.install();await page.route('**/app.js',route=>route.abort());
   await page.goto(baseURL);await page.clock.fastForward(10001);
-  await expect(page.locator('#startup-recovery')).toBeVisible();
+  await expect(page.locator('#startup-recovery')).toBeVisible();await expect(page.locator('#startup-status')).toHaveCount(0);
   await expect(page.locator('#startup-recovery button')).toHaveText('إعادة المحاولة');
   await expect(page.locator('h1')).not.toBeVisible();
  }finally{await context.close()}
+});
+
+test('today dates have equal typography and localized labels in both directions',async({page},info)=>{
+ for(const lang of ['en','ar']){
+  if(lang==='ar')await page.locator('#language-button').click();
+  for(const width of [1100,393,320]){
+   await page.setViewportSize({width,height:850});
+   const styles=await page.locator('.today-value').evaluateAll(els=>els.map(el=>{const s=getComputedStyle(el);return [s.fontSize,s.fontWeight,s.color,s.lineHeight]}));expect(styles[0]).toEqual(styles[1]);
+   await expect(page.locator('[data-calendar-label=g]')).toHaveText(lang==='ar'?'الميلادي':'Gregorian');
+   await expect(page.locator('[data-calendar-label=h]')).toHaveText(lang==='ar'?'الهجري':'Hijri');
+   expect(await page.locator('#family-overview').evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+  }
+  await page.locator('#family-overview').screenshot({path:info.outputPath('equal-calendars-'+lang+'.png')});
+ }
+});
+
+test('RTL tab arrows follow the visual direction',async({page})=>{
+ await page.locator('#people-tab').focus();await page.keyboard.press('ArrowRight');await expect(page.locator('#birthdays-tab')).toBeFocused();
+ await page.locator('#language-button').click();await page.locator('#people-tab').click();await page.keyboard.press('ArrowLeft');await expect(page.locator('#birthdays-tab')).toBeFocused();
+ await page.keyboard.press('ArrowRight');await expect(page.locator('#people-tab')).toBeFocused();
+ await page.keyboard.press('End');await expect(page.locator('#timeline-tab')).toBeFocused();await page.keyboard.press('Home');await expect(page.locator('#people-tab')).toBeFocused();
+});
+
+test('Arabic editor values and selection counts use local digits without changing links',async({page})=>{
+ const original=page.url();await page.locator('#language-button').click();await page.locator('[data-edit="cDAwMDAx"]').click();
+ await expect(page.locator('#birth-day')).toHaveValue('١٨');await expect(page.locator('#birth-year')).toHaveValue('١٩٩٠');await page.locator('#close-modal').click();
+ await page.locator('#share-button').click();await expect(page.locator('#share-count')).toHaveText('تم تحديد ٢ من أصل ٢');
+ await expect(page.locator('.selection-search')).toHaveAttribute('dir','auto');await page.locator('.selection-search').fill('اسم غير موجود');await expect(page.locator('.selection-empty')).toBeVisible();await expect(page.locator('.selection-empty')).toHaveText('لا توجد أسماء مطابقة');await page.locator('.selection-search').fill('');await expect(page.locator('.selection-empty')).toBeHidden();await page.locator('#close-modal').click();
+ await page.locator('#exports-button').click();await page.locator('#print-open').click();await expect(page.locator('#download-pdf')).toBeEnabled();
+ await expect(page.locator('#document-selection .selection-count')).toHaveText('تم تحديد ٢ من أصل ٢');await expect(page.locator('#doc-year')).toHaveValue(/^[٠-٩]+$/);
+ await page.locator('#doc-language').selectOption('ar');await expect(page.locator('#download-pdf')).toBeEnabled();await expect(page.locator('#document-text')).toHaveAttribute('dir','rtl');
+ await expect(page.locator('#document-preview canvas')).toHaveAttribute('aria-label',/معاينة الصفحة/);expect(page.url()).toBe(original);
+});
+
+test('copy feedback is shown inside its dialog rather than only behind it',async({page})=>{
+ await page.locator('#language-button').click();await page.locator('#share-button').click();
+ await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async()=>{}}}));
+ await page.locator('#copy-share').click();await expect(page.locator('#modal #dialog-feedback')).toBeVisible();await expect(page.locator('#dialog-feedback')).toContainText('تم نسخ الرابط');await expect(page.locator('#dialog-feedback')).toHaveAttribute('role','status');
 });
 
 test('calendar symbols are identical in cards, the editor and birthday agenda',async({page})=>{

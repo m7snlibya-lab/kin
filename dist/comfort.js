@@ -49,7 +49,9 @@ export function createComfort(state,{device,render}){
  overview.querySelector('.overview-item:not(.date-item)').hidden=true;
  for(const [selector,name] of [['#today-g','sun'],['#today-h','moon']]){
   const value=$(selector),row=document.createElement('div');row.className='today-date';
-  value.before(row);row.innerHTML=icon(name);row.append(value);
+  value.className='today-value';value.before(row);
+  row.innerHTML=icon(name)+'<div class="today-calendar"><span class="today-calendar-label" data-calendar-label="'+(name==='sun'?'g':'h')+'"></span></div>';
+  row.querySelector('.today-calendar').append(value);
  }
  const aside=$('.workspace > aside');
  const offline=$('#offline-label').closest('.detail-line');
@@ -82,6 +84,7 @@ export function createComfort(state,{device,render}){
   document.body.classList.toggle('has-family',state.people.length>0);
   $('.celebration-panel').hidden=state.people.length===0;
   $('.celebration-panel .eyebrow').textContent=t(state.reference===null?'Next in your circle':'Next from this date');
+  for(const label of document.querySelectorAll('[data-calendar-label]'))label.textContent=calendarName(label.dataset.calendarLabel);
   $('#tools-button').hidden=$('#exports-button').hidden=state.people.length===0;
   $('.discovery-bar').hidden=state.people.length===0;
   $('.view-tabs').hidden=state.people.length===0;

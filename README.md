@@ -20,6 +20,14 @@ The browser suite checks person creation/editing/removal/undo, calendar switchin
 
 Run the algorithm checks with `node tests.mjs`. Tests cover 100,406 date conversions against ICU, Hijri/Gregorian leap dates, date-based ages and countdowns, Unicode codec round trips, corruption rejection, size limits, merge conflicts, duplicate detection, and QR generation. Browser installation, offline navigation, and device QR scanning require browser/device verification; these were not tested in this environment.
 
+## Balanced calendars, feedback and Arabic polish (1.7.0)
+
+- Today/reference dates share one component with equal font size, weight, color and line height; both calendars have explicit labels and their established sun/moon icons. Narrow layouts stack both rather than treating Hijri as a secondary date.
+- Startup uses an accessible localized Loading indicator (جارٍ التحميل…) with a reduced-motion-safe spinner; failure replaces it with a retry message. Saved-language pre-paint behavior remains intact.
+- Save and lazy export actions show their working state, restore their labels after failures, and keep duplicate actions disabled. Preview/export work shows progress, with explicit export cancellation. Copy feedback is also visible inside its dialog.
+- Arabic selection counts and editable dates use localized digits; export text previews follow their own selected language, independently of interface language. RTL keyboard tab navigation follows visual order. Search selections explain an empty match without losing checked people.
+- New app-navigation and workflow ideas are recommendations in UX-NOTES.md, not changes to the existing navigation in this release.
+
 ## Native text sizing and mobile reflow (1.6.2)
 
 - Removed the app-specific Larger text control and ignore its legacy preference without changing family data or other preferences.

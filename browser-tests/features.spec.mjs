@@ -31,6 +31,14 @@ test('dense Arabic exports preserve all names and cancellation permits retry',as
 test.afterEach(async({page})=>expect(errors.get(page)).toEqual([]));
 async function tools(page,id){if(id==='#groups-open'){const filters=page.locator('#family-options');if(!await filters.evaluate(el=>el.open))await filters.locator('summary').click();await page.locator('#manage-groups').click()}else{await page.locator('#tools-button').click();await page.locator(id).click()}}
 async function print(page){await page.locator('#exports-button').click();await page.locator('#print-open').click();await expect(page.locator('#download-pdf')).toBeEnabled({timeout:20000})}
+test('preview loading has visible progress and recovers to a labeled preview',async({page})=>{
+ await page.locator('#language-button').click();await page.locator('#exports-button').click();await page.locator('#print-open').click();
+ await expect(page.locator('#document-status')).toHaveClass(/is-loading/);await expect(page.locator('#document-status')).toHaveText('جارٍ تجهيز المعاينة…');
+ await expect(page.locator('#document-preview')).toHaveAttribute('aria-busy','true');
+ await expect(page.locator('#download-pdf')).toBeEnabled();await expect(page.locator('#document-status')).not.toHaveClass(/is-loading/);await expect(page.locator('#document-preview')).toHaveAttribute('aria-busy','false');
+ await expect(page.locator('#document-status')).toContainText('الصفحات:');await expect(page.locator('#document-preview canvas')).toHaveAttribute('role','img');
+});
+
 test('groups remain device-only and filter sharing and exports',async({page})=>{
  const original=page.url();await tools(page,'#groups-open');await expect(page.locator('#group-name')).toBeFocused();await page.locator('#group-name').fill('Parents');
  await page.locator('#group-selection .selection-all').uncheck();await page.locator('#group-selection [value="cDAwMDAx"]').check();await page.locator('#save-group').click();
