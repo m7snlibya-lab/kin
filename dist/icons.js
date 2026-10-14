@@ -4,6 +4,9 @@ import {t} from './i18n.js';
 // Icons: official Lucide at dab294f313897bacaa968b725b3259fa37c17bd1.
 // Copyright and permissions: vendor/lucide-LICENSE.txt (Lucide ISC / Feather MIT).
 const paths={
+ "grid":"<rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\" /><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\" /><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\" /><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\" />",
+ "list":"<path d=\"M8 6h13\" /><path d=\"M8 12h13\" /><path d=\"M8 18h13\" /><path d=\"M3 6h.01\" /><path d=\"M3 12h.01\" /><path d=\"M3 18h.01\" />",
+ "table":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" /><path d=\"M3 9h18\" /><path d=\"M3 15h18\" /><path d=\"M9 3v18\" /><path d=\"M15 3v18\" />",
  "external":"<path d=\"M15 3h6v6\" /><path d=\"M10 14 21 3\" /><path d=\"M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6\" />",
  "people": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\" /><path d=\"M16 3.128a4 4 0 0 1 0 7.744\" /><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\" /><circle cx=\"9\" cy=\"7\" r=\"4\" />",
  "backup": "<path d=\"M12 2v8\" /><path d=\"m16 6-4 4-4-4\" /><rect width=\"20\" height=\"8\" x=\"2\" y=\"14\" rx=\"2\" /><path d=\"M6 18h.01\" /><path d=\"M10 18h.01\" />",

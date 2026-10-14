@@ -58,7 +58,7 @@ test('comparison and past/future dates do not mutate family links',async({page})
  await tools(page,'#reference-open');await page.locator('#reference-year').fill('2030');await page.locator('#reference-apply').click();await expect(page.locator('#reference-banner')).toContainText('2030');expect(page.url()).toBe(original);
 });
 test('table, timeline, preferences and RTL remain usable',async({page})=>{
- const original=page.url();await page.locator('#people-layout').selectOption('table');await expect(page.locator('.family-table tbody tr')).toHaveCount(3);await page.reload();await expect(page.locator('#people-layout')).toHaveValue('table');
+ const original=page.url();await page.locator('[data-layout="table"]').click();await expect(page.locator('.family-table tbody tr')).toHaveCount(3);await page.reload();await expect(page.locator('[data-layout="table"]')).toHaveAttribute('aria-pressed','true');
  await page.locator('#tools-tab').click();await page.locator('#timeline-tab').click();await expect(page.locator('.family-timeline li')).toHaveCount(3);await page.locator('#timeline-mode').selectOption('birthdays');await expect(page.locator('.family-timeline li').first()).toBeVisible();
  await page.locator('#language-button').click();await expect(page.locator('html')).toHaveAttribute('dir','rtl');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect(page.url()).toBe(original);
 });

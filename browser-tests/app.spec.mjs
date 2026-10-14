@@ -11,6 +11,10 @@ async function addPerson(page, name = 'Release Test', {day='18', month='4', year
   await expect(page.locator('#modal')).not.toBeVisible();
   await expect(page.locator('.person-card h3', {hasText:name})).toBeVisible();
 }
+async function fillSearch(page, value) {
+  if (await page.locator('#search-toggle').isVisible() && await page.locator('.search-field').isHidden()) await page.locator('#search-toggle').click();
+  await page.locator('#family-search').fill(value);
+}
 
 const pageErrors=new WeakMap();
 test.beforeEach(async ({page}) => {
@@ -39,7 +43,7 @@ test('adds, edits, searches and removes a person with undo', async ({page}) => {
   await page.locator('#person-name').fill('Updated Test');
   await page.locator('#save-person').click();
   await expect(page.locator('#modal')).not.toBeVisible();
-  await page.locator('#family-search').fill('missing');
+  await fillSearch(page, 'missing');
   await expect(page.getByText('No people match these filters', {exact:true})).toBeVisible();
   await page.locator('#clear-search').click();
   await page.getByRole('button', {name:'Edit Updated Test', exact:true}).click();

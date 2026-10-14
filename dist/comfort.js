@@ -1,5 +1,5 @@
-import {$,button,esc} from './ui.js';
-import {t,months,number,calendarName} from './i18n.js';
+import {$,$$,button,esc} from './ui.js';
+import {t,number,calendarName} from './i18n.js';
 import {icon,labelControl} from './icons.js';
 
 // Keep everyday information visible; organize advanced controls without removing them.
@@ -24,8 +24,8 @@ export function createComfort(state,{device,render}){
  $('.page-heading h1').dataset.i18n='Your people';
  $('.page-heading h1').insertAdjacentHTML('afterend','<p id="family-mode" class="family-mode" role="status"></p>');
  const finder=document.createElement('div');finder.className='discovery-bar';
- $('.search-field').before(finder);finder.append($('.search-field'),layout);
- $('#layout-control > span').className='sr-only';
+ $('.search-field').before(finder);finder.append($('.search-field'));
+ layout.hidden=true;
  $('.sort-label .sr-only').className='control-label';
  // Add person lives in the persistent app header, not repeated in each view.
  $('#share-button').classList.replace('primary','secondary');
@@ -39,17 +39,19 @@ export function createComfort(state,{device,render}){
  celebration.querySelector('.eyebrow').dataset.i18n='Next in your circle';
  celebration.insertAdjacentHTML('beforeend',`<button id="see-birthdays" class="celebration-link" data-i18n="View birthdays">${t('View birthdays')}</button>`);
  $('.page-heading').append(celebration);
- $('#see-birthdays').onclick=()=>{state.view='birthdays';state.birthdayCalendar='both';state.birthdayRange=365;state.milestones=[];render();$('#birthdays-tab').focus();$('#birthday-panel').scrollIntoView({block:'start',behavior:'auto'})};
+ $('#see-birthdays').onclick=()=>{state.view='birthdays';state.birthdayView='upcoming';state.birthdayCalendar='both';state.birthdayRange=365;state.milestones=[];render();$('#birthdays-tab').focus();$('#birthday-panel').scrollIntoView({block:'start',behavior:'auto'})};
 
  const filters=$('.family-filters');
  $('.search-field').insertAdjacentHTML('afterend',`<details id="family-options" class="family-options"><summary><span data-i18n="Filter & organize">${t('Filter & organize')}</span><span id="filter-count" class="count-pill" hidden></span></summary></details><div id="filter-status" class="filter-status" hidden><div id="filter-description" class="filter-chips"></div>${button('clear-filters','Clear filters')}</div>`);
  $('#family-options').append(filters);finder.append($('#family-options'));finder.after($('#filter-status'));
  const results=document.createElement('div');results.className='results-toolbar';results.id='results-toolbar';
- results.innerHTML='<p id="results-summary" role="status" aria-live="polite" aria-atomic="true"></p>';
- $('#filter-status').after(results);results.append($('.sort-label'));
+ results.innerHTML=`<p id="results-summary" role="status" aria-live="polite" aria-atomic="true"></p><div class="results-actions"><button type="button" id="search-toggle" class="icon-button search-toggle" aria-controls="family-search" aria-expanded="false" aria-label="${t('Search family')}" title="${t('Search family')}">${icon('search')}<span class="sr-only">${t('Search family')}</span></button><div class="layout-view-toggle" role="group" aria-label="${t('People view')}">${[['cards','grid'],['list','list'],['table','table']].map(([value,symbol])=>`<button type="button" data-layout="${value}" aria-label="${t(value==='cards'?'Cards':value==='list'?'List':'Table')}" title="${t(value==='cards'?'Cards':value==='list'?'List':'Table')}">${icon(symbol)}<span class="sr-only">${t(value==='cards'?'Cards':value==='list'?'List':'Table')}</span></button>`).join('')}</div></div>`;
+ $('#filter-status').after(results);$('.results-actions').append($('.sort-label'));
+ $$('.layout-view-toggle [data-layout]').forEach(button=>button.onclick=()=>{state.layout=button.dataset.layout;device.value.preferences.layout=state.layout;device.save();render()});
+ $('#search-toggle').onclick=()=>{if(state.search){$('#family-search').focus();return}state.searchOpen=!state.searchOpen;refresh();if(state.searchOpen)$('#family-search').focus();else $('#search-toggle').focus()};
  $('#primary-calendar').previousElementSibling.dataset.i18n='Calendar for filters & dates';
  filters.insertAdjacentHTML('beforeend',`<p class="hint filter-explanation" data-i18n="Ages are always shown in both calendars. This choice only changes filters and date-based tools.">${t('Ages are always shown in both calendars. This choice only changes filters and date-based tools.')}</p>`);
- $('#clear-filters').onclick=()=>{state.group='';state.month='';state.search='';$('#family-search').value='';render();$('#family-search').focus()};
+ $('#clear-filters').onclick=()=>{state.group='';state.search='';$('#family-search').value='';render();$('#family-search').focus()};
  $('#filter-description').onclick=e=>{
   const chip=e.target.closest('[data-remove-filter]');if(!chip)return;
   const key=chip.dataset.removeFilter,index=[...chip.parentElement.children].indexOf(chip);
@@ -124,7 +126,6 @@ export function createComfort(state,{device,render}){
   $('.celebration-panel').hidden=!state.people.length||tools||state.view==='timeline';
   const active=[
    state.group?{key:'group',label:t('Group: {name}',{name:device.value.groups.find(g=>g.id===state.group)?.name||''})}:null,
-   state.month?{key:'month',label:t('{calendar}: {month}',{calendar:calendarName(state.primaryCalendar),month:months(state.primaryCalendar)[+state.month-1]})}:null,
    state.search?{key:'search',label:t('Search: {query}',{query:state.search})}:null
   ].filter(Boolean);
   $('#filter-status').hidden=!active.length||tools;
@@ -133,12 +134,20 @@ export function createComfort(state,{device,render}){
    `<button type="button" class="filter-chip" data-remove-filter="${key}" title="${esc(label)}" aria-label="${esc(t('Remove filter: {filter}',{filter:label}))}"><bdi>${esc(label)}</bdi>${icon('close')}</button>`
   ).join('');
   $('#results-toolbar').hidden=!state.people.length||tools;
+  $('#results-summary').hidden=state.view!=='people';
   $('#results-summary').textContent=t('Showing {shown} of {total} people',{shown:$('#list-count').textContent,total:number(state.people.length)});
   $('#filter-count').hidden=!active.length;$('#filter-count').textContent=number(active.length);
   $('#family-options').classList.toggle('has-filters',!!active.length);
+  $('.search-field').classList.toggle('is-collapsed',!state.search&&!state.searchOpen);
+  $('.discovery-bar').classList.toggle('search-visible',!!state.search||!!state.searchOpen);
+  $('#search-toggle').setAttribute('aria-expanded',String(!!state.search||!!state.searchOpen));
+  $('#search-toggle').setAttribute('aria-label',t('Search family'));$('#search-toggle').title=t('Search family');
+  $('.layout-view-toggle').setAttribute('aria-label',t('People view'));
+  $$('.layout-view-toggle [data-layout]').forEach(button=>{const label=t(button.dataset.layout==='cards'?'Cards':button.dataset.layout==='list'?'List':'Table');button.setAttribute('aria-label',label);button.title=label});
+  $$('.layout-view-toggle [data-layout]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.layout===state.layout)));
 
   $('.sort-label').hidden=state.view!=='people'||state.people.length<2;
-  $('#layout-control').hidden=state.view!=='people';
+  $('#layout-control').hidden=true;$('.layout-view-toggle').hidden=state.view!=='people';
   const table=$('.table-scroll');
   if(table!==observedTable){tableObserver.disconnect();observedTable=table;if(table)tableObserver.observe(table)}
   updateScrollHint();

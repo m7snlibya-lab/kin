@@ -82,6 +82,13 @@ Remembering the last successfully used birth-entry calendar removes repeated swi
 
 Remaining evidence gaps: physical iOS/Android accessibility settings, browser/hardware Back with modal drafts, live Arabic VoiceOver/TalkBack, and task completion with younger/older relatives. These are not certified by viewport emulation. Keep the requested no-zoom viewport, but do not call this accessibility conformance. Product naming, notifications and cloud sync remain separate decisions, not features to add during this corrective pass.
 
+## Family-first browsing in 1.11.0
+
+- People is the default focus; on phones, search opens only when requested and stays visible while a query is active. Cards, List, and Table use direct, labelled icon buttons instead of a layout dropdown.
+- Remove month as a roster filter. The Birthdays destination keeps its upcoming agenda and adds a By month mode, with an explicit Gregorian/Hijri choice. Each family member appears once in the selected calendar's birth month; both birth dates and both current/reference ages remain visible.
+- Month sections are ordered by calendar month, omit empty months, and order people by day then localized name. Filtered family/group/search scope is preserved when browsing.
+- Keep the mode and calendar choice as local display preferences only; they do not alter family records, links, or exports. Calendar exports remain in the Upcoming agenda.
+
 ## Verification
 
 Regression checks cover English/Arabic, RTL, narrow screens, larger text, keyboard focus, remembered preferences, filtered sharing/exports, and unchanged family links. Unit checks additionally cover date conversion, backup/import safety, offline caching, and dense printable layouts. Deployment is gated by the complete automated suite.
