@@ -7,7 +7,7 @@ const records=[
  {id:'cDAwMDAy',name:'Omar',calendar:'h',day:calendars.g.toDay(2010,9,22)}
 ];
 const errors=new WeakMap();
-test.beforeEach(async({page})=>{errors.set(page,[]);page.on('pageerror',e=>errors.get(page).push(e.message));await page.goto('./'+encode(records));await expect(page.locator('.person-card')).toHaveCount(2)});
+test.beforeEach(async({page})=>{errors.set(page,[]);page.on('pageerror',e=>errors.get(page).push(e.message));await page.goto('./'+encode(records));await page.locator('#confirm-merge').click();await expect(page.locator('#modal')).toBeHidden();await expect(page.locator('.person-card')).toHaveCount(2)});
 test.afterEach(async({page})=>expect(errors.get(page)).toEqual([]));
 
 test('both ages, birth dates and next birthdays are visible without expanding details',async({page})=>{
@@ -83,15 +83,15 @@ test('mobile views come before tools and tool explanations are clickable',async(
  await page.setViewportSize({width:393,height:851});
  for(const lang of ['en','ar']){
   if(lang==='ar')await page.locator('#language-button').click();
-  const tabs=await page.locator('.view-tabs').boundingBox(),tools=await page.locator('.section-toolbar').boundingBox();expect(tabs.y+tabs.height).toBeLessThanOrEqual(tools.y+1);
+  const tabs=await page.locator('.view-tabs').boundingBox();expect(tabs.y+tabs.height).toBeLessThanOrEqual(852);await expect(page.locator('#tools-panel')).toBeHidden();
   expect(await page.locator('.view-tabs').evaluate(el=>!!(el.compareDocumentPosition(document.querySelector('.section-toolbar'))&Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
-  await page.locator('#tools-button').click();await page.locator('#compare-open .tool-copy>span').click();
-  await expect(page.locator('#comparison-result')).toBeVisible();await page.locator('#close-modal').click();
+  await page.locator('#tools-tab').click();await page.locator('#tools-button').click();await page.locator('#compare-open .tool-copy>span').click();
+  await expect(page.locator('#comparison-result')).toBeVisible();await page.locator('#close-modal').click();await page.locator('#people-tab').click();
  }
 });
 
 test('comparison identifies the older person in either selection order',async({page})=>{
- const original=page.url();await page.locator('#tools-button').click();await page.locator('#compare-open').click();
+ const original=page.url();await page.locator('#tools-tab').click();await page.locator('#tools-button').click();await page.locator('#compare-open').click();
  const before=await page.locator('#comparison-result').textContent();
  await expect(page.locator('.comparison-age')).toHaveCount(2);await expect(page.locator('#comparison-result')).not.toContainText('Not born yet');
  await expect(page.locator('.comparison-summary')).toHaveText('When Omar was born, Amina أحمد was:');
@@ -102,21 +102,21 @@ test('comparison identifies the older person in either selection order',async({p
 });
 
 test('comparison handles same-day births without calling either person older',async({page})=>{
- const same=records.map(p=>({...p,day:records[0].day}));await page.evaluate(()=>localStorage.clear());await page.goto('about:blank');await page.goto('./'+encode(same));
- const original=page.url();await page.locator('#tools-button').click();await page.locator('#compare-open').click();
+ const same=records.map(p=>({...p,day:records[0].day}));await page.evaluate(()=>localStorage.clear());await page.goto('about:blank');await page.goto('./'+encode(same));await page.locator('#confirm-merge').click();
+ const original=page.url();await page.locator('#tools-tab').click();await page.locator('#tools-button').click();await page.locator('#compare-open').click();
  await expect(page.locator('.comparison-summary')).toHaveText('Amina أحمد and Omar were born on the same day.');
  await expect(page.locator('.comparison-age')).toHaveCount(0);await expect(page.locator('#comparison-result')).not.toContainText('Not born yet');
  expect(page.url()).toBe(original);
- await page.locator('#close-modal').click();await page.locator('#language-button').click();await page.locator('#tools-button').click();await page.locator('#compare-open').click();
+ await page.locator('#close-modal').click();await page.locator('#people-tab').click();await page.locator('#language-button').click();await page.locator('#tools-tab').click();await page.locator('#tools-button').click();await page.locator('#compare-open').click();
  await expect(page.locator('.comparison-summary')).toContainText('في اليوم نفسه');
 });
 
 test('comparison can use the family without resetting restrictive filters',async({page})=>{
- const original=page.url();await page.locator('#family-search').fill('Omar');await page.locator('#tools-button').click();await page.locator('#compare-open').click();
+ const original=page.url();await page.locator('#family-search').fill('Omar');await page.locator('#tools-tab').click();await page.locator('#tools-button').click();await page.locator('#compare-open').click();
  await expect(page.locator('.comparison-scope')).toBeVisible();await expect(page.locator('#compare-a option')).toHaveCount(2);
- await expect(page.locator('.comparison-age')).toHaveCount(2);await page.locator('#close-modal').click();
+ await expect(page.locator('.comparison-age')).toHaveCount(2);await page.locator('#close-modal').click();await page.locator('#people-tab').click();
  await expect(page.locator('#family-search')).toHaveValue('Omar');await expect(page.locator('.person-card')).toHaveCount(1);expect(page.url()).toBe(original);
- await page.evaluate(()=>localStorage.clear());await page.goto('about:blank');await page.goto('./'+encode(records.slice(0,1)));await expect(page.locator('#sort')).toBeHidden();await page.locator('#tools-button').click();
+ await page.evaluate(()=>localStorage.clear());await page.goto('about:blank');await page.goto('./'+encode(records.slice(0,1)));await page.locator('#confirm-merge').click();await expect(page.locator('#sort')).toBeHidden();await page.locator('#tools-tab').click();await page.locator('#tools-button').click();
  await expect(page.locator('#compare-open')).toHaveCount(0);await expect(page.locator('#reference-open')).toBeVisible();
 });
 
@@ -153,7 +153,7 @@ test('today and offline installation are embedded while long guidance remains in
   await expect(page.locator('#family-overview summary,.saving-guide,.link-note')).toHaveCount(0);
   await expect(page.locator('#install-button')).toBeVisible();await expect(page.locator('#offline-label')).toBeVisible();
  }
- await page.locator('#about-button').click();await expect(page.locator('#modal .prose')).toContainText('الرابط مضغوط');
+ await page.locator('#tools-tab').click();await page.locator('#about-button').click();await expect(page.locator('#modal .prose')).toContainText('الرابط مضغوط');
  expect(page.url()).toBe(original);
 });
 
@@ -162,7 +162,7 @@ test('embedded sharing keeps action labels readable with Arabic larger text',asy
  await expect(page.locator('#share-url')).toHaveAttribute('type','url');await expect(page.locator('#modal summary')).toHaveCount(0);
  for(const button of await page.locator('.share-controls .button:visible').all())expect(await button.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
  expect(await page.locator('#modal').evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
- await page.locator('#qr').scrollIntoViewIfNeeded();await expect(page.locator('#qr')).toBeVisible();await expect(page.locator('#download-qr')).toBeVisible();
+ await expect(page.locator('#qr')).toBeHidden();await page.locator('#share-qr-format').click();await expect(page.locator('#qr')).toBeVisible();await expect(page.locator('#download-qr')).toBeVisible();
 });
 
 test('native text sizing replaces the app toggle and ignores legacy preferences',async({page})=>{
@@ -184,7 +184,7 @@ test('mobile viewport requests app-like no zoom while retaining native text scal
 });
 
 test('key controls have large targets and dialogs restore keyboard focus',async({page})=>{
- for(const selector of ['#add-button','#share-button','#tools-button','#exports-button','.edit-button','#family-options>summary']){
+ for(const selector of ['#add-button','#share-button','#tools-tab','.edit-button','#family-options>summary']){
   const box=await page.locator(selector).first().boundingBox();expect(Math.round(box.height)).toBeGreaterThanOrEqual(48);expect(Math.round(box.width)).toBeGreaterThanOrEqual(48);
  }
  await page.locator('#add-button').click();await expect(page.locator('#person-name')).toBeFocused();
@@ -208,7 +208,7 @@ test('small screens and doubled text reflow in English and Arabic',async({page},
  await page.setViewportSize({width:640,height:900});
  await page.evaluate(()=>document.documentElement.style.fontSize='200%');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
- await page.locator('#tools-button').click();await page.locator('#compare-open').click();
+ await page.locator('#tools-tab').click();await page.locator('#tools-button').click();await page.locator('#compare-open').click();
  expect(await page.locator('#modal').evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
 });
 
@@ -224,16 +224,16 @@ test('native enlarged text reflows on phones without page zoom',async({page},inf
    for(const card of await page.locator('.person-card').all())expect(await card.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
    await expect(page.locator('.calendar-age')).toHaveCount(4);
    if(size==='100%')await page.screenshot({path:info.outputPath('native-text-'+lang+'-100.png'),fullPage:true});
-   await page.locator('#add-button').click();await fits('#modal');await fits('.date-fields');await page.locator('#close-modal').click();
+   await page.locator('#add-button').click();await fits('#modal');await fits('.date-fields');await page.locator('#close-modal').click();await page.locator('#people-tab').click();
    await page.locator('#share-button').click();await fits('#modal');
    for(const button of await page.locator('.share-controls .button:visible').all())expect(await button.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
-   await page.locator('#close-modal').click();
+   await page.locator('#close-modal').click();await page.locator('#people-tab').click();
   }
   await page.screenshot({path:info.outputPath('native-text-'+lang+'-200.png'),fullPage:true});
-  await page.locator('#exports-button').click();await page.locator('#print-open').click();await expect(page.locator('#download-pdf')).toBeEnabled();await fits('#modal');await fits('.document-settings');
-  await page.locator('#close-modal').click();
+  await page.locator('#tools-tab').click();await page.locator('#exports-button').click();await page.locator('#print-open').click();await expect(page.locator('#download-pdf')).toBeEnabled();await fits('#modal');await fits('.document-settings');
+  await page.locator('#close-modal').click();await page.locator('#people-tab').click();
   await page.setViewportSize({width:851,height:393});await fits('html');await fits('.person-card');
-  await page.locator('#tools-button').click();await page.locator('#compare-open').click();await fits('#modal');await fits('.comparison-ages');await page.locator('#close-modal').click();
+  await page.locator('#tools-tab').click();await page.locator('#tools-button').click();await page.locator('#compare-open').click();await fits('#modal');await fits('.comparison-ages');await page.locator('#close-modal').click();await page.locator('#people-tab').click();
  }
  expect(page.url()).toBe(original);
 });
@@ -266,7 +266,7 @@ test('empty birthday recovery is actionable and calendar export explains an empt
  await page.locator('.milestone-options input').last().check();await page.locator('#apply-milestones').click();
  await expect(page.locator('#milestones-button')).toHaveAttribute('aria-pressed','true');
  await expect(page.locator('#agenda-summary')).toContainText('Milestone ages:');await expect(page.locator('#broaden-birthdays')).toBeVisible();
- await page.locator('#exports-button').click();await page.locator('#ics-open').click();
+ await page.locator('#tools-tab').click();await page.locator('#exports-button').click();await page.locator('#ics-open').click();
  await expect(page.locator('#toast-text')).toHaveText('No birthdays to export. Adjust the birthday range or family filters.');
  await expect(page.locator('#birthday-range')).toBeFocused();await page.locator('#broaden-birthdays').click();
  await expect(page.locator('#birthday-range')).toHaveValue('365');await expect(page.locator('#birthday-calendar')).toHaveValue('both');
@@ -314,7 +314,7 @@ test('labeled calendar icons survive language changes and view switching',async(
 });
 
 test('saved language is resolved before delayed app code can reveal another language',async({browser,baseURL})=>{
- for(const [saved,locale,dir,heading] of [['ar','en-US','rtl','دائرة عائلتك.'],['en','ar-SA','ltr','Your family circle.']]){
+ for(const [saved,locale,dir,heading] of [['ar','en-US','rtl','أفراد العائلة'],['en','ar-SA','ltr','Your people']]){
  const context=await browser.newContext({locale,serviceWorkers:'block',reducedMotion:'reduce'});const page=await context.newPage();
  let release;const gate=new Promise(resolve=>release=resolve);
  try{
@@ -366,15 +366,15 @@ test('RTL tab arrows follow the visual direction',async({page})=>{
  await page.locator('#people-tab').focus();await page.keyboard.press('ArrowRight');await expect(page.locator('#birthdays-tab')).toBeFocused();
  await page.locator('#language-button').click();await page.locator('#people-tab').click();await page.keyboard.press('ArrowLeft');await expect(page.locator('#birthdays-tab')).toBeFocused();
  await page.keyboard.press('ArrowRight');await expect(page.locator('#people-tab')).toBeFocused();
- await page.keyboard.press('End');await expect(page.locator('#timeline-tab')).toBeFocused();await page.keyboard.press('Home');await expect(page.locator('#people-tab')).toBeFocused();
+ await page.keyboard.press('End');await expect(page.locator('#tools-tab')).toBeFocused();await page.keyboard.press('Home');await expect(page.locator('#people-tab')).toBeFocused();
 });
 
 test('Arabic editor values and selection counts use local digits without changing links',async({page})=>{
  const original=page.url();await page.locator('#language-button').click();await page.locator('[data-edit="cDAwMDAx"]').click();
- await expect(page.locator('#birth-day')).toHaveValue('١٨');await expect(page.locator('#birth-year')).toHaveValue('١٩٩٠');await page.locator('#close-modal').click();
+ await expect(page.locator('#birth-day')).toHaveValue('١٨');await expect(page.locator('#birth-year')).toHaveValue('١٩٩٠');await page.locator('#close-modal').click();await page.locator('#people-tab').click();
  await page.locator('#share-button').click();await expect(page.locator('#share-count')).toHaveText('تم تحديد ٢ من أصل ٢');
- await expect(page.locator('.selection-search')).toHaveAttribute('dir','auto');await page.locator('.selection-search').fill('اسم غير موجود');await expect(page.locator('.selection-empty')).toBeVisible();await expect(page.locator('.selection-empty')).toHaveText('لا توجد أسماء مطابقة');await page.locator('.selection-search').fill('');await expect(page.locator('.selection-empty')).toBeHidden();await page.locator('#close-modal').click();
- await page.locator('#exports-button').click();await page.locator('#print-open').click();await expect(page.locator('#download-pdf')).toBeEnabled();
+ await expect(page.locator('.selection-search')).toHaveAttribute('dir','auto');await page.locator('.selection-search').fill('اسم غير موجود');await expect(page.locator('.selection-empty')).toBeVisible();await expect(page.locator('.selection-empty')).toHaveText('لا توجد أسماء مطابقة');await page.locator('.selection-search').fill('');await expect(page.locator('.selection-empty')).toBeHidden();await page.locator('#close-modal').click();await page.locator('#people-tab').click();
+ await page.locator('#tools-tab').click();await page.locator('#exports-button').click();await page.locator('#print-open').click();await expect(page.locator('#download-pdf')).toBeEnabled();
  await expect(page.locator('#document-selection .selection-count')).toHaveText('تم تحديد ٢ من أصل ٢');await expect(page.locator('#doc-year')).toHaveValue(/^[٠-٩]+$/);
  await page.locator('#doc-language').selectOption('ar');await expect(page.locator('#download-pdf')).toBeEnabled();await expect(page.locator('#document-text')).toHaveAttribute('dir','rtl');
  await expect(page.locator('#document-preview canvas')).toHaveAttribute('aria-label',/معاينة الصفحة/);expect(page.url()).toBe(original);
@@ -390,22 +390,22 @@ test('calendar symbols are identical in cards, the editor and birthday agenda',a
  const symbols={};for(const type of ['sun','moon'])symbols[type]=await page.locator('.calendar-label .icon-'+type).first().innerHTML();
  await page.locator('#add-button').click();
  for(const type of ['sun','moon'])expect(await page.locator('.segmented .icon-'+type).innerHTML()).toBe(symbols[type]);
- await page.locator('#close-modal').click();await page.locator('#birthdays-tab').click();await page.locator('#birthday-range').selectOption('365');
+ await page.locator('#close-modal').click();await page.locator('#people-tab').click();await page.locator('#birthdays-tab').click();await page.locator('#birthday-range').selectOption('365');
  for(const type of ['sun','moon'])expect(await page.locator('.agenda-person .icon-'+type).first().innerHTML()).toBe(symbols[type]);
 });
 
 test('menus have one home for groups, backups and calendar outputs',async({page})=>{
- await page.locator('#tools-button').click();
+ await page.locator('#tools-tab').click();await page.locator('#tools-button').click();
  await expect(page.locator('#compare-open')).toBeVisible();await expect(page.locator('#reference-open')).toBeVisible();await expect(page.locator('#groups-open')).toHaveCount(0);
- await page.locator('#close-modal').click();await page.locator('#exports-button').click();
+ await page.locator('#close-modal').click();await page.locator('#people-tab').click();await page.locator('#tools-tab').click();await page.locator('#exports-button').click();
  await expect(page.locator('#print-open')).toBeVisible();await expect(page.locator('#ics-open')).toBeVisible();
  await expect(page.locator('#card-open')).toHaveCount(0);await expect(page.locator('#backup-open')).toHaveCount(0);
- await page.locator('#close-modal').click();await page.locator('#share-button').click();
- await expect(page.locator('#download-backup')).toBeVisible();await expect(page.locator('#copy-share')).toBeVisible();
+ await page.locator('#close-modal').click();await page.locator('#people-tab').click();await page.locator('#share-button').click();
+ await expect(page.locator('#download-backup')).toHaveCount(0);await expect(page.locator('#copy-share')).toBeVisible();
  await expect(page.getByText('2 of 2 people',{exact:true})).toHaveCount(1);
  await page.locator('.share-person').first().uncheck();await expect(page.getByText('1 of 2 people',{exact:true})).toHaveCount(1);
- await expect(page.locator('.qr-options summary')).toHaveCount(0);await expect(page.locator('#qr')).toBeVisible();await expect(page.locator('#download-qr')).toBeVisible();
- await page.locator('#close-modal').click();await page.locator('#family-options>summary').click();await expect(page.locator('#manage-groups')).toBeVisible();
+ await expect(page.locator('.qr-options summary')).toHaveCount(0);await page.locator('#share-qr-format').click();await expect(page.locator('#qr')).toBeVisible();await expect(page.locator('#download-qr')).toBeVisible();
+ await page.locator('#close-modal').click();await page.locator('#people-tab').click();await page.locator('#family-options>summary').click();await expect(page.locator('#manage-groups')).toBeVisible();
  for(const selector of ['#save-button','#calendar-help','#empty-add','#export-calendar','#mobile-add'])await expect(page.locator(selector)).toHaveCount(0);
 });
 
@@ -420,4 +420,74 @@ test('visible card text has readable sizes and high text contrast',async({page})
   });
  });
  for(const result of results){expect(result.size,result.text).toBeGreaterThanOrEqual(15);expect(result.contrast,result.text).toBeGreaterThanOrEqual(4.5)}
+});
+
+test('compact list preserves both complete ages, details and the saved view',async({page},info)=>{
+ const url=page.url();await page.setViewportSize({width:393,height:851});
+ await page.locator('#people-layout').selectOption('list');
+ await expect(page.locator('.person-row')).toHaveCount(2);await expect(page.locator('.row-age')).toHaveCount(4);
+ for(const c of ['g','h'])await expect(page.locator('.person-row').filter({hasText:'Omar'}).locator('.age-'+c)).toContainText(quantity(age(records[1].day,today(),c).years,'year'));
+ await page.locator('[data-person="cDAwMDAy"]').click();await expect(page.locator('#modal .calendar-age')).toHaveCount(2);
+ await page.locator('#close-modal').click();await expect(page.locator('[data-person="cDAwMDAy"]')).toBeFocused();
+ await page.reload();await expect(page.locator('#people-layout')).toHaveValue('list');expect(page.url()).toBe(url);
+ await page.locator('#language-button').click();await page.screenshot({path:info.outputPath('app-list-ar.png'),fullPage:true});
+ await page.locator('[data-person="cDAwMDAy"]').click();await page.locator('#modal [data-edit]').click();await page.locator('#person-name').fill('عمر Updated');await page.locator('#save-person').click();await expect(page.locator('#modal')).toBeHidden();await expect(page.locator('[data-person="cDAwMDAy"]')).toBeFocused();
+});
+
+test('phone family starts within the first screen and tools stay out of its way',async({page},info)=>{
+ await page.setViewportSize({width:393,height:851});
+ for(const lang of ['en','ar']){
+  if(lang==='ar')await page.locator('#language-button').click();
+  await expect(page.locator('#tools-button')).toBeHidden();await expect(page.locator('#exports-button')).toBeHidden();
+  const card=await page.locator('.person-card').first().boundingBox();expect(card.y).toBeLessThan(550);
+  await page.screenshot({path:info.outputPath('app-people-'+lang+'.png'),fullPage:true});
+  await page.locator('#tools-tab').click();await expect(page.locator('#tools-panel')).toBeVisible();await expect(page.locator('#family-search')).toBeHidden();
+  await page.locator('#people-tab').click();
+ }
+});
+
+test('opening a shared link never silently saves it and demo cannot leak into it',async({page,context})=>{
+ await page.evaluate(()=>localStorage.clear());await page.goto('about:blank');await page.goto('./');
+ await page.locator('#demo-button').click();
+ await page.evaluate(hash=>{location.hash=hash},encode(records));
+ await expect(page.locator('#confirm-merge')).toHaveText('Keep this family');
+ await expect(page.locator('.merge-person')).toHaveCount(2);
+ await page.locator('#view-link').click();
+ await expect(page.locator('#family-mode')).toHaveText('Shared family · view only');
+ await expect(page.locator('#add-button')).toBeHidden();await expect(page.locator('.edit-button:visible')).toHaveCount(0);
+ expect(await page.evaluate(()=>localStorage.getItem('kin.family.v1:'+location.pathname))).toBeNull();
+ await page.locator('#tools-tab').click();await expect(page.locator('#backup-button')).toBeHidden();
+ await page.locator('#exports-button').click();await page.locator('#print-open').click();
+ await expect(page.locator('#download-pdf')).toBeEnabled();
+ await page.locator('#close-modal').click();await page.locator('#notice button').click();await page.locator('#confirm-merge').click();
+ await expect(page.locator('#family-mode')).toHaveText('Saved on this device');await expect(page.locator('#add-button')).toBeVisible();
+ expect(await page.evaluate(()=>localStorage.getItem('kin.family.v1:'+location.pathname))).toBe(encode(records));
+});
+
+test('print opens on a preview rather than a wall of settings',async({page},info)=>{
+ await page.setViewportSize({width:393,height:851});
+ await page.locator('#tools-tab').click();await page.locator('#exports-button').click();await page.locator('#print-open').click();
+ await expect(page.locator('#download-pdf')).toBeEnabled();await expect(page.locator('#doc-birthdays')).toHaveValue('both');
+ const canvas=await page.locator('#document-preview canvas').boundingBox(),settings=await page.locator('.document-settings').boundingBox();
+ expect(canvas.y).toBeLessThan(550);expect(canvas.y).toBeLessThan(settings.y);
+ await expect(page.locator('#document-status')).toHaveText(/Pages: 1 · Birthdays: /);
+ await page.screenshot({path:info.outputPath('app-print-preview.png')});
+});
+
+test('QR is a sharing choice and backups have a separate home',async({page})=>{
+ await page.locator('#share-button').click();await expect(page.locator('#qr')).toBeHidden();await expect(page.locator('#download-backup')).toHaveCount(0);
+ await page.locator('.share-person').first().uncheck();const link=await page.locator('#share-url').inputValue();
+ await page.locator('#share-qr-format').click();await expect(page.locator('#qr')).toBeVisible();await expect(page.locator('#copy-share')).toBeHidden();
+ await page.locator('#share-link-format').click();await expect(page.locator('#share-url')).toHaveValue(link);await expect(page.locator('.share-person:checked')).toHaveCount(1);
+ await page.locator('#close-modal').click();await page.locator('#tools-tab').click();await page.locator('#backup-button').click();
+ await expect(page.locator('#download-backup')).toBeVisible();await expect(page.locator('#copy-share')).toHaveCount(0);await expect(page.locator('#backup-selection .selection-person')).toHaveCount(2);
+});
+
+test('failed save feedback stays visible until dismissed or retried',async({page})=>{
+ await page.clock.install();await page.locator('#add-button').click();await page.locator('#person-name').fill('Draft Test');await page.locator('#birth-day').fill('1');await page.locator('#birth-month').selectOption('1');await page.locator('#birth-year').fill('2000');
+ await page.evaluate(()=>Object.defineProperty(navigator,'locks',{configurable:true,value:{request:()=>Promise.reject(new Error('Unavailable'))}}));
+ await page.locator('#save-person').click();await expect(page.locator('#dialog-feedback')).toHaveAttribute('role','alert');
+ await page.clock.fastForward(20000);await expect(page.locator('#dialog-feedback')).toBeVisible();await expect(page.locator('#person-name')).toHaveValue('Draft Test');
+ await page.evaluate(()=>Object.defineProperty(navigator,'locks',{configurable:true,value:undefined}));
+ await page.locator('#save-person').click();await expect(page.locator('#modal')).toBeHidden();await expect(page.locator('.person-card')).toHaveCount(3);
 });

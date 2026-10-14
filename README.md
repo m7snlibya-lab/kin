@@ -20,6 +20,16 @@ The browser suite checks person creation/editing/removal/undo, calendar switchin
 
 Run the algorithm checks with `node tests.mjs`. Tests cover 100,406 date conversions against ICU, Hijri/Gregorian leap dates, date-based ages and countdowns, Unicode codec round trips, corruption rejection, size limits, merge conflicts, duplicate detection, and QR generation. Browser installation, offline navigation, and device QR scanning require browser/device verification; these were not tested in this environment.
 
+## Calmer app navigation and purpose-led flows (1.8.0)
+
+- Phone navigation is now People, Birthdays and Tools. Add person stays in the header; occasional utilities no longer take a row above every family. Desktop uses the same destinations without fixed bottom navigation.
+- Cards and Table are preserved. A remembered List option shows both complete calendar ages and the next birthday, with a focused person-detail dialog.
+- Incoming links always offer View only or Keep/Merge, including on an empty device. Viewing does not save a family. Demo state cannot leak into a shared snapshot, and read-only views hide editing and backup actions.
+- Share family opens at link/QR actions and privacy guidance, with selection below. Backup files have a separate Tools destination. Printing opens at a visible preview with year/calendar controls, before people and paper settings; phone printing fills the viewport.
+- All UI icons use the pinned, bundled Lucide source and license. System typography is consistent across headings and controls; warm surfaces remain. The name stays Kin pending a separate naming decision.
+- Save failures remain visible with the draft available for retry. Remove is separated from Save. Update app replaces Reload, Help identifies the release, and local-save status does not claim cloud synchronization.
+- Added regressions for compact reading, first-screen access, explicit link ownership, demo/shared transitions, preview placement, separate sharing/backup and persistent errors. Physical-device text settings, keyboard/Back behavior and testing with relatives remain release follow-ups.
+
 ## Balanced calendars, feedback and Arabic polish (1.7.0)
 
 - Today/reference dates share one component with equal font size, weight, color and line height; both calendars have explicit labels and their established sun/moon icons. Narrow layouts stack both rather than treating Hijri as a secondary date.

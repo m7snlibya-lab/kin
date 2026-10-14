@@ -5,7 +5,7 @@ import {loadExportFonts,createMeasure,createCalendarDocument,createCardDocument,
 
 export function openDocumentDialog(state,{modal,close,toast,visible,device},event){
  const card=!!event,prefs=device.value.preferences.export||{};
- const defaults={layoutCalendar:'g',year:calendars.g.parts(today())[0],birthdayCalendar:'g',layout:'annual',size:'A4',orientation:'landscape',locale:language(),showAges:false,ink:false,qr:false,shape:'square',theme:'celebratory'};
+ const defaults={layoutCalendar:'g',year:calendars.g.parts(today())[0],birthdayCalendar:'both',layout:'annual',size:'A4',orientation:'landscape',locale:language(),showAges:false,ink:false,qr:false,shape:'square',theme:'celebratory'};
  const initial={...defaults};
  for(const [k,allowed] of Object.entries({layoutCalendar:['g','h'],birthdayCalendar:['g','h','both'],layout:['annual','monthly'],size:['A4','A3'],orientation:['landscape','portrait'],locale:['en','ar'],shape:['square','portrait'],theme:['celebratory','minimal']}))if(allowed.includes(prefs[k]))initial[k]=prefs[k];
  initial.year=calendars[initial.layoutCalendar].parts(today())[0];
@@ -17,6 +17,18 @@ export function openDocumentDialog(state,{modal,close,toast,visible,device},even
  ${card?'':`<label class="check-row"><input id="doc-ink" type="checkbox">${t('Ink-friendly design')}</label><label class="check-row"><input id="doc-qr" type="checkbox">${t('Include family QR')}</label><p id="doc-qr-note" class="hint" hidden>${t('Anyone with this QR can read the selected names and birth dates.')}</p>`}
  </div></div><p id="document-status" class="hint export-status" role="status" aria-live="polite"></p><div id="document-preview" class="document-preview"></div><div class="preview-controls">${button('previous-page','Previous page')}<span id="page-count"></span>${button('next-page','Next page')}</div><section class="document-text" tabindex="0" role="region" aria-label="${t('Accessible text preview')}"><h3>${t('Accessible text preview')}</h3><div id="document-text"></div></section><div class="dialog-actions export-controls">${button('cancel-document','Cancel')}${card?button('share-image','Share image'):button('download-pdf','Download PDF','primary')}${button('download-image','Download image',card?'primary':'secondary')}</div><p class="hint">${t('PDFs use high-resolution page images. Download one PNG at a time using the page controls.')}</p>`);
  $('#modal').classList.add('document-dialog');
+ const body=$('#modal-body'),settings=$('.document-settings'),previewElement=$('#document-preview');
+ const stage=document.createElement('section');stage.className='document-stage';stage.setAttribute('aria-label',t('Preview'));
+ const previewControls=$('.preview-controls'),previewStatus=$('#document-status');
+ settings.before(stage);stage.append(previewStatus,previewElement,previewControls);
+ if(!card){
+  const essentials=document.createElement('div');essentials.className='document-essentials';
+  stage.prepend(essentials);
+  ['#doc-layout-calendar','#doc-year','#doc-birthdays'].forEach(s=>essentials.append($(s).closest('label')));
+  settings.querySelector('.export-form').insertAdjacentHTML('afterbegin',`<h3 class="print-settings-title">${t('Print settings')}</h3>`);
+ }
+ body.prepend(stage);
+ $('#modal-title').tabIndex=-1;$('#modal-title').focus({preventScroll:true});$('#modal').scrollTop=0;
  let model=null,page=0,generation=0,previewGeneration=0,controller=null,busy=false,timer=null;
  const statusElement=$('#document-status'),formElement=$('.export-form'),selectionElement=$('#document-selection');
  const active=()=>statusElement.isConnected&&$('#modal').open;
@@ -25,7 +37,7 @@ export function openDocumentDialog(state,{modal,close,toast,visible,device},even
  const status=text=>{if(active())statusElement.textContent=text};
  const working=value=>{if(active()){statusElement.classList.toggle('is-loading',value);$('#document-preview').setAttribute('aria-busy',String(value))}};
  const selections=card?null:mountSelection($('#document-selection'),state.people,{selected:visible().map(p=>p.id),changed:()=>schedule()});
- if(!card){$('#document-selection .selection-all').focus({preventScroll:true});$('#modal').scrollTop=0}
+ // Keep the preview at the start; selection remains a clearly titled section.
  const fieldMap=card?{'#doc-shape':'shape','#doc-theme':'theme','#doc-language':'locale'}:{'#doc-layout-calendar':'layoutCalendar','#doc-birthdays':'birthdayCalendar','#doc-layout':'layout','#doc-size':'size','#doc-orientation':'orientation','#doc-language':'locale'};
  for(const [selector,key] of Object.entries(fieldMap))$(selector).value=initial[key];
  function options(){const value={...initial};for(const [selector,key] of Object.entries(fieldMap))value[key]=$(selector).value;value.showAges=$('#doc-ages').checked;if(!card){value.year=parseDigits($('#doc-year').value);value.ink=$('#doc-ink').checked;value.qr=$('#doc-qr').checked}return value}
@@ -42,7 +54,7 @@ export function openDocumentDialog(state,{modal,close,toast,visible,device},even
    model=next;page=0;
    device.value.preferences.export=Object.fromEntries(Object.keys(fieldMap).map(s=>[fieldMap[s],opts[fieldMap[s]]]));device.save();
    await preview(ticket);
-   if(ticket===generation){status(t('{count} pages · {events} birthdays',{count:number(model.pages.length),events:number(model.events.length)}));setDisabled(false)}
+   if(ticket===generation){status(t('Pages: {count} · Birthdays: {events}',{count:number(model.pages.length),events:number(model.events.length)}));setDisabled(false)}
   }catch(error){if(ticket===generation){model=null;$('#document-preview')?.replaceChildren();status(messages[error.message]?t(error.message):t('Export could not be created. Check the year and try again.'))}}
   finally{if(ticket===generation)working(false)}
  }
@@ -60,13 +72,13 @@ export function openDocumentDialog(state,{modal,close,toast,visible,device},even
  }
  $('#previous-page').onclick=()=>{if(model&&page>0){page--;preview().catch(()=>status(t('Export could not be created. Try again.')))}};
  $('#next-page').onclick=()=>{if(model&&page<model.pages.length-1){page++;preview().catch(()=>status(t('Export could not be created. Try again.')))}};
- $$('.export-form input,.export-form select').forEach(el=>el.onchange=()=>{if(el.id==='doc-layout-calendar')$('#doc-year').value=number(calendars[el.value].parts(today())[0]).replace(/[٬,]/g,'');if(el.id==='doc-qr')$('#doc-qr-note').hidden=!el.checked;schedule()});
+ $$('.export-form input,.export-form select,.document-essentials input,.document-essentials select').forEach(el=>el.onchange=()=>{if(el.id==='doc-layout-calendar')$('#doc-year').value=number(calendars[el.value].parts(today())[0]).replace(/[٬,]/g,'');if(el.id==='doc-qr')$('#doc-qr-note').hidden=!el.checked;schedule()});
  $('#doc-year')?.addEventListener('input',schedule);
  async function exportFile(kind){
   if(!model||busy)return;
   const trigger=$(kind==='pdf'?'#download-pdf':kind==='share'?'#share-image':'#download-image');
   setBusy(trigger,true,'Preparing download…');working(true);status(t('Preparing download…'));$('#cancel-document span').textContent=t('Cancel export');
-  const snapshot=model,index=page;busy=true;controller=new AbortController();setDisabled(true);formElement.inert=true;selectionElement?.setAttribute('inert','');
+  const snapshot=model,index=page;busy=true;controller=new AbortController();setDisabled(true);formElement.inert=true;$('.document-essentials')?.setAttribute('inert','');selectionElement?.setAttribute('inert','');
   try{
    const blob=kind==='pdf'?await documentPDF(snapshot,{signal:controller.signal,onProgress:(n,total)=>status(t('Generating page {page} of {total}…',{page:number(n),total:number(total)}))}):await canvasBlob(await renderDocumentPage(snapshot.pages[index],{scale:card?2:300/72,signal:controller.signal}));
    if(controller.signal.aborted||!active())return;
@@ -74,7 +86,7 @@ export function openDocumentDialog(state,{modal,close,toast,visible,device},even
    if(kind==='share'&&navigator.canShare){const file=new File([blob],name,{type:'image/png'});if(navigator.canShare({files:[file]})){await navigator.share({files:[file],title:t('Birthday image')});status(t('Image shared.'));return}}
    download(blob,name);status(t('Download started.'));
   }catch(error){if(error.name==='AbortError')status(t('Export cancelled.'));else status(t('Export could not be created. Try again.'))}
-  finally{setBusy(trigger,false);busy=false;controller=null;if(active()){working(false);$('#cancel-document span').textContent=t('Cancel');formElement.inert=false;selectionElement?.removeAttribute('inert');setDisabled(!model)}}
+  finally{setBusy(trigger,false);busy=false;controller=null;if(active()){working(false);$('#cancel-document span').textContent=t('Cancel');formElement.inert=false;$('.document-essentials')?.removeAttribute('inert');selectionElement?.removeAttribute('inert');setDisabled(!model)}}
  }
  $('#download-pdf')?.addEventListener('click',()=>exportFile('pdf'));$('#download-image').onclick=()=>exportFile('png');$('#share-image')?.addEventListener('click',()=>exportFile('share'));
  $('#cancel-document').onclick=()=>{if(busy){controller?.abort();status(t('Export cancelled.'))}else close()};

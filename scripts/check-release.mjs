@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFile, readdir} from 'node:fs/promises';
 import {resolve, relative, sep} from 'node:path';
+import {spawnSync} from 'node:child_process';
 
 const root=resolve('dist');
 const read=path=>readFile(resolve(root,path),'utf8');
@@ -15,6 +16,9 @@ async function check(path){
   const asset=relative(root,full).split(sep).join('/');
   if(/\.(?:html|css|js|png|svg|webmanifest|ttf|woff2)$/.test(asset)&&asset!=='sw.js')assert.ok(cached.has(asset),`Offline asset missing: ${asset}`);
   if(asset.endsWith('.js')){
+   const syntax=spawnSync(process.execPath,['--check',full],{encoding:'utf8',windowsHide:true});
+   assert.ifError(syntax.error);
+   assert.equal(syntax.status,0,`Invalid JavaScript: ${asset}\n${syntax.stderr}`);
    const code=await read(asset);
    for(const match of code.matchAll(/(?:import|export)\s+(?:[^'"\n]*?\sfrom\s*)?['"](\.\.?\/[^'"]+)['"]/g)){
     const dependency=resolve(full,'..',match[1]);

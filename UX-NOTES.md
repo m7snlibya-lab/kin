@@ -46,7 +46,11 @@ Make the next useful action obvious without making the family list feel like a s
 - Localize selection counts and editable dates, use neutral Arabic count headings where plural grammar would otherwise be wrong, and keep Arabic terminology consistent around family members.
 - Make RTL keyboard movement mirror the visual tab order; use logical spacing and isolate preview content according to its selected language. Explain selection searches with no matches without clearing checked people.
 
-## App-like direction, in recommended order (not implemented)
+## Earlier app-like direction (implemented in 1.8.0 where noted above)
+
+The compact app shell, List/person detail, plain edit titles, purpose-led sharing/backup and preview-first printing are now implemented. The items below preserve the original rationale; quick group shortcuts and participant/physical-device testing remain future work.
+
+### Original recommended order
 
 1. **A compact phone app shell.** Explore bottom navigation with People, Birthdays, and Tools, plus one clearly labeled Add person action. Replace the existing mobile navigation/tool rows rather than duplicating them. Put occasional timeline/export/group operations in Tools. Respect safe areas and the on-screen keyboard; keep desktop navigation appropriate to desktop. Validate with younger and older relatives before shipping.
 2. **A compact family list with a person sheet.** Name, both ages, and the next birthday make the list scannable; tap a person for their full details and edit/share actions. Keep both ages visible and preserve existing card/table choices. Do not make swipe or long-press the only way to find an action.

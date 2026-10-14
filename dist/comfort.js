@@ -10,11 +10,24 @@ export function createComfort(state,{device,render}){
  $('.section-toolbar h2').classList.add('sr-only');
  // Match visual and reading order: family views before occasional utilities.
  $('.view-tabs').after($('.section-toolbar'));
+ $('.view-tabs').insertAdjacentHTML('beforeend',`<button id="tools-tab" role="tab" tabindex="-1" aria-selected="false" aria-controls="tools-panel" data-view="tools" data-i18n="Tools">${t('Tools')}</button>`);
+ $('#timeline-tab').removeAttribute('role');$('#timeline-tab').removeAttribute('aria-selected');$('#timeline-tab').removeAttribute('aria-controls');$('#timeline-tab').tabIndex=0;
+ $('#timeline-panel').setAttribute('aria-labelledby','timeline-tab');
+ $('#timeline-panel').insertAdjacentHTML('afterend',`<section id="tools-panel" role="tabpanel" aria-labelledby="tools-tab" hidden><h2 data-i18n="Tools">${t('Tools')}</h2><p class="hint" data-i18n="A few useful things for your family.">${t('A few useful things for your family.')}</p><div class="tools-grid"></div><h3 id="data-tools-title" data-i18n="Your data">${t('Your data')}</h3><p id="data-tools-help" class="hint" data-i18n="Backups are files you keep. Kin does not sync to a cloud account.">${t('Backups are files you keep. Kin does not sync to a cloud account.')}</p><div class="data-tools"></div></section>`);
+ $('#tools-panel .tools-grid').append($('#tools-button'),$('#exports-button'),$('#timeline-tab'));
+ $('#tools-panel .data-tools').append($('#import-button'));
+ $('#tools-panel .data-tools').insertAdjacentHTML('afterbegin',button('backup-button','Back up family'));
+ $('#tools-panel').append($('#about-button'));
+ $('.section-toolbar').hidden=true;
+ $('#add-button').classList.remove('small');
+ $('.site-header nav').prepend($('#add-button'));
+ $('.page-heading h1').dataset.i18n='Your people';
+ $('.page-heading h1').insertAdjacentHTML('afterend','<p id="family-mode" class="family-mode" role="status"></p>');
  const finder=document.createElement('div');finder.className='discovery-bar';
  $('.search-field').before(finder);finder.append($('.search-field'),layout);
  $('#layout-control > span').className='sr-only';
  $('.sort-label .sr-only').className='control-label';
- $('.heading-actions').prepend($('#add-button'));
+ // Add person lives in the persistent app header, not repeated in each view.
  $('#share-button').classList.replace('primary','secondary');
  $('#import-button').dataset.i18n='Import & restore';
  $('#exports-button').dataset.i18n='Calendars';
@@ -65,7 +78,7 @@ export function createComfort(state,{device,render}){
  $('#close-modal').innerHTML=`<span aria-hidden="true">${icon('close')}</span> <span data-i18n="Close">${t('Close')}</span>`;
 
  for(const [selector,name,key] of [
-  ['#add-button','plus','Add person'],['#share-button','share','Share & backup'],
+  ['#add-button','plus','Add person'],['#share-button','share','Share family'],['#backup-button','backup','Back up family'],['#tools-tab','tools','Tools'],
   ['#tools-button','compare'],['#exports-button','calendar'],['#import-button','folder'],
   ['#people-tab','people'],['#birthdays-tab','calendar'],['#timeline-tab','timeline'],['#about-button','help'],['#install-button','install','Install app'],['#manage-groups','people']
  ])labelControl($(selector),name,key);
@@ -87,18 +100,34 @@ export function createComfort(state,{device,render}){
   for(const label of document.querySelectorAll('[data-calendar-label]'))label.textContent=calendarName(label.dataset.calendarLabel);
   $('#tools-button').hidden=$('#exports-button').hidden=state.people.length===0;
   $('.discovery-bar').hidden=state.people.length===0;
-  $('.view-tabs').hidden=state.people.length===0;
+  $('.view-tabs').hidden=false;
+  $('#tools-panel').hidden=state.view!=='tools';
+  const tools=state.view==='tools';
+  $('.page-heading h1').textContent=t(state.view==='birthdays'?'Birthdays':state.view==='timeline'?'Timeline':tools?'Tools':'Your people');
+  $('#people').classList.toggle('list-layout',state.layout==='list');
+  $('.discovery-bar').hidden=!state.people.length||tools;
+  $('#filter-status').hidden=tools;
+  $('#family-mode').textContent=t(state.demo?'Example family':state.viewOnly?'Shared family · view only':state.people.length?(state.storageAvailable===false?'Only in this link':'Saved on this device'):'No account needed');
+  $('#add-button').hidden=state.demo||state.viewOnly;
+  $('#share-button').hidden=state.demo;
+  $('#backup-button').hidden=state.demo||state.viewOnly||!state.people.length;
+  $('#import-button').hidden=state.demo||state.viewOnly;
+  $('#data-tools-title').hidden=$('#data-tools-help').hidden=state.demo||state.viewOnly;
+  $('#exports-button').hidden=!state.people.length||state.demo;
+  $('#timeline-tab').hidden=!state.people.length;
+  $('#birthdays-tab').disabled=!state.people.length;
+  $('.celebration-panel').hidden=!state.people.length||tools||state.view==='timeline';
   const active=[
    state.group?{key:'group',label:t('Group: {name}',{name:device.value.groups.find(g=>g.id===state.group)?.name||''})}:null,
    state.month?{key:'month',label:t('{calendar}: {month}',{calendar:calendarName(state.primaryCalendar),month:months(state.primaryCalendar)[+state.month-1]})}:null,
    state.search?{key:'search',label:t('Search: {query}',{query:state.search})}:null
   ].filter(Boolean);
-  $('#filter-status').hidden=!active.length;
+  $('#filter-status').hidden=!active.length||tools;
   $('#clear-filters span').textContent=t('Clear filters');
   $('#filter-description').innerHTML=active.map(({key,label})=>
    `<button type="button" class="filter-chip" data-remove-filter="${key}" title="${esc(label)}" aria-label="${esc(t('Remove filter: {filter}',{filter:label}))}"><bdi>${esc(label)}</bdi>${icon('close')}</button>`
   ).join('');
-  $('#results-toolbar').hidden=!state.people.length;
+  $('#results-toolbar').hidden=!state.people.length||tools;
   $('#results-summary').textContent=t('Showing {shown} of {total} people',{shown:$('#list-count').textContent,total:number(state.people.length)});
   $('#filter-count').hidden=!active.length;$('#filter-count').textContent=number(active.length);
   $('#family-options').classList.toggle('has-filters',!!active.length);

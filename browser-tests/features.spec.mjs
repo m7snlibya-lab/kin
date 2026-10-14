@@ -9,7 +9,7 @@ const records=[
  {id:'cDAwMDAz',name:'آمنة Family',calendar:'h',day:calendars.g.toDay(2010,3,12)}
 ];
 const errors=new WeakMap();
-test.beforeEach(async({page})=>{errors.set(page,[]);page.on('pageerror',e=>errors.get(page).push(e.message));await page.goto('./'+encode(records));await expect(page.locator('.person-card')).toHaveCount(3)});
+test.beforeEach(async({page})=>{errors.set(page,[]);page.on('pageerror',e=>errors.get(page).push(e.message));await page.goto('./'+encode(records));await page.locator('#confirm-merge').click();await expect(page.locator('#modal')).toBeHidden();await expect(page.locator('.person-card')).toHaveCount(3)});
 test('backup reminder and temporary device groups do not imply cloud sync',async({page})=>{
  await expect(page.locator('#backup-reminder')).toBeVisible();await page.locator('#dismiss-reminder').click();await page.reload();await expect(page.locator('#backup-reminder')).toBeHidden();
  await page.evaluate(()=>{const get=Storage.prototype.getItem,set=Storage.prototype.setItem;Storage.prototype.getItem=function(key){if(key.startsWith('kin.device.'))throw new DOMException('Blocked','SecurityError');return get.call(this,key)};Storage.prototype.setItem=function(key,value){if(key.startsWith('kin.device.'))throw new DOMException('Blocked','SecurityError');return set.call(this,key,value)}});
@@ -29,10 +29,10 @@ test('dense Arabic exports preserve all names and cancellation permits retry',as
 });
 
 test.afterEach(async({page})=>expect(errors.get(page)).toEqual([]));
-async function tools(page,id){if(id==='#groups-open'){const filters=page.locator('#family-options');if(!await filters.evaluate(el=>el.open))await filters.locator('summary').click();await page.locator('#manage-groups').click()}else{await page.locator('#tools-button').click();await page.locator(id).click()}}
-async function print(page){await page.locator('#exports-button').click();await page.locator('#print-open').click();await expect(page.locator('#download-pdf')).toBeEnabled({timeout:20000})}
+async function tools(page,id){if(id==='#groups-open'){const filters=page.locator('#family-options');if(!await filters.evaluate(el=>el.open))await filters.locator('summary').click();await page.locator('#manage-groups').click()}else{await page.locator('#tools-tab').click();await page.locator('#tools-button').click();await page.locator(id).click()}}
+async function print(page){await page.locator('#tools-tab').click();await page.locator('#exports-button').click();await page.locator('#print-open').click();await expect(page.locator('#download-pdf')).toBeEnabled({timeout:20000})}
 test('preview loading has visible progress and recovers to a labeled preview',async({page})=>{
- await page.locator('#language-button').click();await page.locator('#exports-button').click();await page.locator('#print-open').click();
+ await page.locator('#language-button').click();await page.locator('#tools-tab').click();await page.locator('#exports-button').click();await page.locator('#print-open').click();
  await expect(page.locator('#document-status')).toHaveClass(/is-loading/);await expect(page.locator('#document-status')).toHaveText('جارٍ تجهيز المعاينة…');
  await expect(page.locator('#document-preview')).toHaveAttribute('aria-busy','true');
  await expect(page.locator('#download-pdf')).toBeEnabled();await expect(page.locator('#document-status')).not.toHaveClass(/is-loading/);await expect(page.locator('#document-preview')).toHaveAttribute('aria-busy','false');
@@ -43,23 +43,23 @@ test('groups remain device-only and filter sharing and exports',async({page})=>{
  const original=page.url();await tools(page,'#groups-open');await expect(page.locator('#group-name')).toBeFocused();await page.locator('#group-name').fill('Parents');
  await page.locator('#group-selection .selection-all').uncheck();await page.locator('#group-selection [value="cDAwMDAx"]').check();await page.locator('#save-group').click();
  if(!await page.locator('#family-options').evaluate(el=>el.open))await page.locator('#family-options > summary').click();await page.locator('#group-filter').selectOption({label:'Parents'});await expect(page.locator('.person-card')).toHaveCount(1);expect(page.url()).toBe(original);
- await page.locator('#share-button').click();await expect(page.locator('.share-person:checked')).toHaveCount(1);await page.locator('#close-modal').click();
- await print(page);await expect(page.locator('.selection-person:checked')).toHaveCount(1);await page.locator('#close-modal').click();
+ await page.locator('#share-button').click();await expect(page.locator('.share-person:checked')).toHaveCount(1);await page.locator('#close-modal').click();await page.locator('#people-tab').click();
+ await print(page);await expect(page.locator('.selection-person:checked')).toHaveCount(1);await page.locator('#close-modal').click();await page.locator('#people-tab').click();
  await page.reload();await page.locator('#family-options > summary').click();await page.locator('#group-filter').selectOption({label:'Parents'});await expect(page.locator('.person-card h3')).toHaveText('Parent Test');
  await tools(page,'#groups-open');await page.locator('[data-group]').click();await page.locator('#group-name').fill('Family elders');await page.locator('#save-group').click();
  await tools(page,'#groups-open');await page.locator('[data-group]').click();page.once('dialog',d=>d.accept());await page.locator('#delete-group').click();await expect(page.locator('.person-card')).toHaveCount(3);expect(page.url()).toBe(original);
 });
 test('comparison and past/future dates do not mutate family links',async({page})=>{
  const original=page.url();await tools(page,'#compare-open');await expect(page.locator('#comparison-result')).toContainText('10 years');await expect(page.locator('#comparison-result')).not.toContainText('Not born yet');
- await expect(page.locator('#compare-b option[value="cDAwMDAx"]')).toHaveCount(0);await page.locator('#close-modal').click();
+ await expect(page.locator('#compare-b option[value="cDAwMDAx"]')).toHaveCount(0);await page.locator('#close-modal').click();await page.locator('#people-tab').click();
  await tools(page,'#reference-open');await page.locator('#reference-year').fill('1995');await page.locator('#reference-month').selectOption('1');await page.locator('#reference-day').fill('1');await page.locator('#reference-apply').click();
- await expect(page.locator('#reference-banner')).toContainText('1995');await expect(page.locator('.person-card').filter({hasText:'Child Test'})).toContainText('Not born yet');await expect(page.locator('.person-card').filter({hasText:'Child Test'}).locator('.person-lifetime')).toHaveCount(0);expect(page.url()).toBe(original);
+ await expect(page.locator('#people')).toBeVisible();await expect(page.locator('#reference-banner')).toContainText('1995');await expect(page.locator('.person-card').filter({hasText:'Child Test'})).toContainText('Not born yet');await expect(page.locator('.person-card').filter({hasText:'Child Test'}).locator('.person-lifetime')).toHaveCount(0);expect(page.url()).toBe(original);
  await page.locator('#back-today').click();await expect(page.locator('#reference-banner')).toBeHidden();
  await tools(page,'#reference-open');await page.locator('#reference-year').fill('2030');await page.locator('#reference-apply').click();await expect(page.locator('#reference-banner')).toContainText('2030');expect(page.url()).toBe(original);
 });
 test('table, timeline, preferences and RTL remain usable',async({page})=>{
  const original=page.url();await page.locator('#people-layout').selectOption('table');await expect(page.locator('.family-table tbody tr')).toHaveCount(3);await page.reload();await expect(page.locator('#people-layout')).toHaveValue('table');
- await page.locator('#timeline-tab').click();await expect(page.locator('.family-timeline li')).toHaveCount(3);await page.locator('#timeline-mode').selectOption('birthdays');await expect(page.locator('.family-timeline li').first()).toBeVisible();
+ await page.locator('#tools-tab').click();await page.locator('#timeline-tab').click();await expect(page.locator('.family-timeline li')).toHaveCount(3);await page.locator('#timeline-mode').selectOption('birthdays');await expect(page.locator('.family-timeline li').first()).toBeVisible();
  await page.locator('#language-button').click();await expect(page.locator('html')).toHaveAttribute('dir','rtl');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect(page.url()).toBe(original);
 });
 test('calendar exports valid PDF and print-resolution PNG from one preview',async({page},info)=>{
@@ -80,11 +80,11 @@ test('embedded exports fit Arabic larger text and explain QR only when enabled',
  expect(await page.locator('.document-text').evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
 });
 
-test('embedded dialogs open at people selection instead of jumping to lower actions',async({page})=>{
+test('sharing opens at its actions and printing opens at the preview',async({page})=>{
  await page.setViewportSize({width:320,height:850});await page.locator('#language-button').click();await page.evaluate(()=>document.documentElement.style.fontSize='125%');
- await page.locator('#share-button').click();await expect(page.locator('#select-all')).toBeFocused();
- expect(await page.locator('#modal').evaluate(el=>el.scrollTop)).toBe(0);await page.locator('#close-modal').click();
- await print(page);await expect(page.locator('#document-selection .selection-all')).toBeFocused();
+ await page.locator('#share-button').click();await expect(page.locator('#modal-title')).toBeFocused();
+ expect(await page.locator('#modal').evaluate(el=>el.scrollTop)).toBe(0);await page.locator('#close-modal').click();await page.locator('#people-tab').click();
+ await print(page);await expect(page.locator('#modal-title')).toBeFocused();
  expect(await page.locator('#modal').evaluate(el=>el.scrollTop)).toBe(0);
 });
 
@@ -97,7 +97,7 @@ test('birthday cards and milestone filtering share actual event ages',async({pag
  await page.locator('#birthdays-tab').click();await page.locator('#birthday-range').selectOption('365');await page.locator('#birthday-calendar').selectOption('g');await page.locator('[data-agenda-card]').first().click();await expect(page.locator('#download-image')).toBeEnabled({timeout:20000});
  await expect(page.locator('#doc-ages')).not.toBeChecked();await page.locator('#doc-shape').selectOption('portrait');await page.locator('#doc-language').selectOption('ar');await expect(page.locator('#download-image')).toBeEnabled();
  const pending=page.waitForEvent('download');await page.locator('#download-image').click();const bytes=await readFile(await (await pending).path());expect(bytes.readUInt32BE(16)).toBe(1080);expect(bytes.readUInt32BE(20)).toBe(1350);
- await page.locator('#document-preview').screenshot({path:info.outputPath('birthday-card.png')});await page.locator('#close-modal').click();
+ await page.locator('#document-preview').screenshot({path:info.outputPath('birthday-card.png')});await page.locator('#close-modal').click();await page.locator('#birthdays-tab').click();
  await page.locator('#milestones-button').click();await page.locator('.milestone-options input[value="100"]').check();await page.locator('#apply-milestones').click();await expect(page.locator('.agenda-event')).toHaveCount(0);await page.locator('#milestones-button').click();await page.locator('#clear-milestones').click();await expect(page.locator('.agenda-event').first()).toBeVisible();
 });
 test('offline export includes bundled fonts and PDF runtime',async({page,context})=>{

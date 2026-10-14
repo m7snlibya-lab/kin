@@ -71,9 +71,9 @@ test('selected sharing, QR and backup restore work in a fresh browser', async ({
   await page.locator('#share-button').click();
   await page.locator('.check-row', {hasText:'Excluded Test'}).locator('input').uncheck();
   const sharedURL=await page.locator('#share-url').inputValue();
-  await expect(page.locator('.qr-options summary')).toHaveCount(0);await expect(page.locator('#qr')).toBeVisible();
+  await expect(page.locator('.qr-options summary')).toHaveCount(0);await page.locator('#share-qr-format').click();await expect(page.locator('#qr')).toBeVisible();
   const downloadPromise=page.waitForEvent('download');
-  await page.locator('#download-backup').click();
+  await page.locator('#close-modal').click();await page.locator('#tools-tab').click();await page.locator('#backup-button').click();await page.locator('#backup-selection .check-row',{hasText:'Excluded Test'}).locator('input').uncheck();await page.locator('#download-backup').click();
   const download=await downloadPromise;
   const backupPath=await download.path();
   const backup=JSON.parse(await readFile(backupPath,'utf8'));
@@ -82,14 +82,14 @@ test('selected sharing, QR and backup restore work in a fresh browser', async ({
   const fresh=await browser.newContext({locale:'en-US'});
   try {
     const recipient=await fresh.newPage();
-    await recipient.goto(sharedURL);
+    await recipient.goto(sharedURL);await recipient.locator('#view-link').click();
     await expect(recipient.locator('.person-card h3')).toHaveText('Selected Test');
     // Restore in a separate clean context so import cannot rely on local data.
     const restoreContext=await browser.newContext({locale:'en-US'});
     try {
       const restore=await restoreContext.newPage();
       await restore.goto(baseURL);
-      await restore.locator('#import-button').click();
+      await restore.locator('#tools-tab').click();await restore.locator('#import-button').click();
       await restore.locator('#backup-file').setInputFiles(backupPath);
       await expect(restore.locator('.merge-person')).toHaveCount(1);
       await restore.locator('#confirm-merge').click();
@@ -104,14 +104,14 @@ test('birthday agenda downloads recurring and one-time calendar files', async ({
   await page.locator('#birthday-range').selectOption('365');
   await page.locator('#birthday-calendar').selectOption('g');
   await expect(page.locator('.agenda-event')).toHaveCount(1);
-  await page.locator('#exports-button').click();await page.locator('#ics-open').click();
+  await page.locator('#tools-tab').click();await page.locator('#exports-button').click();await page.locator('#ics-open').click();
   await expect(page.locator('#repeat-gregorian')).toBeChecked();
   let downloadPromise=page.waitForEvent('download');
   await page.locator('#download-calendar').click();
   let content=await readFile(await (await downloadPromise).path(), 'utf8');
   expect(content).toContain('BEGIN:VCALENDAR\r\n');
   expect(content).toContain('RRULE:FREQ=YEARLY');
-  await page.locator('#exports-button').click();await page.locator('#ics-open').click();
+  await page.locator('#tools-tab').click();await page.locator('#exports-button').click();await page.locator('#ics-open').click();
   await page.locator('#repeat-gregorian').uncheck();
   downloadPromise=page.waitForEvent('download');
   await page.locator('#download-calendar').click();
@@ -202,8 +202,8 @@ test('unavailable browser storage leaves a recoverable family URL', async ({page
   await page.reload();
   await addPerson(page, 'URL Recovery');
   expect(page.url()).toContain('#k1');
-  await expect(page.locator('#notice')).toContainText('Browser storage is unavailable');
-  await page.reload();
+  await expect(page.locator('#notice')).toContainText('Browser storage is unavailable');await expect(page.locator('#family-mode')).toHaveText('Only in this link');
+  await page.reload();await page.locator('#view-link').click();
   await expect(page.locator('.person-card h3')).toHaveText('URL Recovery');
 });
 
