@@ -13,6 +13,14 @@ async function fillSearch(page,value){if(await page.locator('#search-toggle').is
 test.beforeEach(async({page})=>{errors.set(page,[]);page.on('pageerror',e=>errors.get(page).push(e.message));await page.goto('./'+encode(records));await page.locator('#confirm-merge').click();await expect(page.locator('#modal')).toBeHidden();await expect(page.locator('.person-card')).toHaveCount(2)});
 test.afterEach(async({page})=>expect(errors.get(page)).toEqual([]));
 
+test('browser and test process use the same local day around midnight',async({page})=>{
+ const instants=['2026-10-14T20:59:00Z','2026-10-14T21:01:00Z'];
+ const days=values=>values.map(value=>{const d=new Date(value);return[d.getFullYear(),d.getMonth()+1,d.getDate()]});
+ const browserDays=await page.evaluate(days,instants);
+ expect(browserDays).toEqual([[2026,10,14],[2026,10,15]]);
+ expect(days(instants)).toEqual(browserDays);
+});
+
 test('both ages, birth dates and next birthdays are visible without expanding details',async({page})=>{
  await expect(page.locator('#mobile-add')).toBeHidden();
  const card=page.locator('.person-card').filter({hasText:'Omar'});

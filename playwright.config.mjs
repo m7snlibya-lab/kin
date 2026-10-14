@@ -1,5 +1,10 @@
 import {defineConfig, devices} from '@playwright/test';
 
+// Expected dates are calculated in Node as well as the browser. Share one zone
+// so they agree around local midnight on UTC-hosted CI runners.
+const testTimezone='Asia/Riyadh';
+process.env.TZ=testTimezone;
+
 export default defineConfig({
   testDir:'./browser-tests',
   testMatch:'**/{app,features,usability}.spec.mjs',
@@ -9,7 +14,7 @@ export default defineConfig({
   workers:2,
   reporter:'list',
   use:{baseURL:process.env.KIN_BASE_URL || 'http://127.0.0.1:4173/kin/',
-    locale:'en-US', timezoneId:'Asia/Riyadh', trace:'retain-on-failure', screenshot:'only-on-failure'},
+    locale:'en-US', timezoneId:testTimezone, trace:'retain-on-failure', screenshot:'only-on-failure'},
   projects:[
     {name:'desktop', use:{...devices['Desktop Chrome']}},
     {name:'mobile', use:{...devices['Pixel 7']}},
