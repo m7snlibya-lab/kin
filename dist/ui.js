@@ -19,7 +19,14 @@ export function setBusy(el,busy,key='Saving…'){
 export function createDialogs(state){
  let opener=null,activation=null,returnTo=null;
  document.addEventListener('click',event=>{if(!$('#modal').contains(event.target))activation=event.target.closest?.('button,a,select,input,textarea,summary')||null},true);
- function restoreFocus(){if($('#modal').open)return;const editId=opener?.dataset?.edit,personId=opener?.dataset?.person;const target=opener?.isConnected&&opener!==document.body?opener:editId?document.querySelector('[data-edit="'+editId+'"]'):personId?document.querySelector('[data-person="'+personId+'"]'):null;(returnTo?.isConnected?returnTo:target||$('#add-button')).focus()}
+ function restoreFocus(){
+  if($('#modal').open)return;
+  const visible=el=>el?.isConnected&&el!==document.body&&el.getClientRects().length&&!el.disabled;
+  const findVisible=selector=>$$(selector).find(visible);
+  const editId=opener?.dataset?.edit,personId=opener?.dataset?.person;
+  const target=visible(opener)?opener:editId?findVisible('[data-edit="'+editId+'"]'):personId?findVisible('[data-person="'+personId+'"]'):null;
+  (visible(returnTo)?returnTo:target||findVisible('[role="tab"][aria-selected="true"]')||$('#add-button')).focus();
+ }
  function confirmLeave(){if(state.saving)return false;if(state.pendingDraft?.()&&!window.confirm(t('Discard your unsaved changes?')))return false;state.pendingDraft=null;return true}
  function close(focusTarget=null){if(!confirmLeave())return false;returnTo=typeof focusTarget?.focus==='function'?focusTarget:null;$('#modal').close();queueMicrotask(restoreFocus);return true}
  function modal(title,html){if(!$('#modal').open){opener=activation?.isConnected?activation:document.activeElement;activation=null;returnTo=null;}state.onDialogClose?.();state.pendingDraft=null;$('#modal').onclose=null;$('#modal-title').textContent=t(title);$('#modal-body').innerHTML=html;if(!$('#modal').open)$('#modal').showModal();const first=[...$('#modal-body').querySelectorAll('input:not([type=checkbox]):not([readonly]),select,textarea:not([readonly]),button,summary')].find(el=>!el.disabled&&el.getClientRects().length);(first||$('#close-modal')).focus()}

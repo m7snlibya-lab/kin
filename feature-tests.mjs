@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import './dist/vendor/pako.min.js';
 import {calendars,MIN,MAX,encode,decode,today} from './dist/core.js';
-import {referenceDay,ageAt,comparePeople,yearBounds,eventsBetween,filterPeople} from './dist/domain.js';
+import {referenceDay,ageAt,comparePeople,yearBounds,eventsBetween,filterPeople,groupBirthMonths} from './dist/domain.js';
 import {createDeviceStore} from './dist/device.js';
 import {createFamilyStore} from './dist/family-store.js';
 import {createCalendarDocument,createCardDocument,pageSize} from './dist/documents.js';
@@ -16,6 +16,25 @@ for(const c of ['g','h']){const y=calendars[c].parts(today())[0],bounds=yearBoun
 const hash=encode([a,b]);
 assert.equal(filterPeople([a,b],{groups:[{id:'group',members:[a.id]}],group:'group'}).length,1);
 assert.equal(filterPeople([p(8,1990,1,1,'آمِنة')],{search:'آمنة',locale:'ar'}).length,1);
+const monthRecords=[p(10,2000,9,22,'Zayn'),feb,p(11,1992,9,1,'Amina'),a,p(12,1990,1,1,'Person 1')];
+const originalMonths=JSON.stringify(monthRecords);
+for(const calendar of ['g','h'])for(const locale of ['en','ar']){
+ const groups=groupBirthMonths(monthRecords,calendar,locale),entries=groups.flatMap(g=>g.people);
+ assert.equal(entries.length,monthRecords.length,'Every person appears once, including leap-day births');
+ assert.equal(new Set(entries.map(e=>e.person.id)).size,monthRecords.length);
+ for(const group of groups){
+  for(const entry of group.people){const [,m,d]=calendars[calendar].parts(entry.person.day);assert.equal(group.month,m);assert.equal(entry.day,d)}
+  assert.deepEqual(group.people.map(e=>e.day),group.people.map(e=>e.day).sort((x,y)=>x-y));
+ }
+ assert.deepEqual(groups.map(g=>g.month),groups.map(g=>g.month).sort((x,y)=>x-y));
+ assert.equal(JSON.stringify(monthRecords),originalMonths,'Browsing never changes records or their order');
+ assert.deepEqual(groupBirthMonths([...monthRecords].reverse(),calendar,locale),groups,'Tied birthdays have stable ordering');
+}
+assert.equal(groupBirthMonths([feb],'g')[0].people[0].day,29,'Birth-month browsing does not clamp February 29 to this year');
+const longHijriMonth=Array.from({length:12},(_,i)=>i+1).find(m=>calendars.h.days(1445,m)===30);
+const hijri30={...a,calendar:'h',day:calendars.h.toDay(1445,longHijriMonth,30)};
+assert.equal(groupBirthMonths([hijri30],'h')[0].people[0].day,30,'Hijri birth days are not clamped to a shorter occurrence month');
+assert.deepEqual(groupBirthMonths([]),[]);assert.throws(()=>groupBirthMonths(monthRecords,'invalid'));
 const memory=new Map(),storage={getItem:k=>memory.get(k)??null,setItem:(k,v)=>memory.set(k,v)};
 const device=createDeviceStore('/kin/',storage);device.value.groups=[{id:'local',name:'Cousins',members:[a.id]}];device.save();
 assert.equal(createDeviceStore('/kin/',storage).value.groups[0].name,'Cousins');

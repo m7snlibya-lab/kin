@@ -42,4 +42,18 @@ export function filterPeople(records,{search='',group='',groups=[],month='',cale
  const members=group?groups.find(g=>g.id===group)?.members||[]:null;
  return records.filter(p=>(!members||members.includes(p.id))&&normalized(p.name).includes(normalized(search))&&(!month||calendars[calendar].parts(p.day)[1]===+month));
 }
+// Birth-month browsing uses the original day, not a clamped birthday occurrence.
+export function groupBirthMonths(records,calendar='g',locale='en'){
+ const cal=calendars[calendar];
+ if(!cal)throw Error('Invalid calendar.');
+ const collator=new Intl.Collator(locale);
+ const entries=records.map(person=>{const [,month,day]=cal.parts(person.day);return{person,month,day}})
+  .sort((a,b)=>a.month-b.month||a.day-b.day||collator.compare(a.person.name,b.person.name)||a.person.id.localeCompare(b.person.id));
+ const groups=[];
+ for(const {person,month,day} of entries){
+  if(groups.at(-1)?.month!==month)groups.push({month,people:[]});
+  groups.at(-1).people.push({person,day});
+ }
+ return groups;
+}
 export function safeToday(){return Math.max(MIN,Math.min(MAX,today()))}

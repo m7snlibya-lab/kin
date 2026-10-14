@@ -89,6 +89,15 @@ Remaining evidence gaps: physical iOS/Android accessibility settings, browser/ha
 - Month sections are ordered by calendar month, omit empty months, and order people by day then localized name. Filtered family/group/search scope is preserved when browsing.
 - Keep the mode and calendar choice as local display preferences only; they do not alter family records, links, or exports. Calendar exports remain in the Upcoming agenda.
 
+## Review refinements in 1.11.1
+
+- Group birth months in the domain layer and render them with the other family views. Grouping retains the original birth day (including Gregorian February 29 and Hijri day 30), sorts without mutating records, and uses localized names with stable tie-breaking.
+- Show the chosen calendar first in both birth dates and ages. Label ages as today or the reference date, remove historical weekdays from recurring month browsing, and make the complete person row a keyboard-accessible details button. Saving an edit preserves the reading view and returns focus to the visible updated row.
+- Announce the small month summary rather than rereading the entire family. Localize month help headings, counts, search controls and calendar choices; use the existing sun/moon icon system.
+- Keep search optional on desktop as well as phones. Put search, layout, options and sorting in one toolbar, remove the superseded layout select, explain the calendar setting accurately, and restore visible focus after resetting either searches or groups. Escape closes search and restores the complete family.
+- Reflow month controls and both calendar facts with enlarged text, without fixed minimum widths that overflow phones. Keep filters and calendar exports scoped to the same people, and preserve family links across browsing changes.
+- Restore readable repository documentation and check its encoding and release metadata before deployment.
+
 ## Verification
 
 Regression checks cover English/Arabic, RTL, narrow screens, larger text, keyboard focus, remembered preferences, filtered sharing/exports, and unchanged family links. Unit checks additionally cover date conversion, backup/import safety, offline caching, and dense printable layouts. Deployment is gated by the complete automated suite.

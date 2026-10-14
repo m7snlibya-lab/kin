@@ -32,7 +32,7 @@ test('both ages, birth dates and next birthdays are visible without expanding de
 test('advanced filters are optional and active filters have a clear reset',async({page})=>{
  await expect(page.locator('#family-options')).not.toHaveAttribute('open','');
  await expect(page.locator('#month-filter')).toBeHidden();
- await expect(page.locator('#people-layout')).toBeHidden();await expect(page.locator('.layout-view-toggle button')).toHaveCount(3);
+ await expect(page.locator('#people-layout')).toHaveCount(0);await expect(page.locator('.layout-view-toggle button')).toHaveCount(3);
  await fillSearch(page,'Omar');await expect(page.locator('.person-card')).toHaveCount(1);await expect(page.locator('#filter-status')).toBeVisible();
  await page.locator('#clear-filters').click();await expect(page.locator('.person-card')).toHaveCount(2);
  await expect(page.locator('#family-search')).toBeFocused();await expect(page.locator('#filter-status')).toBeHidden();
@@ -42,6 +42,112 @@ test('advanced filters are optional and active filters have a clear reset',async
  await page.locator('[data-month-calendar="h"]').click();await expect(page.locator('.birth-month')).toHaveCount(2);
  await expect(page.locator('.birth-month-dates .age-g')).toHaveCount(2);await expect(page.locator('.birth-month-dates .age-h')).toHaveCount(2);
  await page.locator('#upcoming-view').click();await expect(page.locator('.agenda-controls')).toBeVisible();
+});
+
+test('month browsing maps real birth months and days, orders names and remembers its calendar',async({page})=>{
+ const family=[...records,
+  {id:'cDAwMDAz',name:'Zayn',calendar:'g',day:calendars.g.toDay(2000,9,1)},
+  {id:'cDAwMDA0',name:'Adam',calendar:'g',day:calendars.g.toDay(2000,9,1)},
+  {id:'cDAwMDA1',name:'Leap day',calendar:'g',day:calendars.g.toDay(2000,2,29)}
+ ];
+ await page.evaluate(()=>localStorage.clear());await page.goto('about:blank');await page.goto('./'+encode(family));await page.locator('#confirm-merge').click();
+ const original=page.url();await page.locator('#birthdays-tab').click();await page.locator('#month-view').click();
+ for(const calendar of ['g','h']){
+  await page.locator(`[data-month-calendar="${calendar}"]`).click();
+  await expect(page.locator('.birth-month-person')).toHaveCount(family.length);
+  const expected=[...family].sort((a,b)=>{const [,am,ad]=calendars[calendar].parts(a.day),[,bm,bd]=calendars[calendar].parts(b.day);return am-bm||ad-bd||a.name.localeCompare(b.name,'en')});
+  expect(await page.locator('.birth-month-name bdi').allTextContents()).toEqual(expected.map(p=>p.name));
+  for(const person of family){
+   const [,month,day]=calendars[calendar].parts(person.day),section=page.locator(`#birth-month-${calendar}-${month}`).locator('..');
+   const row=section.locator(`[data-person="${person.id}"]`);
+   await expect(row.locator('.birth-month-day')).toHaveText(String(day));
+   await expect(row.locator('[data-birth-date]').first()).toHaveAttribute('data-birth-date',calendar);
+   for(const c of ['g','h']){
+    await expect(row.locator(`[data-birth-date="${c}"] bdi`)).toHaveText(date(person.day,c));
+    const ageNow=age(person.day,today(),c);
+    await expect(row.locator(`[data-birth-age="${c}"]`)).toContainText(['year','month','day'].map((u,i)=>quantity([ageNow.years,ageNow.months,ageNow.days][i],u)).join(' · '));
+   }
+   await expect(row.locator('.birth-month-age-label')).toHaveText('Age today');
+  }
+ }
+ await expect(page.locator('#birthday-month-view')).not.toHaveAttribute('aria-live','polite');
+ await expect(page.locator('#birthday-month-summary')).toHaveText('5 people · Birth months: Hijri');
+ await page.locator('#birthday-month-view [data-person="cDAwMDAy"]').click();await expect(page.locator('#modal .person-title')).toContainText('Omar');
+ await page.locator('#close-modal').click();await expect(page.locator('#birthday-month-view [data-person="cDAwMDAy"]')).toBeFocused();
+ await page.reload();await expect(page.locator('#month-view')).toHaveAttribute('aria-pressed','true');await expect(page.locator('[data-month-calendar="h"]')).toHaveAttribute('aria-pressed','true');
+ expect(page.url()).toBe(original);
+ // Saving an edit stays in the month view, even with a hidden List underneath it.
+ await page.locator('#people-tab').click();await page.locator('[data-layout="list"]').click();await page.locator('#birthdays-tab').click();
+ await page.locator('#birthday-month-view [data-person="cDAwMDAy"]').click();await page.locator('#modal [data-edit]').click();
+ await page.locator('#person-name').fill('Omar Updated');await page.locator('#save-person').click();await expect(page.locator('#modal')).toBeHidden();
+ await expect(page.locator('#month-view')).toHaveAttribute('aria-pressed','true');await expect(page.locator('[data-month-calendar="h"]')).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('#birthday-month-view [data-person="cDAwMDAy"]')).toBeFocused();
+ await expect(page.locator('#birthday-month-view [data-person="cDAwMDAy"] .birth-month-name')).toContainText('Omar Updated');
+});
+
+test('month browsing explains reference ages and reflows with enlarged Arabic and English text',async({page},info)=>{
+ const original=page.url();await page.locator('#tools-tab').click();await page.locator('#tools-button').click();await page.locator('#reference-open').click();
+ await page.locator('#reference-year').fill('2020');await page.locator('#reference-month').selectOption('1');await page.locator('#reference-day').fill('1');await page.locator('#reference-apply').click();
+ await page.locator('#birthdays-tab').click();await page.locator('#month-view').click();await page.locator('[data-month-calendar="h"]').click();
+ const reference=calendars.g.toDay(2020,1,1);
+ for(const locale of ['en','ar']){
+  if(locale==='ar')await page.locator('#language-button').click();
+  for(const person of records)for(const c of ['g','h']){
+   const a=age(person.day,reference,c),expected=[quantity(a.years,'year',locale),quantity(a.months,'month',locale),quantity(a.days,'day',locale)].join(' · ');
+   await expect(page.locator(`#birthday-month-view [data-person="${person.id}"] [data-birth-age="${c}"]`)).toContainText(expected);
+  }
+  await expect(page.locator('.birth-month-age-label').first()).toHaveText(locale==='en'?'Age on this date':'العمر في هذا التاريخ');
+  for(const width of [393,320]){
+   await page.setViewportSize({width,height:851});await page.evaluate(()=>document.documentElement.style.fontSize='200%');
+   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+   for(const selector of ['.birthday-browse-controls','#birthday-month-view','.birth-month-open']){
+    for(const element of await page.locator(selector).all())expect(await element.evaluate(el=>el.scrollWidth<=el.clientWidth+1),selector).toBe(true);
+   }
+  }
+  await page.evaluate(()=>document.documentElement.style.fontSize='100%');await page.setViewportSize({width:393,height:851});
+  await page.screenshot({path:info.outputPath('birth-months-'+locale+'.png'),fullPage:true});
+ }
+ expect(page.url()).toBe(original);
+});
+
+test('month scope survives export and empty-group recovery keeps focus visible',async({page})=>{
+ await page.evaluate(id=>{
+  const key='kin.device.v1:'+location.pathname,value=JSON.parse(localStorage.getItem(key));
+  value.groups=[{id:'one',name:'One person',members:[id]},{id:'empty',name:'Empty group',members:[]}];
+  value.preferences.birthdayRange=365;localStorage.setItem(key,JSON.stringify(value));
+ },records[1].id);await page.reload();
+ const original=page.url();await page.locator('#family-options>summary').click();await page.locator('#group-filter').selectOption('one');await page.locator('#family-options>summary').click();
+ await page.locator('#birthdays-tab').click();await page.locator('#month-view').click();await expect(page.locator('.birth-month-person')).toHaveCount(1);
+ await expect(page.locator('.layout-view-toggle')).toBeHidden();await expect(page.locator('#sort')).toBeHidden();
+ await page.locator('#tools-tab').click();await page.locator('#exports-button').click();await page.locator('#ics-open').click();
+ await expect(page.locator('#modal-title')).toHaveText('Export calendar');await expect(page.locator('#modal .check-list')).toContainText('Omar');await expect(page.locator('#modal .check-list')).not.toContainText('Amina');
+ await page.locator('#cancel-export').click();await expect(page.locator('#upcoming-view')).toHaveAttribute('aria-pressed','true');
+ await page.locator('#month-view').click();await page.locator('#family-options>summary').click();await page.locator('#group-filter').selectOption('empty');await page.locator('#family-options>summary').click();
+ await expect(page.locator('#clear-month-view')).toBeVisible();await expect(page.locator('#family-search')).toBeHidden();
+ await page.locator('#clear-month-view').click();await expect(page.locator('.birth-month-person')).toHaveCount(2);await expect(page.locator('#family-options>summary')).toBeFocused();
+ expect(page.url()).toBe(original);
+});
+
+test('search stays optional and Escape returns focus without changing the family',async({page})=>{
+ const original=page.url();await expect(page.locator('#family-search')).toBeHidden();await expect(page.locator('#search-toggle')).toBeVisible();
+ await page.locator('#search-toggle').click();await expect(page.locator('#family-search')).toBeFocused();await expect(page.locator('#search-toggle')).toHaveAttribute('aria-expanded','true');
+ await page.locator('#family-search').fill('Omar');await page.keyboard.press('Escape');
+ await expect(page.locator('#family-search')).toBeHidden();await expect(page.locator('#search-toggle')).toBeFocused();await expect(page.locator('.person-card')).toHaveCount(2);
+ await expect(page.locator('#search-toggle')).toHaveAttribute('aria-expanded','false');
+ await page.locator('#birthdays-tab').click();await page.locator('#month-view').click();await fillSearch(page,'Omar');
+ await page.locator('[data-remove-filter="search"]').click();await expect(page.locator('#family-search')).toBeVisible();await expect(page.locator('#family-search')).toBeFocused();
+ await expect(page.locator('.birth-month-person')).toHaveCount(2);expect(page.url()).toBe(original);
+});
+
+test('old display preferences keep the month default sensible without reviving the removed filter',async({page})=>{
+ await page.evaluate(()=>{
+  const key='kin.device.v1:'+location.pathname,value=JSON.parse(localStorage.getItem(key));
+  value.preferences={primaryCalendar:'h',month:'9',layout:'list',birthdayView:'months',view:'birthdays'};
+  localStorage.setItem(key,JSON.stringify(value));
+ });await page.reload();
+ await expect(page.locator('[data-month-calendar="h"]')).toHaveAttribute('aria-pressed','true');await expect(page.locator('.birth-month-person')).toHaveCount(2);
+ await page.locator('[data-month-calendar="g"]').click();await page.reload();await expect(page.locator('[data-month-calendar="g"]')).toHaveAttribute('aria-pressed','true');
+ await page.locator('#people-tab').click();await expect(page.locator('[data-layout="list"]')).toHaveAttribute('aria-pressed','true');
 });
 
 test('sorting and result counts are visible without opening filters',async({page})=>{

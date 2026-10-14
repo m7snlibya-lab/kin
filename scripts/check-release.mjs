@@ -7,6 +7,11 @@ const root=resolve('dist');
 const read=path=>readFile(resolve(root,path),'utf8');
 const sw=await read('sw.js');
 const version=JSON.parse(await readFile('package.json','utf8')).version;
+const lock=JSON.parse(await readFile('package-lock.json','utf8'));
+assert.equal(lock.version,version,'Keep the lockfile release version in sync');
+assert.equal(lock.packages[''].version,version,'Keep the root package version in sync');
+const readme=new TextDecoder('utf-8',{fatal:true}).decode(await readFile('README.md'));
+assert.match(readme,/^# Kin\b/,'Repository documentation must remain readable UTF-8 text');
 assert.equal(sw.match(/const VERSION='([^']+)'/)?.[1],version,'Bump the worker version alongside the package release');
 const cached=new Set([...sw.matchAll(/'\.\/([^']*)'/g)].map(match=>match[1]));
 async function check(path){
@@ -29,6 +34,7 @@ async function check(path){
  }
 }
 await check(root);
+assert.equal((await read('app.js')).match(/Kin · (\d+\.\d+\.\d+)/)?.[1],version,'Help must identify the installed release correctly');
 for(const asset of cached)if(asset)await readFile(resolve(root,asset));
 const manifest=JSON.parse(await read('manifest.webmanifest'));
 assert.equal(manifest.start_url,'./');assert.equal(manifest.scope,'./');

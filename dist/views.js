@@ -1,9 +1,28 @@
-import {ageAt,nextEvent} from './domain.js';
-import {date,quantity,t,calendarName,number,weekday} from './i18n.js';
+import {ageAt,nextEvent,groupBirthMonths} from './domain.js';
+import {date,quantity,t,calendarName,number,weekday,months,language} from './i18n.js';
 import {esc} from './ui.js';
 import {icon} from './icons.js';
 const ageText=a=>a?[quantity(a.years,'year'),quantity(a.months,'month'),quantity(a.days,'day')].join(' · '):t('Not born yet');
 export {ageText};
+
+export function birthdayMonths(records,state){
+ const calendar=state.birthdayMonthCalendar,order=[calendar,calendar==='g'?'h':'g'];
+ return groupBirthMonths(records,calendar,language()).map(({month,people})=>`
+  <section class="birth-month" aria-labelledby="birth-month-${calendar}-${month}">
+   <h3 id="birth-month-${calendar}-${month}" class="birth-month-heading">${icon(calendar==='g'?'sun':'moon')}<span>${months(calendar)[month-1]}</span><span class="birth-month-count"><span class="sr-only">${t('People')}: </span>${number(people.length)}</span></h3>
+   <div class="birth-month-people">${people.map(({person,day})=>`
+    <article class="birth-month-person"><button type="button" class="birth-month-open" data-person="${person.id}" aria-labelledby="month-name-${person.id}" aria-describedby="month-facts-${person.id}">
+     <span class="birth-month-day" aria-hidden="true">${number(day)}</span>
+     <span class="birth-month-details"><span id="month-name-${person.id}" class="birth-month-name"><bdi>${esc(person.name)}</bdi><span class="sr-only"> · ${t('Person details')}</span>${icon('next')}</span>
+      <span id="month-facts-${person.id}" class="birth-month-facts">
+       <span class="birth-month-dates">${order.map(c=>`<span class="birth-month-date age-${c}" data-birth-date="${c}">${icon(c==='g'?'sun':'moon')}<span><span class="sr-only">${t('Born')} · ${calendarName(c)} · </span><bdi>${date(person.day,c)}</bdi></span></span>`).join('')}</span>
+       <span class="birth-month-age-label">${t(state.reference===null?'Age today':'Age on this date')}</span>
+       <span class="birth-month-ages">${order.map(c=>`<span class="age-${c}" data-birth-age="${c}">${icon(c==='g'?'sun':'moon')}<span><span class="sr-only">${calendarName(c)} · </span>${ageText(ageAt(person,state.now,c))}</span></span>`).join('')}</span>
+      </span>
+     </span>
+    </button></article>`).join('')}</div>
+  </section>`).join('');
+}
 
 export function personRow(p,state){
  const next=['g','h'].map(c=>({c,event:nextEvent(p,Math.max(state.now,p.day),c)})).filter(x=>x.event).sort((a,b)=>a.event.day-b.event.day)[0];
