@@ -229,6 +229,13 @@ dialog::backdrop { background:#30253670; backdrop-filter:blur(5px); }
 .tool-list .button { border:1px solid var(--line); border-radius:10px; background:#f7f4f0; font-size:1.0625rem; margin-bottom:.75rem; padding:1rem; color:var(--deep); }
 .tool-list .button:hover { background:var(--lavender); }
 .tool-list .tool-action:hover .tool-copy strong { text-decoration:underline; text-underline-offset:4px; }
+.date-fields:has(#compare-a) { grid-template-columns:repeat(2,minmax(0,1fr)); }
+#comparison-result>.comparison-summary { font-size:1.125rem; line-height:1.8; color:var(--deep); }
+.comparison-ages { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
+.comparison-age { background:#f7f4f0; border:1px solid var(--line); border-radius:12px; padding:1rem; min-width:0; }
+.comparison-age h3 { font-size:1rem; margin:0 0 .5rem; }
+.comparison-age p { font-size:1.0625rem; margin:0; overflow-wrap:anywhere; }
+@media(max-width:500px) { .comparison-ages { grid-template-columns:1fr; } }
 #comparison-result>h3 { font-size:1.125rem; margin-bottom:.5rem; color:var(--deep); }
 #comparison-result>p { font-size:1rem; }
 .agenda-controls { background:var(--surface); border-color:var(--line); }

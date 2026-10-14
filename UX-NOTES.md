@@ -13,6 +13,14 @@ Make the next useful action obvious without making the family list feel like a s
 - **No silent dead ends:** exporting an empty birthday agenda explains what needs changing. A restrictive empty agenda offers a one-step 365-day, both-calendar reset while preserving the family search/group/month selection. Active milestone filtering is explicitly labeled.
 - **Preserve comfort:** no change to dual ages, intact table names, the remembered language before first paint, official Lucide Sun/Moon icons, larger text, offline support, or export privacy choices.
 
+## Context-aware controls in 1.5.0
+
+- Identify older/younger automatically and show one useful age-at-birth answer in both calendars; do not show the reverse “not born yet” result. Same-day births do not assign an older person.
+- Prevent same-person comparisons without error messages. Preserve the pair when changing selection order.
+- Allow comparison even if fewer than two people match the family filters, explaining the broader scope without clearing the filters.
+- Hide empty group selection and open first-group creation directly. Restore the empty-group state when the last group is deleted. Keep group names, membership, and family links unchanged by browsing.
+- Hide comparison and sorting in a one-person family, but retain the useful reference-date tool.
+
 ## Next ideas, in recommended order (not implemented)
 
 1. **Quick group switching, only when useful.** Show Everyone plus a compact group chooser once a family has groups. Avoid displaying an empty group system to first-time users. Keep all group management in one place and retain device-only labeling.

@@ -112,6 +112,7 @@ export function createComfort(state,{device,render}){
   $('#filter-count').hidden=!active.length;$('#filter-count').textContent=number(active.length);
   $('#family-options').classList.toggle('has-filters',!!active.length);
 
+  $('.sort-label').hidden=state.view!=='people'||state.people.length<2;
   $('#layout-control').hidden=state.view!=='people';
   const table=$('.table-scroll');
   if(table!==observedTable){tableObserver.disconnect();observedTable=table;if(table)tableObserver.observe(table)}

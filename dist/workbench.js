@@ -11,7 +11,7 @@ export function createWorkbench(state,{modal,close,render,ics,toast}){
  const device=createDeviceStore(location.pathname,storage),prefs=device.value.preferences;
  for(const [key,allowed] of Object.entries({sort:['added','birthday','oldest','name'],view:['people','birthdays','timeline'],layout:['cards','table'],primaryCalendar:['g','h'],birthdayCalendar:['both','g','h']}))if(allowed.includes(prefs[key]))state[key]=prefs[key];
  if([30,90,365].includes(prefs.birthdayRange))state.birthdayRange=prefs.birthdayRange;
- $('.search-field').insertAdjacentHTML('beforebegin',`<div class="family-filters"><label><span data-i18n="Group">${t('Group')}</span><select id="group-filter"></select></label><button id="manage-groups" class="quiet" data-i18n="Manage groups">${t('Manage groups')}</button><label><span data-i18n="Birthday month">${t('Birthday month')}</span><select id="month-filter"></select></label><label><span data-i18n="Primary calendar">${t('Primary calendar')}</span><select id="primary-calendar"><option value="g" data-i18n="Gregorian">${t('Gregorian')}</option><option value="h" data-i18n="Hijri">${t('Hijri')}</option></select></label><label id="layout-control"><span data-i18n="People view">${t('People view')}</span><select id="people-layout"><option value="cards" data-i18n="Cards">${t('Cards')}</option><option value="table" data-i18n="Table">${t('Table')}</option></select></label></div>`);
+ $('.search-field').insertAdjacentHTML('beforebegin',`<div class="family-filters"><label id="group-filter-control"><span data-i18n="Group">${t('Group')}</span><select id="group-filter"></select></label><button id="manage-groups" class="quiet" data-i18n="Manage groups">${t('Manage groups')}</button><label><span data-i18n="Birthday month">${t('Birthday month')}</span><select id="month-filter"></select></label><label><span data-i18n="Primary calendar">${t('Primary calendar')}</span><select id="primary-calendar"><option value="g" data-i18n="Gregorian">${t('Gregorian')}</option><option value="h" data-i18n="Hijri">${t('Hijri')}</option></select></label><label id="layout-control"><span data-i18n="People view">${t('People view')}</span><select id="people-layout"><option value="cards" data-i18n="Cards">${t('Cards')}</option><option value="table" data-i18n="Table">${t('Table')}</option></select></label></div>`);
  $('.view-tabs').insertAdjacentHTML('beforeend',`<button id="timeline-tab" role="tab" tabindex="-1" aria-selected="false" aria-controls="timeline-panel" data-view="timeline" data-i18n="Timeline">${t('Timeline')}</button>`);
  $('#birthday-panel').insertAdjacentHTML('afterend','<section id="timeline-panel" role="tabpanel" aria-labelledby="timeline-tab" hidden></section>');
  $('.heading-actions').insertAdjacentHTML('beforeend',`<button id="tools-button" class="button secondary" data-i18n="Tools">${t('Tools')}</button><button id="exports-button" class="button secondary" data-i18n="Export & print">${t('Export & print')}</button>`);
@@ -20,9 +20,10 @@ export function createWorkbench(state,{modal,close,render,ics,toast}){
  const visible=()=>filterPeople(state.people,{search:state.search,group:state.group,groups:device.value.groups,month:state.month,calendar:state.primaryCalendar,locale:language()});
  function persist(){for(const key of ['sort','view','layout','primaryCalendar','birthdayCalendar','birthdayRange'])prefs[key]=state[key];device.save()}
  for(const [selector,key] of [['#group-filter','group'],['#month-filter','month'],['#primary-calendar','primaryCalendar'],['#people-layout','layout']])$(selector).onchange=e=>{state[key]=e.target.value;persist();render()};
- $('#manage-groups').onclick=groupsDialog;
+ $('#manage-groups').onclick=()=>device.value.groups.length?groupsDialog():createFirstGroup();
+ function createFirstGroup(){if(state.demo||state.viewOnly)return toast('Merge or save this family before managing groups.');editGroup()}
  const toolAction=(id,key,description)=>button(id,key,'secondary','button',description);
- $('#tools-button').onclick=()=>{modal('Ages & dates',`<p class="hint">${t('Choose what you would like to find out.')}</p><div class="tool-list">${toolAction('compare-open','Compare people','See how old one person was when another was born.')}${toolAction('reference-open','Family on this date','See everyone’s age on a date in the past or future.')}</div>`);$('#compare-open').onclick=compareDialog;$('#reference-open').onclick=referenceDialog};
+ $('#tools-button').onclick=()=>{modal('Ages & dates',`<p class="hint">${t('Choose what you would like to find out.')}</p><div class="tool-list">${state.people.length>1?toolAction('compare-open','Compare people','See how old one person was when another was born.'):''}${toolAction('reference-open','Family on this date','See everyone’s age on a date in the past or future.')}</div>`);$('#compare-open')?.addEventListener('click',compareDialog);$('#reference-open').onclick=referenceDialog};
  $('#exports-button').onclick=()=>{modal('Calendars',`<div class="tool-list">${toolAction('print-open','Printable calendar','Print a year of family birthdays.')}${toolAction('ics-open','Add to calendar app','Keep birthdays in your own calendar.')}</div><p class="hint">${t('Exports start with the people in your current filters. Review your selection before downloading.')}</p>`);$('#print-open').onclick=()=>openDocuments();$('#ics-open').onclick=()=>{close($('#birthday-range'));state.view='birthdays';render();ics()}};
  let openDocuments=()=>{};
  function groupsDialog(){
@@ -42,14 +43,22 @@ export function createWorkbench(state,{modal,close,render,ics,toast}){
   $('#delete-group')?.addEventListener('click',()=>{if(!confirm(t('Delete this group? People will not be deleted.')))return;device.value.groups=device.value.groups.filter(g=>g.id!==group.id);if(state.group===group.id)state.group='';device.save();state.pendingDraft=null;close();render()});
  }
  function compareDialog(){
-  const records=visible();if(records.length<2)return toast('Select at least two people using the family filters.');
+  const filtered=visible(),records=filtered.length>=2?filtered:state.people;
+  if(records.length<2)return;
+  const fallback=filtered.length<2;
   const options=records.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
-  modal('Compare people',`<div class="date-fields"><label>${t('First person')}<select id="compare-a">${options}</select></label><label>${t('Second person')}<select id="compare-b">${options}</select></label></div><div id="comparison-result" aria-live="polite"></div>`);
-  $('#compare-b').value=records[1].id;
-  const update=()=>{const a=records.find(p=>p.id===$('#compare-a').value),b=records.find(p=>p.id===$('#compare-b').value);
-   if(a.id===b.id){$('#comparison-result').textContent=t('Choose two different people.');return}
-   const comparison=comparePeople(a,b);
-   $('#comparison-result').innerHTML=`<p class="form-preview">${t('Age gap: {days} days',{days:number(comparison.gapDays)})}</p>${['g','h'].map(c=>`<h3 class="has-icon">${icon(c==='g'?'sun':'moon')}${calendarName(c)}</h3><p>${t('When {name} was born',{name:'<bdi>'+esc(b.name)+'</bdi>'})}: <bdi>${esc(a.name)}</bdi> — ${ageText(comparison.atBirth[c].a)}</p><p>${t('When {name} was born',{name:'<bdi>'+esc(a.name)+'</bdi>'})}: <bdi>${esc(b.name)}</bdi> — ${ageText(comparison.atBirth[c].b)}</p>`).join('')}`;
+  modal('Compare people',`<p class="hint">${t('Choose two people in any order. The older person is identified automatically.')}</p>${fallback?`<p class="hint comparison-scope">${t('Showing everyone here because fewer than two people match your filters. Your filters have not changed.')}</p>`:''}<div class="date-fields"><label>${t('First person')}<select id="compare-a">${options}</select></label><label>${t('Second person')}<select id="compare-b">${options}</select></label></div><div id="comparison-result" aria-live="polite"></div>`);
+  $('#compare-b').value=records[1].id;let previousFirst=records[0].id;
+  const update=()=>{
+   const a=records.find(p=>p.id===$('#compare-a').value),selected=$('#compare-b').value;
+   const choices=records.filter(p=>p.id!==a.id);
+   const second=choices.find(p=>p.id===selected)||choices.find(p=>p.id===previousFirst)||choices[0];
+   $('#compare-b').innerHTML=choices.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');$('#compare-b').value=second.id;previousFirst=a.id;
+   const comparison=comparePeople(a,second),{older,younger,gapDays}=comparison;
+   const result=$('#comparison-result');
+   const name=p=>'<bdi>'+esc(p.name)+'</bdi>';
+   result.innerHTML=gapDays===0?`<p class="comparison-summary">${t('{first} and {second} were born on the same day.',{first:name(a),second:name(second)})}</p><p class="hint">${date(a.day)} · ${date(a.day,'h')}</p>`:
+    `<p class="comparison-summary">${t('When {younger} was born, {older} was:',{younger:name(younger),older:name(older)})}</p><div class="comparison-ages">${['g','h'].map(c=>`<section class="comparison-age"><h3 class="has-icon">${icon(c==='g'?'sun':'moon')}${calendarName(c)}</h3><p>${ageText(comparison.atBirth[c][older.id===a.id?'a':'b'])}</p></section>`).join('')}</div><p class="hint">${t('Age gap: {days} days',{days:number(gapDays)})}</p>`;
   };$('#compare-a').onchange=$('#compare-b').onchange=update;update();
  }
  function referenceDialog(){
@@ -74,6 +83,10 @@ export function createWorkbench(state,{modal,close,render,ics,toast}){
  function refresh(){
   persist();$('#device-note').hidden=device.available;
   if(state.group&&!device.value.groups.some(g=>g.id===state.group))state.group='';
+  const hasGroups=device.value.groups.length>0;
+  $('#group-filter-control').hidden=!hasGroups;
+  const groupLabel=$('#manage-groups span');groupLabel.dataset.i18n=hasGroups?'Manage groups':'Create group';groupLabel.textContent=t(groupLabel.dataset.i18n);
+  $('#manage-groups').hidden=!state.people.length||state.demo||state.viewOnly;
   $('#group-filter').innerHTML=`<option value="">${t('Everyone')}</option>`+device.value.groups.map(g=>`<option value="${esc(g.id)}">${esc(g.name)}</option>`).join('');$('#group-filter').value=state.group;
   $('#month-filter').innerHTML=`<option value="">${t('All months')}</option>`+months(state.primaryCalendar).map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');$('#month-filter').value=state.month;
   for(const [s,k] of [['#primary-calendar','primaryCalendar'],['#people-layout','layout'],['#sort','sort'],['#birthday-range','birthdayRange'],['#birthday-calendar','birthdayCalendar']])$(s).value=String(state[k]);

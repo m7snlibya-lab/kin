@@ -90,6 +90,51 @@ test('mobile views come before tools and tool explanations are clickable',async(
  }
 });
 
+test('comparison identifies the older person in either selection order',async({page})=>{
+ const original=page.url();await page.locator('#tools-button').click();await page.locator('#compare-open').click();
+ const before=await page.locator('#comparison-result').textContent();
+ await expect(page.locator('.comparison-age')).toHaveCount(2);await expect(page.locator('#comparison-result')).not.toContainText('Not born yet');
+ await expect(page.locator('.comparison-summary')).toHaveText('When Omar was born, Amina أحمد was:');
+ for(const c of ['g','h'])await expect(page.locator('.comparison-age').nth(c==='g'?0:1)).toContainText(quantity(age(records[0].day,records[1].day,c).years,'year'));
+ await expect(page.locator('#compare-b option[value="'+records[0].id+'"]')).toHaveCount(0);
+ await page.locator('#compare-a').selectOption(records[1].id);await expect(page.locator('#compare-b')).toHaveValue(records[0].id);
+ await expect(page.locator('#comparison-result')).toHaveText(before);expect(page.url()).toBe(original);
+});
+
+test('comparison handles same-day births without calling either person older',async({page})=>{
+ const same=records.map(p=>({...p,day:records[0].day}));await page.evaluate(()=>localStorage.clear());await page.goto('about:blank');await page.goto('./'+encode(same));
+ const original=page.url();await page.locator('#tools-button').click();await page.locator('#compare-open').click();
+ await expect(page.locator('.comparison-summary')).toHaveText('Amina أحمد and Omar were born on the same day.');
+ await expect(page.locator('.comparison-age')).toHaveCount(0);await expect(page.locator('#comparison-result')).not.toContainText('Not born yet');
+ expect(page.url()).toBe(original);
+ await page.locator('#close-modal').click();await page.locator('#language-button').click();await page.locator('#tools-button').click();await page.locator('#compare-open').click();
+ await expect(page.locator('.comparison-summary')).toContainText('في اليوم نفسه');
+});
+
+test('comparison can use the family without resetting restrictive filters',async({page})=>{
+ const original=page.url();await page.locator('#family-search').fill('Omar');await page.locator('#tools-button').click();await page.locator('#compare-open').click();
+ await expect(page.locator('.comparison-scope')).toBeVisible();await expect(page.locator('#compare-a option')).toHaveCount(2);
+ await expect(page.locator('.comparison-age')).toHaveCount(2);await page.locator('#close-modal').click();
+ await expect(page.locator('#family-search')).toHaveValue('Omar');await expect(page.locator('.person-card')).toHaveCount(1);expect(page.url()).toBe(original);
+ await page.evaluate(()=>localStorage.clear());await page.goto('about:blank');await page.goto('./'+encode(records.slice(0,1)));await expect(page.locator('#sort')).toBeHidden();await page.locator('#tools-button').click();
+ await expect(page.locator('#compare-open')).toHaveCount(0);await expect(page.locator('#reference-open')).toBeVisible();
+});
+
+test('group controls appear only after the first group and return to direct creation after deletion',async({page})=>{
+ const original=page.url();await page.locator('#family-options>summary').click();
+ await expect(page.locator('#group-filter')).toBeHidden();await expect(page.locator('#manage-groups')).toHaveText('Create group');
+ await page.locator('#manage-groups').click();await expect(page.locator('#group-name')).toBeFocused();await expect(page.locator('#new-group')).toHaveCount(0);
+ await page.locator('#group-name').fill('Family');await page.locator('#save-group').click();
+ await expect(page.locator('#group-filter')).toBeVisible();await expect(page.locator('#manage-groups')).toHaveText('Manage groups');
+ await page.locator('#group-filter').selectOption({label:'Family'});await page.locator('#manage-groups').click();await page.locator('[data-group]').click();
+ page.once('dialog',d=>d.accept());await page.locator('#delete-group').click();
+ await expect(page.locator('#group-filter')).toBeHidden();await expect(page.locator('#manage-groups')).toHaveText('Create group');
+ await expect(page.locator('#manage-groups')).toBeFocused();await expect(page.locator('[data-remove-filter="group"]')).toHaveCount(0);
+ await expect(page.locator('.person-card')).toHaveCount(2);expect(page.url()).toBe(original);
+ await page.locator('#language-button').click();await expect(page.locator('#manage-groups')).toHaveText('إنشاء مجموعة');
+ await page.reload();await page.locator('#family-options>summary').click();await expect(page.locator('#group-filter')).toBeHidden();
+});
+
 test('larger text is remembered without changing family links',async({page})=>{
  const url=page.url();await page.locator('#text-size-button').click();await expect(page.locator('#text-size-button')).toHaveAttribute('aria-pressed','true');
  expect(await page.locator('.calendar-label').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(20);

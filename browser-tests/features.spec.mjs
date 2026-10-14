@@ -13,7 +13,7 @@ test.beforeEach(async({page})=>{errors.set(page,[]);page.on('pageerror',e=>error
 test('backup reminder and temporary device groups do not imply cloud sync',async({page})=>{
  await expect(page.locator('#backup-reminder')).toBeVisible();await page.locator('#dismiss-reminder').click();await page.reload();await expect(page.locator('#backup-reminder')).toBeHidden();
  await page.evaluate(()=>{const get=Storage.prototype.getItem,set=Storage.prototype.setItem;Storage.prototype.getItem=function(key){if(key.startsWith('kin.device.'))throw new DOMException('Blocked','SecurityError');return get.call(this,key)};Storage.prototype.setItem=function(key,value){if(key.startsWith('kin.device.'))throw new DOMException('Blocked','SecurityError');return set.call(this,key,value)}});
- await expect(page.locator('#family-options')).not.toHaveAttribute('open','');await expect(page.locator('#sort')).toBeVisible();await page.locator('#sort').scrollIntoViewIfNeeded();await page.locator('#sort').selectOption('oldest');await expect(page.locator('#device-note')).toBeVisible();await tools(page,'#groups-open');await page.locator('#new-group').click();await page.locator('#group-name').fill('Temporary');await page.locator('#save-group').click();await page.locator('#group-filter').selectOption({label:'Temporary'});await expect(page.locator('.person-card')).toHaveCount(3);
+ await expect(page.locator('#family-options')).not.toHaveAttribute('open','');await expect(page.locator('#sort')).toBeVisible();await page.locator('#sort').scrollIntoViewIfNeeded();await page.locator('#sort').selectOption('oldest');await expect(page.locator('#device-note')).toBeVisible();await tools(page,'#groups-open');await expect(page.locator('#group-name')).toBeFocused();await page.locator('#group-name').fill('Temporary');await page.locator('#save-group').click();await page.locator('#group-filter').selectOption({label:'Temporary'});await expect(page.locator('.person-card')).toHaveCount(3);
 });
 test('dense Arabic exports preserve all names and cancellation permits retry',async({page},info)=>{
  test.setTimeout(60000);
@@ -32,7 +32,7 @@ test.afterEach(async({page})=>expect(errors.get(page)).toEqual([]));
 async function tools(page,id){if(id==='#groups-open'){const filters=page.locator('#family-options');if(!await filters.evaluate(el=>el.open))await filters.locator('summary').click();await page.locator('#manage-groups').click()}else{await page.locator('#tools-button').click();await page.locator(id).click()}}
 async function print(page){await page.locator('#exports-button').click();await page.locator('#print-open').click();await expect(page.locator('#download-pdf')).toBeEnabled({timeout:20000})}
 test('groups remain device-only and filter sharing and exports',async({page})=>{
- const original=page.url();await tools(page,'#groups-open');await page.locator('#new-group').click();await page.locator('#group-name').fill('Parents');
+ const original=page.url();await tools(page,'#groups-open');await expect(page.locator('#group-name')).toBeFocused();await page.locator('#group-name').fill('Parents');
  await page.locator('#group-selection .selection-all').uncheck();await page.locator('#group-selection [value="cDAwMDAx"]').check();await page.locator('#save-group').click();
  if(!await page.locator('#family-options').evaluate(el=>el.open))await page.locator('#family-options > summary').click();await page.locator('#group-filter').selectOption({label:'Parents'});await expect(page.locator('.person-card')).toHaveCount(1);expect(page.url()).toBe(original);
  await page.locator('#share-button').click();await expect(page.locator('.share-person:checked')).toHaveCount(1);await page.locator('#close-modal').click();
@@ -42,8 +42,8 @@ test('groups remain device-only and filter sharing and exports',async({page})=>{
  await tools(page,'#groups-open');await page.locator('[data-group]').click();page.once('dialog',d=>d.accept());await page.locator('#delete-group').click();await expect(page.locator('.person-card')).toHaveCount(3);expect(page.url()).toBe(original);
 });
 test('comparison and past/future dates do not mutate family links',async({page})=>{
- const original=page.url();await tools(page,'#compare-open');await expect(page.locator('#comparison-result')).toContainText('10 years');await expect(page.locator('#comparison-result')).toContainText('Not born yet');
- await page.locator('#compare-b').selectOption('cDAwMDAx');await expect(page.locator('#comparison-result')).toHaveText('Choose two different people.');await page.locator('#close-modal').click();
+ const original=page.url();await tools(page,'#compare-open');await expect(page.locator('#comparison-result')).toContainText('10 years');await expect(page.locator('#comparison-result')).not.toContainText('Not born yet');
+ await expect(page.locator('#compare-b option[value="cDAwMDAx"]')).toHaveCount(0);await page.locator('#close-modal').click();
  await tools(page,'#reference-open');await page.locator('#reference-year').fill('1995');await page.locator('#reference-month').selectOption('1');await page.locator('#reference-day').fill('1');await page.locator('#reference-apply').click();
  await expect(page.locator('#reference-banner')).toContainText('1995');await expect(page.locator('.person-card').filter({hasText:'Child Test'})).toContainText('Not born yet');expect(page.url()).toBe(original);
  await page.locator('#back-today').click();await expect(page.locator('#reference-banner')).toBeHidden();

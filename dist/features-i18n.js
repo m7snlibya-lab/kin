@@ -157,5 +157,10 @@ export const featureMessages={
  "No people match these filters": "لا يوجد أفراد يطابقون هذه المرشحات",
  "Remove a filter above or reset to see everyone.": "أزل أحد المرشحات أعلاه أو أعد ضبطها لعرض الجميع.",
  "Reset filters": "إعادة ضبط المرشحات",
+ "Create group": "إنشاء مجموعة",
+ "Choose two people in any order. The older person is identified automatically.": "اختر شخصين بأي ترتيب. يُحدَّد الأكبر سنًا تلقائيًا.",
+ "Showing everyone here because fewer than two people match your filters. Your filters have not changed.": "نعرض الجميع هنا لأن أقل من شخصين يطابقون مرشحاتك. لم تتغير مرشحاتك.",
+ "{first} and {second} were born on the same day.": "وُلد {first} و{second} في اليوم نفسه.",
+ "When {younger} was born, {older} was:": "عندما وُلد {younger}، كان عمر {older}:",
  "Image export failed.": "تعذر تصدير الصورة."
 };

@@ -20,6 +20,12 @@ The browser suite checks person creation/editing/removal/undo, calendar switchin
 
 Run the algorithm checks with `node tests.mjs`. Tests cover 100,406 date conversions against ICU, Hijri/Gregorian leap dates, date-based ages and countdowns, Unicode codec round trips, corruption rejection, size limits, merge conflicts, duplicate detection, and QR generation. Browser installation, offline navigation, and device QR scanning require browser/device verification; these were not tested in this environment.
 
+## Context-aware controls (1.5.0)
+
+Comparisons identify the older person regardless of selection order and show only their age when the younger person was born, in both calendars. Same-day births receive a neutral message. The second picker excludes the first person; changing the first person preserves the pair where possible. A restrictive family filter no longer blocks comparison: the dialog explains when it includes everyone, without changing the filters.
+
+Group selection is hidden until a group exists. Create group opens the first group form directly; Manage groups appears after creation. Comparison and sorting are hidden for a one-person family, while reference dates remain available. These changes do not alter family links or backups.
+
 ## Lower-friction browsing (1.4.0)
 
 Sorting and a matching-person count are visible without opening filters. Each active group, calendar-specific month, or search has its own removable chip; removing one preserves the rest and keyboard focus. Empty-list recovery resets all family filters. Cards/Table and sorting remain remembered device preferences.

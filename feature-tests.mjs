@@ -9,6 +9,7 @@ const p=(i,year=2000,m=1,d=1,name='Person '+i)=>({id:Buffer.from('p'+String(i).p
 const a=p(1,1990),b=p(2,2000),same=p(3,1990),feb=p(4,2000,2,29);
 assert.equal(ageAt(b,a.day),null);assert.deepEqual(ageAt(a,b.day),{years:10,months:0,days:0});
 assert.equal(comparePeople(a,b).atBirth.g.b,null);assert.equal(comparePeople(a,same).gapDays,0);assert.throws(()=>comparePeople(a,a));
+for(const [first,second] of [[a,b],[b,a]]){const comparison=comparePeople(first,second);assert.equal(comparison.older.id,a.id);assert.equal(comparison.younger.id,b.id);for(const c of ['g','h'])assert.deepEqual(comparison.atBirth[c][comparison.older.id===first.id?'a':'b'],ageAt(a,b.day,c))}
 assert.deepEqual(ageAt(feb,calendars.g.toDay(2023,2,28)),{years:23,months:0,days:0});
 assert.ok(referenceDay('g',2030,1,1)>today());assert.throws(()=>referenceDay('g',2030,2,30));assert.throws(()=>referenceDay('g',9999,1,1));
 for(const c of ['g','h']){const y=calendars[c].parts(today())[0],bounds=yearBounds(c,y);assert.equal(calendars[c].parts(bounds.start)[1],1);assert.equal(calendars[c].parts(bounds.end)[1],12);assert.ok(bounds.end-bounds.start>=353)}
