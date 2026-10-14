@@ -20,6 +20,12 @@ The browser suite checks person creation/editing/removal/undo, calendar switchin
 
 Run the algorithm checks with `node tests.mjs`. Tests cover 100,406 date conversions against ICU, Hijri/Gregorian leap dates, date-based ages and countdowns, Unicode codec round trips, corruption rejection, size limits, merge conflicts, duplicate detection, and QR generation. Browser installation, offline navigation, and device QR scanning require browser/device verification; these were not tested in this environment.
 
+## Embedded information, fewer expanders (1.6.0)
+
+Person cards show the birth weekday beside the name and days lived in a quiet footer, without More details. The table includes both facts in existing cells; future reference dates before birth do not show negative days lived. Both calendar ages and upcoming birthdays remain visible.
+
+Today's dates are directly visible in a compact two-calendar strip. Offline status and Install app are direct controls; long repeated guidance lives in the existing Help. Sharing embeds its QR preview and uses a single-line portable-link field, with privacy guidance before the QR. Printable calendars show their people selection and keyboard-scrollable text preview directly, with bounded lists and sticky export actions. Filters retain their purposeful control toggle; informational show-more disclosures are removed.
+
 ## Context-aware controls (1.5.0)
 
 Comparisons identify the older person regardless of selection order and show only their age when the younger person was born, in both calendars. Same-day births receive a neutral message. The second picker excludes the first person; changing the first person preserves the pair where possible. A restrictive family filter no longer blocks comparison: the dialog explains when it includes everyone, without changing the filters.

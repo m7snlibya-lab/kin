@@ -46,25 +46,20 @@ export function createComfort(state,{device,render}){
   (remaining[Math.min(index,remaining.length-1)]||(key==='search'?$('#family-search'):$('#family-options>summary'))).focus();
  };
 
- const overview=$('.overview'),peek=document.createElement('details');
- peek.className='overview-peek';peek.id='family-overview';
- peek.innerHTML=`<summary data-i18n="Today in both calendars">${t('Today in both calendars')}</summary>`;
- overview.before(peek);peek.append(overview);
- const aside=$('.workspace > aside'),guide=document.createElement('details');
- guide.className='saving-guide';
- guide.innerHTML=`<summary data-i18n="Saving, sharing & offline help">${t('Saving, sharing & offline help')}</summary>`;
+ const overview=$('.overview');overview.id='family-overview';
+ overview.querySelector('.overview-item:not(.date-item)').hidden=true;
+ for(const [selector,name] of [['#today-g','sun'],['#today-h','moon']]){
+  const value=$(selector),row=document.createElement('div');row.className='today-date';
+  value.before(row);row.innerHTML=icon(name);row.append(value);
+ }
+ const aside=$('.workspace > aside');
  const offline=$('#offline-label').closest('.detail-line');
  offline.querySelector('span[aria-hidden]').outerHTML='<span id="offline-symbol" aria-hidden="true">'+icon('clock')+'</span>';
- const details=aside.querySelectorAll('.aside-details .detail-line');
- details[0].querySelector('span[aria-hidden]').outerHTML=icon('calendar');
- details[2].querySelector('span[aria-hidden]').outerHTML=icon('people');
- $('.link-note .note-icon').innerHTML=icon('share');
  offline.classList.add('offline-summary');aside.prepend(offline);
- for(const child of [...aside.children])if(child!==offline)guide.append(child);
- guide.append($('#install-button'));
- aside.append(guide);
- aside.prepend($('#backup-reminder'));
- aside.prepend(peek);
+ // Long explanations remain available through Help, not repeated on the family page.
+ $('.link-note').remove();$('.aside-details').remove();
+ aside.append($('#install-button'));
+ aside.prepend($('#backup-reminder'));aside.prepend(overview);
 
  $('#about-button').insertAdjacentHTML('beforebegin',`<button id="text-size-button" class="reading-button" aria-pressed="false"><span class="reading-symbol" aria-hidden="true">${icon('text')}</span> <span id="text-size-label"></span></button>`);
  $('#text-size-button').onclick=()=>{prefs.largeText=!prefs.largeText;device.save();refresh()};

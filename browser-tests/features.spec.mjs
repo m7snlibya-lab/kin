@@ -24,7 +24,7 @@ test('dense Arabic exports preserve all names and cancellation permits retry',as
  expect(model.events.length).toBeGreaterThanOrEqual(300);expect(model.pages.flatMap(p=>p.events)).toHaveLength(model.events.length);expect(model.pages.length).toBeGreaterThan(1);
  let pending=page.waitForEvent('download');await page.locator('#download-image').click();await (await pending).saveAs(info.outputPath('dense-arabic.png'));
  await page.locator('#download-pdf').click();await page.locator('#cancel-document').click();await expect(page.locator('#download-pdf')).toBeEnabled({timeout:30000});await expect(page.locator('#modal')).toBeVisible();
- await page.locator('#document-selection').evaluate(el=>{el.closest('details').open=true});await page.locator('#document-selection .selection-all').uncheck();await page.locator('#document-selection .selection-person').first().check();await expect(page.locator('#download-pdf')).toBeEnabled();
+ await expect(page.locator('#document-selection')).toBeVisible();await page.locator('#document-selection .selection-all').uncheck();await page.locator('#document-selection .selection-person').first().check();await expect(page.locator('#download-pdf')).toBeEnabled();
  pending=page.waitForEvent('download');await page.locator('#download-pdf').click();await (await pending).saveAs(info.outputPath('arabic-calendar.pdf'));
 });
 
@@ -45,7 +45,7 @@ test('comparison and past/future dates do not mutate family links',async({page})
  const original=page.url();await tools(page,'#compare-open');await expect(page.locator('#comparison-result')).toContainText('10 years');await expect(page.locator('#comparison-result')).not.toContainText('Not born yet');
  await expect(page.locator('#compare-b option[value="cDAwMDAx"]')).toHaveCount(0);await page.locator('#close-modal').click();
  await tools(page,'#reference-open');await page.locator('#reference-year').fill('1995');await page.locator('#reference-month').selectOption('1');await page.locator('#reference-day').fill('1');await page.locator('#reference-apply').click();
- await expect(page.locator('#reference-banner')).toContainText('1995');await expect(page.locator('.person-card').filter({hasText:'Child Test'})).toContainText('Not born yet');expect(page.url()).toBe(original);
+ await expect(page.locator('#reference-banner')).toContainText('1995');await expect(page.locator('.person-card').filter({hasText:'Child Test'})).toContainText('Not born yet');await expect(page.locator('.person-card').filter({hasText:'Child Test'}).locator('.person-lifetime')).toHaveCount(0);expect(page.url()).toBe(original);
  await page.locator('#back-today').click();await expect(page.locator('#reference-banner')).toBeHidden();
  await tools(page,'#reference-open');await page.locator('#reference-year').fill('2030');await page.locator('#reference-apply').click();await expect(page.locator('#reference-banner')).toContainText('2030');expect(page.url()).toBe(original);
 });
@@ -55,13 +55,23 @@ test('table, timeline, preferences and RTL remain usable',async({page})=>{
  await page.locator('#language-button').click();await expect(page.locator('html')).toHaveAttribute('dir','rtl');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect(page.url()).toBe(original);
 });
 test('calendar exports valid PDF and print-resolution PNG from one preview',async({page},info)=>{
- await print(page);await expect(page.locator('#doc-ages')).not.toBeChecked();await expect(page.locator('#doc-qr')).not.toBeChecked();
+ await print(page);await expect(page.locator('#document-selection')).toBeVisible();await expect(page.locator('.document-text')).toBeVisible();await expect(page.locator('#document-text')).not.toBeEmpty();await expect(page.locator('#modal details,#modal summary')).toHaveCount(0);await expect(page.locator('#doc-ages')).not.toBeChecked();await expect(page.locator('#doc-qr')).not.toBeChecked();
  let pending=page.waitForEvent('download');await page.locator('#download-image').click();const png=await pending,bytes=await readFile(await png.path());expect(bytes.subarray(1,4).toString()).toBe('PNG');expect(bytes.readUInt32BE(16)).toBe(3508);expect(bytes.readUInt32BE(20)).toBe(2480);
  pending=page.waitForEvent('download');await page.locator('#download-pdf').click();const pdf=await pending;await pdf.saveAs(info.outputPath('calendar.pdf'));const document=await PDFDocument.load(await readFile(await pdf.path()));expect(document.getPageCount()).toBe(1);expect(document.getPage(0).getWidth()).toBeCloseTo(841.89,1);
  await page.locator('#document-preview').screenshot({path:info.outputPath('calendar-preview.png')});
  await page.locator('#doc-layout-calendar').selectOption('h');await page.locator('#doc-language').selectOption('ar');await page.locator('#doc-layout').selectOption('monthly');await expect(page.locator('#download-pdf')).toBeEnabled();
  await expect(page.locator('#page-count')).toContainText('12');await page.locator('#document-preview').screenshot({path:info.outputPath('arabic-month-preview.png')});
 });
+test('embedded exports fit Arabic larger text and explain QR only when enabled',async({page})=>{
+ await page.setViewportSize({width:320,height:850});await page.locator('#language-button').click();await page.locator('#text-size-button').click();await print(page);
+ await expect(page.locator('#doc-qr-note')).toBeHidden();await page.locator('#doc-qr').check();await expect(page.locator('#doc-qr-note')).toBeVisible();
+ await expect(page.locator('#download-pdf')).toBeEnabled();
+ expect(await page.locator('#modal').evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+ for(const button of await page.locator('.export-controls .button').all())expect(await button.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+ await page.locator('.document-text').focus();await expect(page.locator('.document-text')).toBeFocused();
+ expect(await page.locator('.document-text').evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+});
+
 test('export selection, invalid year, QR and overflow are explicit',async({page})=>{
  await print(page);await page.getByText('Choose people',{exact:true}).click();await page.locator('#document-selection .selection-all').uncheck();await expect(page.locator('#download-pdf')).toBeDisabled();await expect(page.locator('#document-status')).toContainText('Select at least one person');
  await page.locator('#document-selection [value="cDAwMDAx"]').check();await expect(page.locator('#download-pdf')).toBeEnabled();await page.locator('#doc-year').fill('9999');await expect(page.locator('#download-pdf')).toBeDisabled();await expect(page.locator('#document-status')).toContainText('Invalid reference date');

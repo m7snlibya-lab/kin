@@ -71,7 +71,7 @@ test('selected sharing, QR and backup restore work in a fresh browser', async ({
   await page.locator('#share-button').click();
   await page.locator('.check-row', {hasText:'Excluded Test'}).locator('input').uncheck();
   const sharedURL=await page.locator('#share-url').inputValue();
-  await page.locator('.qr-options > summary').click();await expect(page.locator('#qr')).toBeVisible();
+  await expect(page.locator('.qr-options summary')).toHaveCount(0);await expect(page.locator('#qr')).toBeVisible();
   const downloadPromise=page.waitForEvent('download');
   await page.locator('#download-backup').click();
   const download=await downloadPromise;

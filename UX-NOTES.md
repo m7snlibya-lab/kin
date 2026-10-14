@@ -21,6 +21,14 @@ Make the next useful action obvious without making the family list feel like a s
 - Hide empty group selection and open first-group creation directly. Restore the empty-group state when the last group is deleted. Keep group names, membership, and family links unchanged by browsing.
 - Hide comparison and sorting in a one-person family, but retain the useful reference-date tool.
 
+## Embedded content in 1.6.0
+
+- Birth weekdays belong beside names; days lived are a quiet card footer. The table embeds these facts in existing cells instead of adding more columns. No generic More details action is needed.
+- Today's calendar dates and offline/installation status are directly visible. Long explanations remain in the existing Help rather than in a second footer disclosure.
+- Sharing includes a direct QR preview and keeps the encoded URL to a single line. Privacy guidance precedes the QR; copying and backup remain the primary actions.
+- Printable calendars expose their selected people and readable text preview directly. Bounded, keyboard-accessible scroll regions keep large families manageable without show-more toggles.
+- The family filter toggle remains: it controls optional tools, not essential reading content. Dual ages, reference-date behavior, and portable data are unchanged.
+
 ## Next ideas, in recommended order (not implemented)
 
 1. **Quick group switching, only when useful.** Show Everyone plus a compact group chooser once a family has groups. Avoid displaying an empty group system to first-time users. Keep all group management in one place and retain device-only labeling.

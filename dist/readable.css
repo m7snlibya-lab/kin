@@ -2,7 +2,8 @@ html[data-booting] body { visibility:hidden; }
 html[data-booting]::after { content:attr(data-loading-label); display:block; position:fixed; inset:40% 1rem auto; text-align:center; font-size:1rem; color:#615c6b; }
 .startup-recovery { visibility:visible; position:fixed; inset:25% 1rem auto; margin:auto; max-width:30rem; padding:2rem; background:#fffefd; border:1px solid #ded9d5; border-radius:16px; text-align:center; }
 .qr-options { margin-top:1rem; border:1px solid var(--line); border-radius:10px; }
-.qr-options>summary { padding:.6rem 1rem; cursor:pointer; }
+.qr-options>h3 { margin:0; padding:.65rem 1rem; font-size:1rem; color:var(--deep); }
+.qr-options .qr-wrap canvas { width:auto; max-width:min(100%,220px); }
 .share-controls { position:sticky; bottom:-1.75rem; background:var(--surface); padding:.75rem 0; border-top:1px solid var(--line); }
 .qr-options .qr-wrap { margin-top:0; }
 .reading-button { display:inline-flex; align-items:center; gap:.4rem; }
@@ -12,9 +13,7 @@ html[data-booting]::after { content:attr(data-loading-label); display:block; pos
 .icon-moon { color:var(--sage); }
 .icon-previous,.icon-next { transform:none; }
 .agenda-person p .ui-icon { vertical-align:-.2em; margin-inline-end:.35rem; }
-.qr-options>summary { display:flex; justify-content:flex-start; gap:.5rem; }
-.qr-options>summary .icon-chevron { margin-inline-start:auto; }
-.qr-options[open]>summary .icon-chevron { transform:rotate(180deg); }
+
 html[dir=rtl] .icon-previous,html[dir=rtl] .icon-next { transform:scaleX(-1); }
 /* Kin's visual system: warm paper, quiet structure, two equally visible calendars. */
 :root {
@@ -168,9 +167,10 @@ html:not([data-booting]) .results-toolbar { visibility:visible; }
 .birthday-preview .birthday-date { font-size:.9375rem; color:var(--muted); overflow-wrap:anywhere; flex:initial; }
 .birthday-preview .birthday-row strong { font-size:.9375rem; color:var(--deep); font-weight:600; margin:0; max-width:45%; white-space:normal; text-align:end; flex-shrink:0; }
 .birthday-preview .birthday-row.today strong { background:var(--lime); color:var(--deep); border-radius:6px; padding:.25rem .5rem; }
-.person-details { padding-top:0; border-top:0; margin-top:.2rem; }
-.person-details summary { display:list-item; cursor:pointer; font-size:.9375rem; color:var(--muted); padding:.65rem 0; }
-.person-details p,.person-details .lived { font-size:1rem; color:var(--muted); }
+.person-title .birth-weekday { font-size:.9375rem; color:var(--muted); margin:.2rem 0 0; line-height:1.6; overflow-wrap:anywhere; }
+.person-lifetime { display:flex; align-items:baseline; justify-content:space-between; gap:.75rem; flex-wrap:wrap; margin:.75rem 0 .5rem; padding-top:.65rem; border-top:1px solid var(--line); font-size:.9375rem; color:var(--muted); }
+.person-lifetime strong { font-weight:500; font-variant-numeric:tabular-nums; }
+.table-fact { display:block; margin-top:.35rem; color:var(--muted); font-size:.9375rem; font-weight:400; white-space:normal; }
 .family-table { font-size:1rem; min-width:68rem; width:max-content; table-layout:auto; }
 .family-table th,.family-table td { padding:1rem; }
 .family-table th { white-space:nowrap; }
@@ -188,23 +188,21 @@ html:not([data-booting]) .results-toolbar { visibility:visible; }
 .empty h3 { font-size:1.85rem; }
 .empty p { font-size:1rem; max-width:30rem; }
 .empty-symbol { background:var(--lavender); }
-.workspace>aside { border-top:1px solid var(--line); margin-top:2rem; padding-top:1rem; display:grid; grid-template-columns:1fr 1fr; gap:1rem 2rem; }
-.overview-peek { grid-column:1/-1; border-bottom:1px solid var(--line); padding-bottom:.5rem; }
-.overview-peek>summary,.saving-guide>summary { cursor:pointer; color:var(--muted); font-size:.9375rem; padding:.65rem 0; }
+.workspace>aside { border-top:1px solid var(--line); margin-top:2rem; padding-top:1rem; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:1rem 2rem; align-items:center; }
+#family-overview { grid-column:1/-1; margin:0; padding:0 0 1rem; border:0; border-bottom:1px solid var(--line); border-radius:0; box-shadow:none; background:transparent; display:block; }
+#family-overview .date-item { display:flex; align-items:center; flex-wrap:wrap; gap:.5rem 1.25rem; padding:0; border:0; }
+#family-overview .eyebrow { flex-basis:100%; font-size:.9375rem; font-weight:500; letter-spacing:0; }
+.today-date { display:flex; align-items:center; gap:.5rem; min-width:0; }
+.today-date>div { margin:0; font-size:1rem; color:var(--muted); overflow-wrap:anywhere; }
+#install-button { border:1px solid var(--line); justify-self:end; }
+
 .overview { margin:.75rem 0; box-shadow:none; grid-template-columns:1fr 1fr; padding:1.2rem 0; background:var(--surface); }
 .overview .eyebrow { font-size:.8125rem; letter-spacing:.04em; color:var(--muted); }
 .stat-label,.muted { font-size:.9375rem; color:var(--muted); }
 .today-g { font-size:1rem; }
 .offline-summary { margin:0; align-items:center; }
 .offline-summary strong,.offline-summary p { font-size:.9375rem; color:var(--muted); }
-.saving-guide { min-width:0; }
-.saving-guide .link-note { margin-top:.5rem; padding:1.25rem; background:var(--lavender); color:var(--deep); }
-.saving-guide .note-icon,.saving-guide .link-note .eyebrow { display:none; }
-.saving-guide .link-note h2 { font-size:1.5rem; }
-.saving-guide .link-note p,.saving-guide .note-foot { font-size:.9375rem; color:var(--muted); }
-.saving-guide .note-button { background:var(--deep); color:white; width:auto; font-size:.9375rem; }
-.saving-guide .detail-line strong,.saving-guide .detail-line p { font-size:.9375rem; }
-.saving-guide #install-button { border:1px solid var(--line); }
+
 .notice { font-size:1rem; line-height:1.6; padding:1rem; background:var(--lavender); color:var(--deep); border-color:#d6cbdc; }
 #backup-reminder { grid-column:1/-1; display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin:0; }
 #backup-reminder>span { flex:1 1 24rem; }
@@ -247,6 +245,17 @@ dialog::backdrop { background:#30253670; backdrop-filter:blur(5px); }
 .agenda-countdown { max-width:11rem; }
 .agenda-person .quiet { padding:.5rem 0; color:var(--deep); text-decoration:underline; text-underline-offset:4px; }
 .family-timeline span,.export-form label,.document-text { font-size:1rem; }
+.document-settings { display:grid; grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); gap:1.5rem; align-items:start; }
+.document-settings>.export-form:only-child { grid-column:1/-1; }
+.document-people { min-width:0; }
+.document-people>h3,.document-text>h3 { font-size:1rem; margin:0 0 .75rem; color:var(--deep); }
+.document-people .check-list { max-height:12rem; }
+.document-people .selection-search { width:100%; }
+.document-text { max-height:12rem; padding:1rem; border:1px solid var(--line); border-radius:10px; }
+.document-text:focus-visible { outline:3px solid #6b5088; outline-offset:4px; }
+.document-text h4 { margin:.5rem 0; }
+.document-text ul { padding:0; list-style-position:inside; }
+.document-text li { overflow-wrap:anywhere; }
 .export-form { gap:1rem; }
 .export-form .hint { grid-column:1/-1; }
 .document-dialog { width:min(880px,calc(100% - 24px)); }
@@ -320,7 +329,10 @@ html[dir=rtl] .calendar-age .age-value { letter-spacing:0; }
  .calendar-age .age-value { font-size:2.6rem; }
  .birthday-row>div { display:block; }
  .birthday-preview .birthday-date { display:block; }
- .workspace>aside { grid-template-columns:1fr; gap:.5rem; }
+ .workspace>aside { grid-template-columns:1fr; gap:1rem; }
+ #install-button { justify-self:start; }
+ .document-settings { grid-template-columns:1fr; gap:1rem; }
+ .document-people .check-list { max-height:10rem; }
  .overview { grid-template-columns:1fr; gap:1rem; }
  .overview-item+.overview-item { border:0; }
  .overview .eyebrow { font-size:.8125rem; }
@@ -329,14 +341,14 @@ html[dir=rtl] .calendar-age .age-value { letter-spacing:0; }
  .date-fields:has(#compare-a) { grid-template-columns:1fr; }
  dialog,.document-dialog { padding:1rem; }
  .share-controls { bottom:-1rem; }
- .share-controls .button { flex:1; white-space:normal; }
+ .share-controls .button { flex:1 1 9rem; white-space:normal; overflow-wrap:anywhere; }
  .dialog-head { gap:.5rem; }
  .dialog-head h2 { font-size:1.5rem; }
  #close-modal { padding:.5rem; }
  .export-form { grid-template-columns:1fr; }
  .export-form .check-row { grid-column:auto; }
  .export-controls { bottom:-1rem; gap:.6rem; }
- .export-controls .button { min-width:0; white-space:normal; }
+ .export-controls .button { flex:1 1 8rem; min-width:0; white-space:normal; overflow-wrap:anywhere; }
  .agenda-event { flex-wrap:wrap; align-items:flex-start; gap:.7rem; }
  .agenda-person { flex-basis:calc(100% - 80px); }
  .agenda-countdown { margin-inline-start:auto; max-width:none; }
@@ -357,6 +369,9 @@ html[dir=rtl] .calendar-age .age-value { letter-spacing:0; }
 }
 @media(max-width:500px) {
  /* Enlarged text needs full-width controls, regardless of system font metrics. */
+ html[data-large-text=true] .dialog-head { flex-wrap:wrap; }
+ html[data-large-text=true] .dialog-head h2 { flex-basis:100%; min-width:0; }
+ html[data-large-text=true] .dialog-head #close-modal { margin-inline-start:auto; }
  html[data-large-text=true] .celebration-panel { display:block; }
  html[data-large-text=true] .celebration-link { max-width:none; }
  html[data-large-text=true] .toolbar-actions { grid-template-columns:1fr; }

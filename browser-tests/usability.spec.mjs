@@ -21,7 +21,7 @@ test('both ages, birth dates and next birthdays are visible without expanding de
   await expect(card.locator('.age-'+c+' .birth-date')).toBeVisible();
  }
  await expect(card.locator('.birthday-preview .birthday-row')).toHaveCount(2);
- await expect(card.locator('.person-details')).not.toHaveAttribute('open','');
+ await expect(card.locator('details,summary')).toHaveCount(0);await expect(card.locator('.birth-weekday')).toBeVisible();await expect(card.locator('.person-lifetime')).toBeVisible();
  await page.locator('#family-options > summary').click();await page.locator('#primary-calendar').selectOption('h');
  await expect(card.locator('.calendar-age')).toHaveCount(2);
 });
@@ -133,6 +133,36 @@ test('group controls appear only after the first group and return to direct crea
  await expect(page.locator('.person-card')).toHaveCount(2);expect(page.url()).toBe(original);
  await page.locator('#language-button').click();await expect(page.locator('#manage-groups')).toHaveText('إنشاء مجموعة');
  await page.reload();await page.locator('#family-options>summary').click();await expect(page.locator('#group-filter')).toBeHidden();
+});
+
+test('personal facts stay embedded in cards and the table without expanders',async({page})=>{
+ const original=page.url();for(const p of records){
+  const card=page.locator('.person-card').filter({hasText:p.name});await expect(card.locator('.birth-weekday')).toBeVisible();
+  await expect(card.locator('.person-lifetime strong')).toHaveText(new Intl.NumberFormat('en').format(today()-p.day));
+  await expect(card.locator('summary')).toHaveCount(0);
+ }
+ await page.locator('#people-layout').selectOption('table');
+ for(const p of records){const row=page.locator('.family-table tr').filter({hasText:p.name});await expect(row.locator('.table-fact')).toHaveCount(2);await expect(row.locator('.table-fact').first()).toContainText(new Intl.NumberFormat('en').format(today()-p.day))}
+ expect(page.url()).toBe(original);
+});
+
+test('today and offline installation are embedded while long guidance remains in Help',async({page})=>{
+ const original=page.url();for(const lang of ['en','ar']){
+  if(lang==='ar')await page.locator('#language-button').click();
+  await expect(page.locator('#today-g')).toBeVisible();await expect(page.locator('#today-h')).toBeVisible();
+  await expect(page.locator('#family-overview summary,.saving-guide,.link-note')).toHaveCount(0);
+  await expect(page.locator('#install-button')).toBeVisible();await expect(page.locator('#offline-label')).toBeVisible();
+ }
+ await page.locator('#about-button').click();await expect(page.locator('#modal .prose')).toContainText('الرابط مضغوط');
+ expect(page.url()).toBe(original);
+});
+
+test('embedded sharing keeps action labels readable with Arabic larger text',async({page})=>{
+ await page.setViewportSize({width:320,height:850});await page.locator('#language-button').click();await page.locator('#text-size-button').click();await page.locator('#share-button').click();
+ await expect(page.locator('#share-url')).toHaveAttribute('type','url');await expect(page.locator('#modal summary')).toHaveCount(0);
+ for(const button of await page.locator('.share-controls .button:visible').all())expect(await button.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+ expect(await page.locator('#modal').evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+ await page.locator('#qr').scrollIntoViewIfNeeded();await expect(page.locator('#qr')).toBeVisible();await expect(page.locator('#download-qr')).toBeVisible();
 });
 
 test('larger text is remembered without changing family links',async({page})=>{
@@ -296,8 +326,7 @@ test('menus have one home for groups, backups and calendar outputs',async({page}
  await expect(page.locator('#download-backup')).toBeVisible();await expect(page.locator('#copy-share')).toBeVisible();
  await expect(page.getByText('2 of 2 people',{exact:true})).toHaveCount(1);
  await page.locator('.share-person').first().uncheck();await expect(page.getByText('1 of 2 people',{exact:true})).toHaveCount(1);
- await expect(page.locator('.qr-options')).not.toHaveAttribute('open','');
- await page.locator('.qr-options>summary').click();await expect(page.locator('#download-qr')).toBeVisible();
+ await expect(page.locator('.qr-options summary')).toHaveCount(0);await expect(page.locator('#qr')).toBeVisible();await expect(page.locator('#download-qr')).toBeVisible();
  await page.locator('#close-modal').click();await page.locator('#family-options>summary').click();await expect(page.locator('#manage-groups')).toBeVisible();
  for(const selector of ['#save-button','#calendar-help','#empty-add','#export-calendar','#mobile-add'])await expect(page.locator(selector)).toHaveCount(0);
 });
@@ -306,7 +335,7 @@ test('visible card text has readable sizes and high text contrast',async({page})
  const results=await page.locator('.person-card').first().evaluate(card=>{
   const rgb=s=>s.match(/[\d.]+/g)?.map(Number)||[];
   const luminance=c=>c.slice(0,3).map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4}).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
-  return [...card.querySelectorAll('.calendar-label,.age-rest,.birth-date,.birthday-type,.birthday-date,.birthday-row strong')].map(el=>{
+  return [...card.querySelectorAll('.calendar-label,.age-rest,.birth-date,.birthday-type,.birthday-date,.birthday-row strong,.birth-weekday,.person-lifetime,.person-lifetime strong')].map(el=>{
    let parent=el,bg='rgba(0, 0, 0, 0)';while(parent&&(!rgb(bg).length||rgb(bg)[3]===0)){bg=getComputedStyle(parent).backgroundColor;parent=parent.parentElement}
    const style=getComputedStyle(el),a=luminance(rgb(style.color)),b=luminance(rgb(bg));
    return {text:el.textContent,size:parseFloat(style.fontSize),contrast:(Math.max(a,b)+.05)/(Math.min(a,b)+.05)};
