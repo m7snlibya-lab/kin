@@ -123,16 +123,31 @@ main { max-width:1264px; padding:2.5rem 2rem 0; }
 .discovery-bar { margin-bottom:1rem; }
 .search-field { margin:0; }
 .search-field input { font-size:1rem; padding:.7rem 1rem; background:var(--surface); }
-.family-options { margin:0; background:var(--surface); border:1px solid #c8c2cb; border-radius:8px; min-width:0; }
-.family-options>summary { cursor:pointer; padding:.65rem .9rem; font-size:.9375rem; color:var(--deep); white-space:normal; }
-.family-options[open] { flex-basis:100%; }
-.family-options[open]>summary { border-bottom:1px solid var(--line); }
-.family-options.has-filters { border-color:var(--purple); background:var(--lavender); }
-.family-filters { padding:1rem; margin:0; gap:1rem; align-items:end; }
-.family-filters label { min-width:min(100%,10rem); }
-.family-filters label>span,.control-label { font-size:.9375rem; color:var(--muted); display:block; margin-bottom:.3rem; }
-.family-filters select,.sort-label select { width:100%; max-width:none; min-height:48px; padding:.65rem .8rem; font-size:1rem; border:1px solid #c8c2cb; background:var(--surface); }
-.filter-explanation { flex-basis:100%; margin:0; }
+.control-label { font-size:.9375rem; color:var(--muted); display:block; margin-bottom:.3rem; }
+.sort-label select { width:100%; max-width:none; min-height:48px; padding:.65rem .8rem; font-size:1rem; border:1px solid #c8c2cb; background:var(--surface); }
+.family-groups { display:flex; flex-wrap:wrap; gap:.5rem; margin:.75rem 0; }
+.family-groups button { display:inline-flex; align-items:center; gap:.65rem; min-width:48px; min-height:48px; max-width:100%; padding:.55rem .85rem; border:1px solid var(--line); border-radius:999px; background:var(--surface); color:var(--muted); font:inherit; text-align:start; white-space:normal; cursor:pointer; }
+.family-groups button bdi { min-width:0; overflow-wrap:anywhere; }
+.family-groups button[aria-pressed=true] { border-color:var(--purple); background:var(--lavender); color:var(--deep); font-weight:600; }
+.family-groups button:hover { background:var(--lavender); }
+.group-count { flex:0 0 auto; min-width:1.6em; padding:.1em .4em; border-radius:999px; background:#eae5ef; color:var(--deep); font-size:.875rem; text-align:center; font-variant-numeric:tabular-nums; }
+.calendar-preference { min-width:0; max-width:100%; }
+.calendar-preference-heading { display:flex; align-items:center; flex-wrap:wrap; gap:.65rem .85rem; }
+.calendar-preference .control-label { margin:0; }
+.calendar-preference-buttons { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.2rem; padding:.2rem; border:1px solid var(--line); border-radius:10px; background:var(--surface); max-width:100%; }
+.calendar-preference-buttons button { display:flex; align-items:center; justify-content:center; gap:.4rem; min-width:0; min-height:48px; padding:.5rem .7rem; border:1px solid transparent; border-radius:7px; color:var(--muted); background:transparent; font:inherit; white-space:normal; cursor:pointer; }
+.calendar-preference-buttons button>span { min-width:0; overflow-wrap:anywhere; }
+.calendar-preference-buttons .ui-icon { flex:0 0 auto; width:1.15rem; height:1.15rem; }
+.calendar-preference-buttons button[aria-pressed=true] { border-color:var(--line); background:var(--lavender); color:var(--deep); font-weight:600; }
+.family-groups button:focus-visible,.calendar-preference-buttons button:focus-visible { outline:3px solid #6b5088; outline-offset:2px; }
+.people-calendar-slot { display:flex; justify-content:flex-end; margin-bottom:1rem; }
+.tools-calendar-slot { margin-top:1.25rem; padding:1rem; border:1px solid var(--line); border-radius:12px; background:var(--surface); }
+.tools-calendar-slot .hint { margin:.75rem 0 0; }
+@container family (max-width:20em) {
+ .calendar-preference-heading { flex-direction:column; align-items:stretch; }
+ .calendar-preference-buttons { grid-template-columns:repeat(auto-fit,minmax(min(100%,7em),1fr)); }
+ .people-calendar-slot { display:block; }
+}
 .filter-status { display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; background:var(--lavender); border-radius:9px; padding:.5rem 1rem; margin-bottom:1rem; font-size:1rem; }
 #filter-description { min-width:0; overflow-wrap:anywhere; }
 .filter-chips { display:flex; align-items:center; flex-wrap:wrap; gap:.5rem; flex:1 1 20rem; }
@@ -154,8 +169,6 @@ html:not([data-booting]) .results-toolbar { visibility:visible; }
 #results-summary { color:var(--muted); font-size:.9375rem; margin:0; }
 .results-toolbar .sort-label { display:flex; align-items:center; gap:.65rem; margin:0; min-width:0; }
 .results-toolbar .control-label { white-space:nowrap; margin:0; }
-.results-actions .family-options { max-width:100%; }
-.results-actions .family-options>summary { min-height:48px; }
 .results-toolbar select { width:auto; min-width:0; max-width:100%; }
 .tool-list .tool-action { display:flex; align-items:center; justify-content:flex-start; gap:1rem; text-align:start; white-space:normal; }
 .tool-action .tool-copy { display:flex; flex-direction:column; gap:.25rem; min-width:0; }
@@ -293,7 +306,8 @@ dialog::backdrop { background:#30253670; backdrop-filter:blur(5px); }
 .birthday-month-view { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:1rem; }
 .birthday-month-view>.empty { grid-column:1/-1; }
 .birth-month { min-width:0; border:1px solid var(--line); border-radius:14px; background:var(--surface); overflow:hidden; }
-.birth-month-heading { display:flex; align-items:center; gap:.6rem; margin:0; padding:.8rem 1rem; border-bottom:1px solid var(--line); background:var(--lavender); color:var(--deep); font-size:1.125rem; }
+.birth-month-heading { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:.6rem; margin:0; padding:.8rem 1rem; border-bottom:1px solid var(--line); background:var(--lavender); color:var(--deep); font-size:1.125rem; }
+.birth-month-heading>span:not(.birth-month-count) { min-width:0; overflow-wrap:anywhere; }
 .birth-month-heading .ui-icon { width:1.2rem; height:1.2rem; }
 .birth-month-count { margin-inline-start:auto; min-width:1.8rem; padding:.1rem .45rem; border-radius:999px; background:var(--surface); text-align:center; font-size:.875rem; font-weight:500; }
 .birth-month-people { display:grid; }

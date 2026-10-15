@@ -12,7 +12,7 @@ export function createWorkbench(state,{modal,close,render,ics,toast}){
  for(const [key,allowed] of Object.entries({sort:['added','birthday','oldest','name'],view:['people','birthdays','timeline','tools'],layout:['cards','list','table'],primaryCalendar:['g','h'],birthdayCalendar:['both','g','h'],birthdayView:['upcoming','months'],birthdayMonthCalendar:['g','h']}))if(allowed.includes(prefs[key]))state[key]=prefs[key];
  if(!['g','h'].includes(prefs.birthdayMonthCalendar))state.birthdayMonthCalendar=state.primaryCalendar;
  if([30,90,365].includes(prefs.birthdayRange))state.birthdayRange=prefs.birthdayRange;
- $('.search-field').insertAdjacentHTML('beforebegin',`<div class="family-filters"><label id="group-filter-control"><span data-i18n="Group">${t('Group')}</span><select id="group-filter"></select></label><button id="manage-groups" class="quiet" data-i18n="Manage groups">${t('Manage groups')}</button><label><span data-i18n="Calendar for dates & tools">${t('Calendar for dates & tools')}</span><select id="primary-calendar"><option value="g" data-i18n="Gregorian">${t('Gregorian')}</option><option value="h" data-i18n="Hijri">${t('Hijri')}</option></select></label></div>`);
+ $('.search-field').insertAdjacentHTML('beforebegin',`<button id="manage-groups" class="button secondary" data-i18n="Manage groups">${t('Manage groups')}</button><div id="calendar-preference" class="calendar-preference"><div class="calendar-preference-heading"><span id="calendar-preference-label" class="control-label"></span><div class="calendar-preference-buttons" role="group" aria-labelledby="calendar-preference-label" aria-describedby="calendar-preference-note">${['g','h'].map(c=>`<button type="button" data-primary-calendar="${c}">${icon(c==='g'?'sun':'moon')}<span data-i18n="${c==='g'?'Gregorian':'Hijri'}">${calendarName(c)}</span></button>`).join('')}</div></div><p id="calendar-preference-note" class="hint" data-i18n="Both ages stay visible. Used for birthday sorting, the table and date tools.">${t('Both ages stay visible. Used for birthday sorting, the table and date tools.')}</p></div>`);
  $('.view-tabs').insertAdjacentHTML('beforeend',`<button id="timeline-tab" role="tab" tabindex="-1" aria-selected="false" aria-controls="timeline-panel" data-view="timeline" data-i18n="Timeline">${t('Timeline')}</button>`);
  $('#birthday-panel').insertAdjacentHTML('afterend','<section id="timeline-panel" role="tabpanel" aria-labelledby="timeline-tab" hidden></section>');
  $('.heading-actions').insertAdjacentHTML('beforeend',`<button id="tools-button" class="button secondary" data-i18n="Tools">${t('Tools')}</button><button id="exports-button" class="button secondary" data-i18n="Export & print">${t('Export & print')}</button>`);
@@ -23,9 +23,12 @@ export function createWorkbench(state,{modal,close,render,ics,toast}){
  $('#upcoming-view').onclick=()=>{state.birthdayView='upcoming';persist();render()};
  $('#month-view').onclick=()=>{state.birthdayView='months';persist();render()};
  $$('[data-month-calendar]').forEach(button=>button.onclick=()=>{state.birthdayMonthCalendar=button.dataset.monthCalendar;persist();render()});
- const visible=()=>filterPeople(state.people,{search:state.search,group:state.group,groups:device.value.groups,locale:language()});
+ const visible=()=>{
+  if(state.group&&!device.value.groups.some(g=>g.id===state.group))state.group='';
+  return filterPeople(state.people,{search:state.search,group:state.group,groups:device.value.groups,locale:language()});
+ };
  function persist(){for(const key of ['sort','view','layout','primaryCalendar','birthdayCalendar','birthdayRange','birthdayView','birthdayMonthCalendar'])prefs[key]=state[key];device.save()}
- for(const [selector,key] of [['#group-filter','group'],['#primary-calendar','primaryCalendar']])$(selector).onchange=e=>{state[key]=e.target.value;persist();render()};
+ $$('[data-primary-calendar]').forEach(button=>button.onclick=()=>{state.primaryCalendar=button.dataset.primaryCalendar;persist();render()});
  $('#manage-groups').onclick=()=>device.value.groups.length?groupsDialog():createFirstGroup();
  function createFirstGroup(){if(state.demo||state.viewOnly)return toast('Merge or save this family before managing groups.');editGroup()}
  const toolAction=(id,key,description)=>button(id,key,'secondary','button',description);
@@ -88,13 +91,11 @@ export function createWorkbench(state,{modal,close,render,ics,toast}){
  }
  function refresh(){
   persist();$('#device-note').hidden=device.available;
-  if(state.group&&!device.value.groups.some(g=>g.id===state.group))state.group='';
   const hasGroups=device.value.groups.length>0;
-  $('#group-filter-control').hidden=!hasGroups;
-  const groupLabel=$('#manage-groups span');groupLabel.dataset.i18n=hasGroups?'Manage groups':'Create group';groupLabel.textContent=t(groupLabel.dataset.i18n);
+  const groupLabel=$('#manage-groups [data-i18n]');groupLabel.dataset.i18n=hasGroups?'Manage groups':'Create group';groupLabel.textContent=t(groupLabel.dataset.i18n);
   $('#manage-groups').hidden=!state.people.length||state.demo||state.viewOnly;
-  $('#group-filter').innerHTML=`<option value="">${t('Everyone')}</option>`+device.value.groups.map(g=>`<option value="${esc(g.id)}">${esc(g.name)}</option>`).join('');$('#group-filter').value=state.group;
-  for(const [s,k] of [['#primary-calendar','primaryCalendar'],['#sort','sort'],['#birthday-range','birthdayRange'],['#birthday-calendar','birthdayCalendar']])$(s).value=String(state[k]);
+  for(const [s,k] of [['#sort','sort'],['#birthday-range','birthdayRange'],['#birthday-calendar','birthdayCalendar']])$(s).value=String(state[k]);
+  $$('[data-primary-calendar]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.primaryCalendar===state.primaryCalendar)));
   const banner=$('#reference-banner');banner.hidden=state.reference===null;
   banner.innerHTML=state.reference===null?'':`${t('Viewing family on {date}',{date:date(state.now,state.primaryCalendar)})} · ${date(state.now,state.primaryCalendar==='g'?'h':'g')} ${button('back-today','Back to today')}`;
   $('#back-today')?.addEventListener('click',()=>{state.reference=null;render()});

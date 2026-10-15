@@ -54,7 +54,7 @@ Calendar and birthday-image preferences must not overwrite each other. Turning-a
 
 ## Earlier app-like direction (implemented in 1.8.0 where noted above)
 
-The compact app shell, List/person detail, plain edit titles, purpose-led sharing/backup and preview-first printing are now implemented. The items below preserve the original rationale; quick group shortcuts and participant/physical-device testing remain future work.
+The compact app shell, List/person detail, plain edit titles, purpose-led sharing/backup and preview-first printing are now implemented. Direct group choices were added in 1.12.0. The items below preserve the original rationale; participant/physical-device testing remains future work.
 
 ### Original recommended order
 
@@ -97,6 +97,14 @@ Remaining evidence gaps: physical iOS/Android accessibility settings, browser/ha
 - Keep search optional on desktop as well as phones. Put search, layout, options and sorting in one toolbar, remove the superseded layout select, explain the calendar setting accurately, and restore visible focus after resetting either searches or groups. Escape closes search and restores the complete family.
 - Reflow month controls and both calendar facts with enlarged text, without fixed minimum widths that overflow phones. Keep filters and calendar exports scoped to the same people, and preserve family links across browsing changes.
 - Restore readable repository documentation and check its encoding and release metadata before deployment.
+
+## Direct family controls in 1.12.0
+
+- Remove the expanding Options/filter menu. Existing groups appear directly above People, Birthdays and Timeline as wrapping, one-tap buttons with a clear Everyone choice. Counts include only current family members; long names remain readable with enlarged text and RTL.
+- Group creation and management have one home in Tools. A family without groups has no empty browsing controls. Creating the first group still opens its editor directly; group metadata stays on the device.
+- Replace the calendar dropdown with the shared sun/moon segmented control. It is directly visible in Tools and moves into context for birthday sorting, the table or timeline, where it changes the displayed dates. Ordinary dual-age cards retain their uncluttered presentation. Only one calendar-preference control exists.
+- Show group selection through its pressed button rather than a duplicate removable group chip. Search remains optional, can be cleared independently of the group, and retains visible keyboard focus. Empty-view recovery resets both scopes without changing family links.
+- Fix long month headings overflowing at doubled text size on narrow phones. Preserve local preference storage, both ages, shared-view safeguards and scoped exports.
 
 ## Verification
 

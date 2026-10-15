@@ -12,6 +12,8 @@ export const helpSections=[
  ['p','For a birthday on a missing date—29 February or day 30 in a shorter Hijri month—we use that month’s last day. A birthday today shows 0 days to go.'],
  ['h3','Birthdays by month'],
  ['p','In Birthdays, choose By month and then Gregorian or Hijri. Each person appears under their birth month in that calendar; both birth dates and both ages remain visible.'],
+ ['h3','Family groups'],
+ ['p','Choose a group above your family to browse its people. Create or edit groups in Tools. Group names and memberships stay on this device; family links and backups contain people only.'],
  ['h3','Keep links small'],
  ['p','Only names, birth dates, original input calendars and stable identifiers are stored. Ages, weekdays and countdowns are calculated. Each link supports up to 150 people. Long links may be truncated by other apps; selective sharing makes smaller links and clearer QR codes.'],
  ['h3','Merge without losing people'],

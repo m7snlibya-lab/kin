@@ -1,4 +1,11 @@
 export const featureMessages={
+ "Family groups":"مجموعات العائلة",
+ "Choose a group above your family to browse its people. Create or edit groups in Tools. Group names and memberships stay on this device; family links and backups contain people only.":"اختر مجموعة فوق قائمة العائلة لعرض أفرادها. أنشئ المجموعات وعدّلها من «الأدوات». تبقى أسماء المجموعات وعضوياتها على هذا الجهاز؛ تتضمن روابط العائلة والنسخ الاحتياطية بيانات الأفراد فقط.",
+ "{name} · People: {count}":"{name} · الأفراد: {count}",
+ "Keep relatives together on this device.":"نظّم أفراد العائلة في مجموعات على هذا الجهاز.",
+ "Default date calendar":"التقويم الافتراضي للتواريخ",
+ "Date calendar":"تقويم التواريخ",
+ "Birthday dates":"تواريخ أعياد الميلاد",
  "In Birthdays, choose By month and then Gregorian or Hijri. Each person appears under their birth month in that calendar; both birth dates and both ages remain visible.":"في «أعياد الميلاد»، اختر «حسب الشهر» ثم التقويم الميلادي أو الهجري. يظهر كل فرد تحت شهر ميلاده وفق التقويم المختار، مع عرض تاريخي الميلاد والعمرين.",
  "Birthdays by month":"أعياد الميلاد حسب الشهر",
  "Age today":"العمر اليوم",

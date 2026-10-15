@@ -30,6 +30,10 @@ Run the algorithm checks with `node tests.mjs`. Tests cover 100,406 date convers
 - First-time family review uses plain View/Keep choices without irrelevant conflict statistics. Import/backup wording does not offer a viewing choice where none exists. Keeping an empty selection is disabled on an empty device; sharing is hidden until there are people to share.
 - Regression coverage includes real offline font loading, missing-font fallback, Arabic forms, enlarged text, shared-return safety and calendar presentation.
 
+## Direct family controls (1.12.0)
+
+The expanding Options menu is replaced by one-tap group choices, shown only after groups exist. Group creation/management lives in Tools. The date-calendar preference is a direct sun/moon control in Tools and appears beside birthday sorting, table and timeline views when relevant. Search remains optional and works within the selected group; the selected group, current counts and keyboard focus stay clear without a second group-filter chip.
+
 ## Family-first mobile browsing (1.11.0)
 
 Reviewed in **1.11.1**: month rows open details across their full touch target, the selected calendar comes first, ages identify today/reference mode, and historical birth weekdays no longer look like this year's birthday. The compact toolbar keeps search optional on every screen, uses direct layout icons, and returns focus to visible controls after resets. Month grouping preserves leap-day and Hijri day-30 births without changing records. Release checks also verify readable documentation and consistent version metadata.

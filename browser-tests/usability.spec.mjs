@@ -33,12 +33,12 @@ test('both ages, birth dates and next birthdays are visible without expanding de
  }
  await expect(card.locator('.birthday-preview .birthday-row')).toHaveCount(2);
  await expect(card.locator('details,summary')).toHaveCount(0);await expect(card.locator('.birth-weekday')).toBeVisible();await expect(card.locator('.person-lifetime')).toBeVisible();
- await page.locator('#family-options > summary').click();await page.locator('#primary-calendar').selectOption('h');
+ await page.locator('#tools-tab').click();await page.locator('[data-primary-calendar="h"]').click();await page.locator('#people-tab').click();
  await expect(card.locator('.calendar-age')).toHaveCount(2);
 });
 
-test('advanced filters are optional and active filters have a clear reset',async({page})=>{
- await expect(page.locator('#family-options')).not.toHaveAttribute('open','');
+test('direct browsing controls replace the filter menu and search has a clear reset',async({page})=>{
+ await expect(page.locator('#family-options')).toHaveCount(0);
  await expect(page.locator('#month-filter')).toBeHidden();
  await expect(page.locator('#people-layout')).toHaveCount(0);await expect(page.locator('.layout-view-toggle button')).toHaveCount(3);
  await fillSearch(page,'Omar');await expect(page.locator('.person-card')).toHaveCount(1);await expect(page.locator('#filter-status')).toBeVisible();
@@ -124,15 +124,15 @@ test('month scope survives export and empty-group recovery keeps focus visible',
   value.groups=[{id:'one',name:'One person',members:[id]},{id:'empty',name:'Empty group',members:[]}];
   value.preferences.birthdayRange=365;localStorage.setItem(key,JSON.stringify(value));
  },records[1].id);await page.reload();
- const original=page.url();await page.locator('#family-options>summary').click();await page.locator('#group-filter').selectOption('one');await page.locator('#family-options>summary').click();
+ const original=page.url();await page.locator('[data-browse-group="one"]').click();
  await page.locator('#birthdays-tab').click();await page.locator('#month-view').click();await expect(page.locator('.birth-month-person')).toHaveCount(1);
  await expect(page.locator('.layout-view-toggle')).toBeHidden();await expect(page.locator('#sort')).toBeHidden();
  await page.locator('#tools-tab').click();await page.locator('#exports-button').click();await page.locator('#ics-open').click();
  await expect(page.locator('#modal-title')).toHaveText('Export calendar');await expect(page.locator('#modal .check-list')).toContainText('Omar');await expect(page.locator('#modal .check-list')).not.toContainText('Amina');
  await page.locator('#cancel-export').click();await expect(page.locator('#upcoming-view')).toHaveAttribute('aria-pressed','true');
- await page.locator('#month-view').click();await page.locator('#family-options>summary').click();await page.locator('#group-filter').selectOption('empty');await page.locator('#family-options>summary').click();
+ await page.locator('#month-view').click();await page.locator('[data-browse-group="empty"]').click();
  await expect(page.locator('#clear-month-view')).toBeVisible();await expect(page.locator('#family-search')).toBeHidden();
- await page.locator('#clear-month-view').click();await expect(page.locator('.birth-month-person')).toHaveCount(2);await expect(page.locator('#family-options>summary')).toBeFocused();
+ await page.locator('#clear-month-view').click();await expect(page.locator('.birth-month-person')).toHaveCount(2);await expect(page.locator('[data-browse-group=""]')).toBeFocused();
  expect(page.url()).toBe(original);
 });
 
@@ -237,18 +237,65 @@ test('comparison can use the family without resetting restrictive filters',async
 });
 
 test('group controls appear only after the first group and return to direct creation after deletion',async({page})=>{
- const original=page.url();await page.locator('#family-options>summary').click();
- await expect(page.locator('#group-filter')).toBeHidden();await expect(page.locator('#manage-groups')).toHaveText('Create group');
+ const original=page.url();await expect(page.locator('#family-groups')).toBeHidden();await expect(page.locator('#manage-groups')).toBeHidden();await page.locator('#tools-tab').click();
+ await expect(page.locator('#manage-groups [data-i18n]').first()).toHaveText('Create group');
  await page.locator('#manage-groups').click();await expect(page.locator('#group-name')).toBeFocused();await expect(page.locator('#new-group')).toHaveCount(0);
  await page.locator('#group-name').fill('Family');await page.locator('#save-group').click();
- await expect(page.locator('#group-filter')).toBeVisible();await expect(page.locator('#manage-groups')).toHaveText('Manage groups');
- await page.locator('#group-filter').selectOption({label:'Family'});await page.locator('#manage-groups').click();await page.locator('[data-group]').click();
+ await expect(page.locator('#manage-groups [data-i18n]').first()).toHaveText('Manage groups');await page.locator('#people-tab').click();
+ await expect(page.locator('#family-groups')).toBeVisible();await page.locator('#family-groups').getByText('Family',{exact:true}).click();
+ await page.locator('#tools-tab').click();await page.locator('#manage-groups').click();await page.locator('[data-group]').click();
  page.once('dialog',d=>d.accept());await page.locator('#delete-group').click();
- await expect(page.locator('#group-filter')).toBeHidden();await expect(page.locator('#manage-groups')).toHaveText('Create group');
+ await expect(page.locator('#family-groups')).toBeHidden();await expect(page.locator('#manage-groups [data-i18n]').first()).toHaveText('Create group');
  await expect(page.locator('#manage-groups')).toBeFocused();await expect(page.locator('[data-remove-filter="group"]')).toHaveCount(0);
  await expect(page.locator('.person-card')).toHaveCount(2);expect(page.url()).toBe(original);
- await page.locator('#language-button').click();await expect(page.locator('#manage-groups')).toHaveText('إنشاء مجموعة');
- await page.reload();await page.locator('#family-options>summary').click();await expect(page.locator('#group-filter')).toBeHidden();
+ await page.locator('#language-button').click();await expect(page.locator('#manage-groups [data-i18n]').first()).toHaveText('إنشاء مجموعة');
+ await page.reload();await expect(page.locator('#family-groups')).toBeHidden();await expect(page.locator('#manage-groups')).toBeVisible();
+});
+
+test('one-tap groups keep search scoped, exclude missing members from counts and reflow in RTL',async({page},info)=>{
+ await page.evaluate(ids=>{
+  const key='kin.device.v1:'+location.pathname,value=JSON.parse(localStorage.getItem(key));
+  value.groups=[{id:'parents',name:'Parents & grandparents',members:[ids[0],'missing-person']},{id:'children',name:'الأطفال والأحفاد',members:[ids[1]]},{id:'empty',name:'الأقارب من جهة الوالدين وأفراد العائلة الممتدة',members:[]}];
+  localStorage.setItem(key,JSON.stringify(value));
+ },records.map(p=>p.id));await page.reload();const original=page.url();
+ await expect(page.locator('#family-options,#group-filter')).toHaveCount(0);
+ await expect(page.locator('[data-browse-group="parents"] .group-count')).toHaveText('1');await expect(page.locator('[data-browse-group="empty"] .group-count')).toHaveText('0');
+ await page.locator('[data-browse-group="parents"]').focus();await page.keyboard.press('Enter');
+ await expect(page.locator('[data-browse-group="parents"]')).toBeFocused();await expect(page.locator('[data-browse-group="parents"]')).toHaveAttribute('aria-pressed','true');await expect(page.locator('.person-card')).toHaveCount(1);
+ await expect(page.locator('#filter-status')).toBeHidden();await fillSearch(page,'Omar');await expect(page.locator('#clear-search')).toBeVisible();
+ await page.locator('[data-remove-filter="search"]').click();await expect(page.locator('.person-card')).toHaveCount(1);await expect(page.locator('[data-browse-group="parents"]')).toHaveAttribute('aria-pressed','true');
+ await page.locator('[data-browse-group="children"]').click();await expect(page.locator('.person-card h3')).toHaveText('Omar');
+ await page.locator('#birthdays-tab').click();await page.locator('#month-view').click();await expect(page.locator('.birth-month-person')).toHaveCount(1);
+ await page.locator('[data-browse-group="empty"]').click();await page.locator('#clear-month-view').click();await expect(page.locator('[data-browse-group=""]')).toBeFocused();await expect(page.locator('.birth-month-person')).toHaveCount(2);
+ for(const locale of ['en','ar']){
+  if(locale==='ar')await page.locator('#language-button').click();
+  await page.setViewportSize({width:320,height:851});await page.evaluate(()=>document.documentElement.style.fontSize='200%');
+  for(const chip of await page.locator('#family-groups button').all()){
+   await expect(chip).toBeVisible();expect(await chip.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+  }
+  const layout=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth,overflow:[...document.querySelectorAll('body *')].filter(el=>{const r=el.getBoundingClientRect();return r.width>0&&(r.right>innerWidth+1||r.left< -1)&&!el.classList.contains('sr-only')}).map(el=>({tag:el.tagName,id:el.id,classes:el.className,text:el.textContent.slice(0,40),x:el.getBoundingClientRect().x,width:el.getBoundingClientRect().width}))}));
+  expect(layout.scroll,JSON.stringify({locale,...layout})).toBeLessThanOrEqual(layout.width+1);
+ }
+ await expect(page.locator('[data-browse-group="parents"]')).toHaveAttribute('aria-label','Parents & grandparents · الأفراد: ١');
+ await page.evaluate(()=>document.documentElement.style.fontSize='100%');await page.setViewportSize({width:393,height:851});await page.locator('#people-tab').click();
+ await page.screenshot({path:info.outputPath('direct-groups-ar.png'),fullPage:true});expect(page.url()).toBe(original);
+});
+
+test('calendar preference is direct, contextual and has one control across views',async({page},info)=>{
+ const original=page.url();await expect(page.locator('#calendar-preference')).toBeHidden();await expect(page.locator('#family-options')).toHaveCount(0);
+ await page.locator('#tools-tab').click();await expect(page.locator('#tools-calendar-slot #calendar-preference')).toBeVisible();await expect(page.locator('#calendar-preference-note')).toBeVisible();
+ await expect(page.locator('#manage-groups')).toBeVisible();await page.locator('[data-primary-calendar="h"]').click();
+ await page.locator('#people-tab').click();await expect(page.locator('#calendar-preference')).toBeHidden();await page.locator('#sort').selectOption('birthday');
+ await expect(page.locator('#people-calendar-slot #calendar-preference')).toBeVisible();await expect(page.locator('[data-primary-calendar="h"]')).toHaveAttribute('aria-pressed','true');
+ await page.locator('[data-layout="table"]').click();await page.locator('#sort').selectOption('name');await expect(page.locator('#people-calendar-slot #calendar-preference')).toBeVisible();
+ await page.locator('[data-layout="cards"]').click();await expect(page.locator('#calendar-preference')).toBeHidden();
+ await page.locator('#tools-tab').click();await page.locator('#timeline-tab').click();await expect(page.locator('#people-calendar-slot #calendar-preference')).toBeVisible();
+ await page.locator('[data-primary-calendar="g"]').click();await page.locator('#tools-tab').click();await expect(page.locator('[data-primary-calendar="g"]')).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('#calendar-preference')).toHaveCount(1);await expect(page.locator('[data-primary-calendar]')).toHaveCount(2);await expect(page.locator('#manage-groups')).toHaveCount(1);
+ await page.setViewportSize({width:320,height:851});await page.locator('#language-button').click();await page.evaluate(()=>document.documentElement.style.fontSize='200%');
+ expect(await page.locator('#calendar-preference').evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+ await page.evaluate(()=>document.documentElement.style.fontSize='100%');await page.setViewportSize({width:393,height:851});await page.screenshot({path:info.outputPath('direct-tools-ar.png'),fullPage:true});
+ await page.reload();await expect(page.locator('[data-primary-calendar="g"]')).toHaveAttribute('aria-pressed','true');expect(page.url()).toBe(original);
 });
 
 test('personal facts stay embedded in cards and the table without expanders',async({page})=>{
@@ -300,7 +347,7 @@ test('mobile viewport requests app-like no zoom while retaining native text scal
 });
 
 test('key controls have large targets and dialogs restore keyboard focus',async({page})=>{
- for(const selector of ['#add-button','#share-button','#tools-tab','.edit-button','#family-options>summary']){
+ for(const selector of ['#add-button','#share-button','#tools-tab','.edit-button','#search-toggle']){
   const box=await page.locator(selector).first().boundingBox();expect(Math.round(box.height)).toBeGreaterThanOrEqual(48);expect(Math.round(box.width)).toBeGreaterThanOrEqual(48);
  }
  await page.locator('#add-button').click();await expect(page.locator('#person-name')).toBeFocused();
@@ -521,7 +568,7 @@ test('menus have one home for groups, backups and calendar outputs',async({page}
  await expect(page.getByText('2 of 2 people',{exact:true})).toHaveCount(1);
  await page.locator('.share-person').first().uncheck();await expect(page.getByText('1 of 2 people',{exact:true})).toHaveCount(1);
  await expect(page.locator('.qr-options summary')).toHaveCount(0);await page.locator('#share-qr-format').click();await expect(page.locator('#qr')).toBeVisible();await expect(page.locator('#download-qr')).toBeVisible();
- await page.locator('#close-modal').click();await page.locator('#people-tab').click();await page.locator('#family-options>summary').click();await expect(page.locator('#manage-groups')).toBeVisible();
+ await page.locator('#close-modal').click();await page.locator('#tools-tab').click();await expect(page.locator('#manage-groups')).toBeVisible();
  for(const selector of ['#save-button','#calendar-help','#empty-add','#export-calendar','#mobile-add'])await expect(page.locator(selector)).toHaveCount(0);
 });
 
@@ -635,7 +682,7 @@ test('birthday agenda uses the selected calendar for months and shows both event
 });
 
 test('table next dates and date exploration honor the preferred calendar',async({page})=>{
- const original=page.url();await page.locator('#family-options>summary').click();await page.locator('#primary-calendar').selectOption('h');await page.locator('#family-options>summary').click();await page.locator('[data-layout="table"]').click();
+ const original=page.url();await page.locator('[data-layout="table"]').click();await page.locator('[data-primary-calendar="h"]').click();
  const row=page.locator('.family-table tbody tr').filter({hasText:'Omar'});
  await expect(row.locator('td').nth(3)).toContainText(date(nextEvent(records[1],today(),'h').day,'h'));
  await expect(row.locator('td').first().locator('.icon-sun')).toBeVisible();await expect(row.locator('td').first().locator('.icon-moon')).toBeVisible();
