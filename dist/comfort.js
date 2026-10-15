@@ -4,17 +4,17 @@ import {icon,labelControl} from './icons.js';
 
 // Keep everyday information visible; organize advanced controls without removing them.
 export function createComfort(state,{device,render}){
- const toolbar=$('.toolbar-actions');
- toolbar.append($('#tools-button'),$('#exports-button'),$('#import-button'));
  $('.section-toolbar h2').classList.add('sr-only');
  // Match visual and reading order: family views before occasional utilities.
  $('.view-tabs').after($('.section-toolbar'));
- $('.view-tabs').insertAdjacentHTML('beforeend',`<button id="tools-tab" role="tab" tabindex="-1" aria-selected="false" aria-controls="tools-panel" data-view="tools" data-i18n="Tools">${t('Tools')}</button>`);
+ // Keep the saved "tools" view key so existing devices migrate without losing preferences.
+ $('.view-tabs').insertAdjacentHTML('beforeend',`<button id="tools-tab" role="tab" tabindex="-1" aria-selected="false" aria-controls="tools-panel" data-view="tools" data-i18n="Manage family">${t('Manage family')}</button>`);
  $('#timeline-tab').removeAttribute('role');$('#timeline-tab').removeAttribute('aria-selected');$('#timeline-tab').removeAttribute('aria-controls');$('#timeline-tab').tabIndex=0;
- $('#timeline-panel').setAttribute('aria-labelledby','timeline-tab');
- $('#timeline-panel').insertAdjacentHTML('afterend',`<section id="tools-panel" role="tabpanel" aria-labelledby="tools-tab" hidden><h2 data-i18n="Tools">${t('Tools')}</h2><p class="hint" data-i18n="A few useful things for your family.">${t('A few useful things for your family.')}</p><div class="tools-grid"></div><h3 id="data-tools-title" data-i18n="Your data">${t('Your data')}</h3><p id="data-tools-help" class="hint" data-i18n="Backups are files you keep. Kin does not sync to a cloud account.">${t('Backups are files you keep. Kin does not sync to a cloud account.')}</p><div class="data-tools"></div></section>`);
- $('#tools-panel .tools-grid').append($('#tools-button'),$('#exports-button'),$('#manage-groups'),$('#timeline-tab'));
- $('#tools-panel .tools-grid').insertAdjacentHTML('afterend','<div id="tools-calendar-slot" class="tools-calendar-slot"></div>');
+ $('#timeline-panel').setAttribute('aria-labelledby','people-tab');
+ $('#timeline-panel').innerHTML=`<div class="timeline-heading"><button id="timeline-back" class="button secondary has-icon" data-view="people">${icon('previous')}<span data-i18n="Back to people">${t('Back to people')}</span></button><p class="hint" data-i18n="Your family, through time.">${t('Your family, through time.')}</p></div><div id="timeline-content"></div>`;
+ $('#people-actions').append($('#timeline-tab'));
+ $('#timeline-panel').insertAdjacentHTML('afterend',`<section id="tools-panel" role="tabpanel" aria-labelledby="tools-tab" hidden><h2 data-i18n="Manage family">${t('Manage family')}</h2><p id="management-hint" class="hint">${t('Your family stays on this device. Keep a copy before changing devices.')}</p><div class="family-management"></div><h3 id="data-tools-title" data-i18n="Your data">${t('Your data')}</h3><p id="data-tools-help" class="hint" data-i18n="Backups are files you keep. Kin does not sync to a cloud account.">${t('Backups are files you keep. Kin does not sync to a cloud account.')}</p><div class="data-tools"></div><div id="tools-calendar-slot" class="tools-calendar-slot"></div></section>`);
+ $('#tools-panel .family-management').append($('#manage-groups'));
  $('#tools-panel .data-tools').append($('#import-button'));
  $('#tools-panel .data-tools').insertAdjacentHTML('afterbegin',button('backup-button','Back up family'));
  $('#tools-panel').append($('#about-button'));
@@ -29,8 +29,6 @@ export function createComfort(state,{device,render}){
  // Add person lives in the persistent app header, not repeated in each view.
  $('#share-button').classList.replace('primary','secondary');
  $('#import-button').dataset.i18n='Import & restore';
- $('#exports-button').dataset.i18n='Calendars';
- $('#tools-button').dataset.i18n='Ages & dates';
  $('#about-button').dataset.i18n='Help';
  const copy=$('.page-heading > div');
  copy.classList.add('hero-copy');copy.append($('.heading-actions'));
@@ -46,6 +44,9 @@ export function createComfort(state,{device,render}){
  const results=document.createElement('div');results.className='results-toolbar';results.id='results-toolbar';
  results.innerHTML=`<p id="results-summary" role="status" aria-live="polite" aria-atomic="true"></p><div class="results-actions"><button type="button" id="search-toggle" class="icon-button search-toggle" aria-controls="family-search-control" aria-expanded="false" aria-label="${t('Search family')}" title="${t('Search family')}">${icon('search')}<span class="sr-only">${t('Search family')}</span></button><div class="layout-view-toggle" role="group" aria-label="${t('People view')}">${[['cards','grid'],['list','list'],['table','table']].map(([value,symbol])=>`<button type="button" data-layout="${value}" aria-label="${t(value==='cards'?'Cards':value==='list'?'List':'Table')}" title="${t(value==='cards'?'Cards':value==='list'?'List':'Table')}">${icon(symbol)}<span class="sr-only">${t(value==='cards'?'Cards':value==='list'?'List':'Table')}</span></button>`).join('')}</div></div>`;
  finder.before(results);$('.results-actions').append($('.sort-label'));
+ const searchHome=$('.results-actions'),birthdayViewHeading=document.createElement('div');birthdayViewHeading.className='birthday-view-heading';
+ $('.birthday-view-toggle').before(birthdayViewHeading);birthdayViewHeading.append($('.birthday-view-toggle'));
+ birthdayViewHeading.insertAdjacentHTML('beforeend','<div id="birthday-search-slot"></div>');
  results.insertAdjacentHTML('afterend','<div id="people-calendar-slot" class="people-calendar-slot" hidden></div>');
  $('#tools-calendar-slot').append($('#calendar-preference'));
  $('#family-groups').onclick=e=>{
@@ -87,11 +88,12 @@ export function createComfort(state,{device,render}){
  $('#close-modal').innerHTML=`<span aria-hidden="true">${icon('close')}</span> <span data-i18n="Close">${t('Close')}</span>`;
 
  for(const [selector,name,key] of [
-  ['#add-button','plus','Add person'],['#share-button','share','Share family'],['#backup-button','backup','Back up family'],['#tools-tab','tools','Tools'],
-  ['#tools-button','compare'],['#exports-button','calendar'],['#import-button','folder'],
+  ['#add-button','plus','Add person'],['#share-button','share','Share family'],['#backup-button','backup','Back up family'],['#tools-tab','filter','Manage family'],
+  ['#import-button','folder'],
+  ['#compare-open','compare','Compare ages'],['#reference-open','history','On another date'],['#print-open','printer','Print calendar'],['#ics-open','export','Add to calendar app'],
   ['#people-tab','people'],['#birthdays-tab','calendar'],['#timeline-tab','timeline'],['#about-button','help'],['#install-button','install','Install app'],['#manage-groups','people']
  ])labelControl($(selector),name,key);
- for(const [id,key] of [['tools-button','Compare ages or explore another date.'],['exports-button','Print birthdays or add them to a calendar.'],['manage-groups','Keep relatives together on this device.'],['timeline-tab','See your family’s births through time.'],['backup-button','Download a private file to keep safe.'],['import-button','Review a family link or restore a file.']]){
+ for(const [id,key] of [['manage-groups','Keep relatives together on this device.'],['backup-button','Download a private file to keep safe.'],['import-button','Review a family link or restore a file.']]){
   const tile=$('#'+id),label=tile.querySelector('span'),copy=document.createElement('span');copy.className='tool-copy';
   label.before(copy);copy.append(label);
   const description=document.createElement('span');description.className='tool-description';description.dataset.i18n=key;description.textContent=t(key);copy.append(description);
@@ -110,12 +112,17 @@ export function createComfort(state,{device,render}){
   $('.celebration-panel').hidden=state.people.length===0;
   $('.celebration-panel .eyebrow').textContent=t(state.reference===null?'Next in your circle':'Next from this date');
   for(const label of document.querySelectorAll('[data-calendar-label]'))label.textContent=calendarName(label.dataset.calendarLabel);
-  $('#tools-button').hidden=$('#exports-button').hidden=state.people.length===0;
+  $('#people-actions').hidden=!state.people.length||state.view!=='people';
+  $('#compare-open').hidden=state.people.length<2;
+  $('#birthday-actions').hidden=!state.people.length||state.demo;
+  $('#people-actions').setAttribute('aria-label',t('Explore your family'));
+  $('#birthday-actions').setAttribute('aria-label',t('Keep birthdays'));
   $('.discovery-bar').hidden=state.people.length===0;
   $('.view-tabs').hidden=false;
   $('#tools-panel').hidden=state.view!=='tools';
   const tools=state.view==='tools';
-  $('.page-heading h1').textContent=t(state.view==='birthdays'?'Birthdays':state.view==='timeline'?'Timeline':tools?'Tools':'Your people');
+  $('#management-hint').textContent=t(state.demo?'Example family':state.viewOnly?'Shared family · view only':!state.people.length?'No account needed':state.storageAvailable===false?'Your family is in this link. Keep a backup before closing.':'Your family stays on this device. Keep a copy before changing devices.');
+  $('.page-heading h1').textContent=t(state.view==='birthdays'?'Birthdays':state.view==='timeline'?'Timeline':tools?'Manage family':'Your people');
   $('#people').classList.toggle('list-layout',state.layout==='list');
   $('#filter-status').hidden=tools;
   $('#family-mode').textContent=t(state.demo?'Example family':state.viewOnly?'Shared family · view only':state.people.length?(state.storageAvailable===false?'Only in this link':'Saved on this device'):'No account needed');
@@ -124,10 +131,9 @@ export function createComfort(state,{device,render}){
   $('#backup-button').hidden=state.demo||state.viewOnly||!state.people.length;
   $('#import-button').hidden=state.demo||state.viewOnly;
   $('#data-tools-title').hidden=$('#data-tools-help').hidden=state.demo||state.viewOnly;
-  $('#exports-button').hidden=!state.people.length||state.demo;
   $('#timeline-tab').hidden=!state.people.length;
   $('#birthdays-tab').disabled=!state.people.length;
-  $('.celebration-panel').hidden=!state.people.length||tools||state.view==='timeline';
+  $('.celebration-panel').hidden=!state.people.length||state.view!=='people';
   const active=[
    state.search?{key:'search',label:t('Search: {query}',{query:state.search})}:null
   ].filter(Boolean);
@@ -136,7 +142,9 @@ export function createComfort(state,{device,render}){
   $('#filter-description').innerHTML=active.map(({key,label})=>
    `<button type="button" class="filter-chip" data-remove-filter="${key}" title="${esc(label)}" aria-label="${esc(t('Remove filter: {filter}',{filter:label}))}"><bdi>${esc(label)}</bdi>${icon('close')}</button>`
   ).join('');
-  $('#results-toolbar').hidden=!state.people.length||tools;
+  $('#results-toolbar').hidden=!state.people.length||tools||state.view==='birthdays';
+  const searchHost=state.view==='birthdays'?$('#birthday-search-slot'):searchHome;
+  if($('#search-toggle').parentElement!==searchHost)searchHost.prepend($('#search-toggle'));
   $('#results-summary').hidden=state.view!=='people';
   $('#results-summary').textContent=t('Showing {shown} of {total} people',{shown:$('#list-count').textContent,total:number(state.people.length)});
   const groups=$('#family-groups'),ids=new Set(state.people.map(p=>p.id));

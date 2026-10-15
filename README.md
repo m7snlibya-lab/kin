@@ -30,7 +30,13 @@ Run the algorithm checks with `node tests.mjs`. Tests cover 100,406 date convers
 - First-time family review uses plain View/Keep choices without irrelevant conflict statistics. Import/backup wording does not offer a viewing choice where none exists. Keeping an empty selection is disabled on an empty device; sharing is hidden until there are people to share.
 - Regression coverage includes real offline font loading, missing-font fallback, Arabic forms, enlarged text, shared-return safety and calendar presentation.
 
-## Direct family controls (1.12.0)
+## Task-led navigation (1.13.0)
+
+People now has direct Compare ages, On another date and Timeline actions. Birthdays has direct Print calendar and Add to calendar app actions. The category/chooser dialogs are removed. Manage family replaces the vague Tools destination and contains groups, backup, import, the default date calendar and Help. Existing saved view preferences still work.
+
+Timeline belongs to People, with a visible Back to people action and keyboard focus restoration. The Birthdays page no longer repeats the next-birthday hero. In By month, calendar-app export explicitly covers the next 365 days in the selected calendar, preserves the month view, and still previews its scope before download. First-use printing inherits the active calendar context; saved print preferences remain respected. No family links or birth dates change while browsing. See [UX-NOTES.md](UX-NOTES.md) for the review and limitations.
+
+## Direct family controls (1.12.0, historical)
 
 The expanding Options menu is replaced by one-tap group choices, shown only after groups exist. Group creation/management lives in Tools. The date-calendar preference is a direct sun/moon control in Tools and appears beside birthday sorting, table and timeline views when relevant. Search remains optional and works within the selected group; the selected group, current counts and keyboard focus stay clear without a second group-filter chip.
 

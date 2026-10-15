@@ -6,7 +6,8 @@ import {loadExportFonts,createMeasure,createCalendarDocument,createCardDocument,
 export function openDocumentDialog(state,{modal,close,toast,visible,device},event){
  const card=!!event,saved=card?device.value.preferences.birthdayImage:device.value.preferences.export;
  const prefs=saved||(card?device.value.preferences.export:{})||{};
- const defaults={layoutCalendar:'g',year:calendars.g.parts(today())[0],birthdayCalendar:'both',layout:'annual',size:'A4',orientation:'landscape',locale:language(),showAges:false,ink:false,qr:false,shape:'square',theme:'celebratory'};
+ const contextCalendar=state.birthdayView==='months'?state.birthdayMonthCalendar:state.primaryCalendar;
+ const defaults={layoutCalendar:contextCalendar,year:calendars[contextCalendar].parts(today())[0],birthdayCalendar:state.birthdayView==='months'?contextCalendar:state.birthdayCalendar,layout:'annual',size:'A4',orientation:'landscape',locale:language(),showAges:false,ink:false,qr:false,shape:'square',theme:'celebratory'};
  const presets={year:{layout:'annual',size:'A4',orientation:'landscape',ink:false},monthly:{layout:'monthly',size:'A4',orientation:'portrait',ink:true},wall:{layout:'annual',size:'A3',orientation:'landscape',ink:false}};
  const initial={...defaults,showAges:saved?.showAges===true,ink:!card&&prefs.ink===true};
  for(const [k,allowed] of Object.entries({layoutCalendar:['g','h'],birthdayCalendar:['g','h','both'],layout:['annual','monthly'],size:['A4','A3'],orientation:['landscape','portrait'],locale:['en','ar'],shape:['square','portrait'],theme:['celebratory','minimal']}))if(allowed.includes(prefs[k]))initial[k]=prefs[k];

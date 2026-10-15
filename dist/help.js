@@ -13,13 +13,13 @@ export const helpSections=[
  ['h3','Birthdays by month'],
  ['p','In Birthdays, choose By month and then Gregorian or Hijri. Each person appears under their birth month in that calendar; both birth dates and both ages remain visible.'],
  ['h3','Family groups'],
- ['p','Choose a group above your family to browse its people. Create or edit groups in Tools. Group names and memberships stay on this device; family links and backups contain people only.'],
+ ['p','Choose a group above your family to browse its people. Create or edit groups in Manage family. Group names and memberships stay on this device; family links and backups contain people only.'],
  ['h3','Keep links small'],
  ['p','Only names, birth dates, original input calendars and stable identifiers are stored. Ages, weekdays and countdowns are calculated. Each link supports up to 150 people. Long links may be truncated by other apps; selective sharing makes smaller links and clearer QR codes.'],
  ['h3','Merge without losing people'],
  ['p','Existing identifiers prevent duplicates. Matching names and birth dates are also recognized. Conflicting edits stay yours unless you choose the shared version. Deletions never spread through a merge.'],
  ['h3','A backup that moves with you'],
- ['p','Use Share family to copy a family link. For a backup file, open Tools → Back up family. Restore a link or file through Import & restore. Backups are readable, not encrypted; keep them private.'],
+ ['p','Use Share family to copy a family link. For a backup file, open Manage family → Back up family. Restore a link or file through Import & restore. Backups are readable, not encrypted; keep them private.'],
  ['h3','Bring birthdays to your calendar'],
- ['p','Open Birthdays to choose the date range, calendar and people. Then use Calendars → Add to calendar app. Gregorian birthdays repeat yearly by default; February 29 uses the last day of February. Hijri birthdays are dated events. Imports do not sync with Kin; importing again may create duplicates. Create a birthday image beside its birthday in the agenda.']
+ ['p','Open Birthdays to choose the date range, calendar and people. Then choose Add to calendar app directly. From By month, this exports the next 365 days in the chosen calendar without changing your view. Gregorian birthdays repeat yearly by default; February 29 uses the last day of February. Hijri birthdays are dated events. Imports do not sync with Kin; importing again may create duplicates. Create a birthday image beside its birthday in the agenda.']
 ];

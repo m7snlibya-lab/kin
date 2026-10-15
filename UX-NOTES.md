@@ -4,6 +4,37 @@
 
 Make the next useful action obvious without making the family list feel like a settings screen. Keep readable labels alongside icons; both calendar ages remain equally visible. Do not change family links or saved data when someone changes how they browse.
 
+## Navigation review and redesign — 1.13.0
+
+### Assessment
+
+Heuristic assessment of 1.12.0: **6/10**. The date presentation and local-data safety are strong, but discovery is weak. The Tools label describes implementation rather than a family task; age comparison and printing require two category decisions before work starts. Timeline feels disconnected from People. Birthdays repeats a next-birthday banner even when the user is already viewing birthdays. Each layer is individually tidy, yet the complete journey is unnecessarily indirect.
+
+The redesigned architecture targets **8/10**, pending tests with real younger and older relatives. This is an expert judgment, not a measured usability-study result. Task paths now have fewer steps and regression tests protect navigation, focus and data safety; they do not establish how intuitive the app feels to every user.
+
+| Task | Previous path from People | Current path |
+| --- | --- | --- |
+| Compare ages | Tools → Ages & dates → Compare people | Compare ages |
+| Explore another date | Tools → Ages & dates → Family on this date | On another date |
+| Browse family history | Tools → Timeline | Timeline, within People |
+| Print birthdays | Tools → Calendars → Printable calendar | Birthdays → Print calendar |
+| Add birthday events | Tools → Calendars → Add to calendar app | Birthdays → Add to calendar app |
+
+### Implemented decisions
+
+- Remove both intermediate category dialogs rather than retain duplicate shortcuts. Keep the actual comparison, date exploration, print preview and calendar download review.
+- Place three compact, labeled age/history actions with People. Hide comparison for one-person families and all exploration actions for empty families; no disabled mystery controls.
+- Place two labeled output actions with Birthdays, available in Upcoming and By month. Exporting a month view explains its next-365-days scope and does not silently switch views. Printing starts with the active calendar when there is no saved print setup.
+- Rename Tools to Manage family. Keep device-only groups and data stewardship there, separate from everyday exploration. Existing device preferences migrate without changing persisted keys or family URLs.
+- Keep Timeline under the People navigation selection. Provide a visible return action, restore focus after returning, preserve search/group scope, and retain selector focus when changing timeline mode.
+- Remove the redundant celebration hero from Birthdays. Retain the small-family approach: optional search, direct view icons, one-tap existing groups, readable action labels rather than icon-only guesses, equal dual ages, official sun/moon symbols and native text-sizing support.
+- New devices start with the next 365 days of birthdays instead of 90, so a small family is less likely to encounter an empty agenda on first use. Existing saved range choices remain respected. Empty-state recovery buttons now wrap with 200% Arabic text instead of pushing the phone layout sideways.
+- Use existing colors, typography and motion rather than add animation or branding that increases cognitive load. Respect reduced-motion settings and the existing no-zoom mobile requirement.
+
+### Follow-up validation
+
+Ask a younger relative and an older relative to add one person, compare a parent's age at a child's birth, print a Hijri calendar, and recover a backup without instructions. Watch for hesitation rather than asking whether the screen looks nice. Native installation and calendar-app imports need real-device checks; browser automation cannot substitute for those. No synthetic family is saved into the user's browser during review.
+
 ## Implemented in 1.4.0–1.4.1
 
 - **Find and understand:** search stays direct, the matching-person count is visible, and sorting no longer requires opening filters. Cards/Table stays a remembered choice.

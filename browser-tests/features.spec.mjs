@@ -29,10 +29,10 @@ test('dense Arabic exports preserve all names and cancellation permits retry',as
 });
 
 test.afterEach(async({page})=>expect(errors.get(page)).toEqual([]));
-async function tools(page,id){await page.locator('#tools-tab').click();if(id==='#groups-open')await page.locator('#manage-groups').click();else{await page.locator('#tools-button').click();await page.locator(id).click()}}
-async function print(page){await page.locator('#tools-tab').click();await page.locator('#exports-button').click();await page.locator('#print-open').click();await expect(page.locator('#download-pdf')).toBeEnabled({timeout:20000})}
+async function tools(page,id){await page.locator(id==='#groups-open'?'#tools-tab':'#people-tab').click();await page.locator(id==='#groups-open'?'#manage-groups':id).click()}
+async function print(page){await page.locator('#birthdays-tab').click();await page.locator('#print-open').click();await expect(page.locator('#download-pdf')).toBeEnabled({timeout:20000})}
 test('preview loading has visible progress and recovers to a labeled preview',async({page})=>{
- await page.locator('#language-button').click();await page.locator('#tools-tab').click();await page.locator('#exports-button').click();await page.locator('#print-open').click();
+ await page.locator('#language-button').click();await page.locator('#birthdays-tab').click();await page.locator('#print-open').click();
  await expect(page.locator('#document-status')).toHaveClass(/is-loading/);await expect(page.locator('#document-status')).toHaveText('جارٍ تجهيز المعاينة…');
  await expect(page.locator('#document-preview')).toHaveAttribute('aria-busy','true');
  await expect(page.locator('#download-pdf')).toBeEnabled();await expect(page.locator('#document-status')).not.toHaveClass(/is-loading/);await expect(page.locator('#document-preview')).toHaveAttribute('aria-busy','false');
@@ -59,7 +59,7 @@ test('comparison and past/future dates do not mutate family links',async({page})
 });
 test('table, timeline, preferences and RTL remain usable',async({page})=>{
  const original=page.url();await page.locator('[data-layout="table"]').click();await expect(page.locator('.family-table tbody tr')).toHaveCount(3);await page.reload();await expect(page.locator('[data-layout="table"]')).toHaveAttribute('aria-pressed','true');
- await page.locator('#tools-tab').click();await page.locator('#timeline-tab').click();await expect(page.locator('.family-timeline li')).toHaveCount(3);await page.locator('#timeline-mode').selectOption('birthdays');await expect(page.locator('.family-timeline li').first()).toBeVisible();
+ await page.locator('#people-tab').click();await page.locator('#timeline-tab').click();await expect(page.locator('.family-timeline li')).toHaveCount(3);await page.locator('#timeline-mode').selectOption('birthdays');await expect(page.locator('.family-timeline li').first()).toBeVisible();
  await page.locator('#language-button').click();await expect(page.locator('html')).toHaveAttribute('dir','rtl');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect(page.url()).toBe(original);
 });
 test('calendar exports valid PDF and print-resolution PNG from one preview',async({page},info)=>{
