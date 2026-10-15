@@ -1,10 +1,21 @@
 import {age,calendars,MIN,MAX,validate,today} from './core.js';
 export function referenceDay(calendar,y,m,d){
+ const result=checkReferenceDate(calendar,y,m,d);
+ if(!result.valid)throw Error('Invalid reference date.');
+ return result.day;
+}
+// Return the invalid field without duplicating calendar rules in each form.
+export function checkReferenceDate(calendar,y,m,d){
  const cal=calendars[calendar];
- if(!cal||![y,m,d].every(Number.isSafeInteger)||m<1||m>12||d<1||d>cal.days(y,m))throw Error('Invalid reference date.');
+ if(!['g','h'].includes(calendar)||!cal)return {valid:false,field:'calendar',code:'calendar'};
+ const [minYear]=cal.parts(MIN),[maxYear]=cal.parts(MAX);
+ if(!Number.isSafeInteger(y)||y<minYear||y>maxYear)return {valid:false,field:'year',code:'year',min:minYear,max:maxYear};
+ if(!Number.isSafeInteger(m)||m<1||m>12)return {valid:false,field:'month',code:'month'};
+ const maxDay=cal.days(y,m);
+ if(!Number.isSafeInteger(d)||d<1||d>maxDay)return {valid:false,field:'day',code:'day',max:maxDay};
  const day=cal.toDay(y,m,d);
- if(!Number.isSafeInteger(day)||day<MIN||day>MAX)throw Error('Invalid reference date.');
- return day;
+ if(!Number.isSafeInteger(day)||day<MIN||day>MAX){const boundary=cal.parts(day<MIN?MIN:MAX);return {valid:false,field:m===boundary[1]?'day':'month',code:'bounds'}}
+ return {valid:true,day};
 }
 export function ageAt(person,day,calendar='g'){
  if(!Number.isInteger(day)||day<MIN||day>MAX||!calendars[calendar])throw Error('Invalid reference date.');

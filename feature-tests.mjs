@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import './dist/vendor/pako.min.js';
 import {calendars,MIN,MAX,encode,decode,today} from './dist/core.js';
-import {referenceDay,ageAt,comparePeople,yearBounds,eventsBetween,filterPeople,groupBirthMonths} from './dist/domain.js';
+import {referenceDay,checkReferenceDate,ageAt,comparePeople,yearBounds,eventsBetween,filterPeople,groupBirthMonths} from './dist/domain.js';
 import {createDeviceStore} from './dist/device.js';
 import {createFamilyStore} from './dist/family-store.js';
 import {createCalendarDocument,createCardDocument,pageSize} from './dist/documents.js';
@@ -12,6 +12,13 @@ assert.equal(comparePeople(a,b).atBirth.g.b,null);assert.equal(comparePeople(a,s
 for(const [first,second] of [[a,b],[b,a]]){const comparison=comparePeople(first,second);assert.equal(comparison.older.id,a.id);assert.equal(comparison.younger.id,b.id);for(const c of ['g','h'])assert.deepEqual(comparison.atBirth[c][comparison.older.id===first.id?'a':'b'],ageAt(a,b.day,c))}
 assert.deepEqual(ageAt(feb,calendars.g.toDay(2023,2,28)),{years:23,months:0,days:0});
 assert.ok(referenceDay('g',2030,1,1)>today());assert.throws(()=>referenceDay('g',2030,2,30));assert.throws(()=>referenceDay('g',9999,1,1));
+assert.equal(checkReferenceDate('g',2025,2,31).field,'day');assert.equal(checkReferenceDate('g',2025,2,31).max,28);
+assert.equal(checkReferenceDate('g',2024,2,29).valid,true);assert.equal(checkReferenceDate('g',2024,2,30).max,29);
+assert.equal(checkReferenceDate('g',9999,1,1).field,'year');assert.equal(checkReferenceDate('g',NaN,1,1).field,'year');
+assert.equal(checkReferenceDate('g',2025,NaN,1).field,'month');assert.equal(checkReferenceDate('constructor',2025,1,1).field,'calendar');
+for(const c of ['g','h'])for(const day of [MIN,MAX])assert.deepEqual(checkReferenceDate(c,...calendars[c].parts(day)),{valid:true,day});
+const [firstHijriYear]=calendars.h.parts(MIN);
+assert.equal(checkReferenceDate('h',firstHijriYear,1,1).field,'month','Partial first years identify the out-of-bounds month');
 for(const c of ['g','h']){const y=calendars[c].parts(today())[0],bounds=yearBounds(c,y);assert.equal(calendars[c].parts(bounds.start)[1],1);assert.equal(calendars[c].parts(bounds.end)[1],12);assert.ok(bounds.end-bounds.start>=353)}
 const hash=encode([a,b]);
 assert.equal(filterPeople([a,b],{groups:[{id:'group',members:[a.id]}],group:'group'}).length,1);

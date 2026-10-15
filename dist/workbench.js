@@ -1,5 +1,5 @@
 import {calendars,today,MIN,MAX,id,encode} from './core.js';
-import {filterPeople,comparePeople,referenceDay,yearBounds,eventsBetween,MILESTONES} from './domain.js';
+import {filterPeople,comparePeople,checkReferenceDate,yearBounds,eventsBetween,MILESTONES} from './domain.js';
 import {t,language,number,date,months,calendarName,parseDigits} from './i18n.js';
 import {$,$$,esc,button,mountSelection,download} from './ui.js';
 import {createDeviceStore} from './device.js';
@@ -9,7 +9,7 @@ import {icon} from './icons.js';
 export function createWorkbench(state,{modal,close,render,ics,toast}){
  let storage;try{storage=localStorage}catch{}
  const device=createDeviceStore(location.pathname,storage),prefs=device.value.preferences;
- for(const [key,allowed] of Object.entries({sort:['added','birthday','oldest','name'],view:['people','birthdays','timeline','tools'],layout:['cards','list','table'],primaryCalendar:['g','h'],birthdayCalendar:['both','g','h'],birthdayView:['upcoming','months'],birthdayMonthCalendar:['g','h']}))if(allowed.includes(prefs[key]))state[key]=prefs[key];
+ for(const [key,allowed] of Object.entries({sort:['added','birthday','oldest','name'],view:['people','birthdays','timeline','tools'],layout:['cards','list','table'],primaryCalendar:['g','h'],birthdayCalendar:['both','g','h'],birthdayView:['upcoming','months'],birthdayMonthCalendar:['g','h'],timelineMode:['births','birthdays']}))if(allowed.includes(prefs[key]))state[key]=prefs[key];
  if(!['g','h'].includes(prefs.birthdayMonthCalendar))state.birthdayMonthCalendar=state.primaryCalendar;
  if([30,90,365].includes(prefs.birthdayRange))state.birthdayRange=prefs.birthdayRange;
  $('.search-field').insertAdjacentHTML('beforebegin',`<button id="manage-groups" class="button secondary" data-i18n="Manage groups">${t('Manage groups')}</button><div id="calendar-preference" class="calendar-preference"><div class="calendar-preference-heading"><span id="calendar-preference-label" class="control-label"></span><div class="calendar-preference-buttons" role="group" aria-labelledby="calendar-preference-label" aria-describedby="calendar-preference-note">${['g','h'].map(c=>`<button type="button" data-primary-calendar="${c}">${icon(c==='g'?'sun':'moon')}<span data-i18n="${c==='g'?'Gregorian':'Hijri'}">${calendarName(c)}</span></button>`).join('')}</div></div><p id="calendar-preference-note" class="hint" data-i18n="Both ages stay visible. Used for birthday sorting, the table and date tools.">${t('Both ages stay visible. Used for birthday sorting, the table and date tools.')}</p></div>`);
@@ -28,7 +28,7 @@ export function createWorkbench(state,{modal,close,render,ics,toast}){
   if(state.group&&!device.value.groups.some(g=>g.id===state.group))state.group='';
   return filterPeople(state.people,{search:state.search,group:state.group,groups:device.value.groups,locale:language()});
  };
- function persist(){for(const key of ['sort','view','layout','primaryCalendar','birthdayCalendar','birthdayRange','birthdayView','birthdayMonthCalendar'])prefs[key]=state[key];device.save()}
+ function persist(){for(const key of ['sort','view','layout','primaryCalendar','birthdayCalendar','birthdayRange','birthdayView','birthdayMonthCalendar','timelineMode'])prefs[key]=state[key];device.save()}
  $$('[data-primary-calendar]').forEach(button=>button.onclick=()=>{state.primaryCalendar=button.dataset.primaryCalendar;persist();render()});
  $('#manage-groups').onclick=()=>device.value.groups.length?groupsDialog():createFirstGroup();
  function createFirstGroup(){if(state.demo||state.viewOnly)return toast('Merge or save this family before managing groups.');editGroup()}
@@ -74,23 +74,38 @@ export function createWorkbench(state,{modal,close,render,ics,toast}){
  }
  function referenceDialog(){
   const initialCalendar=state.primaryCalendar;const [y,m,d]=calendars[initialCalendar].parts(state.reference??today());
-  modal('Family on this date',`<p class="hint">${t('Explore ages in the past or future. Birth dates and family links will not change.')}</p><form id="reference-form"><label class="form-field"><span>${t('Calendar')}</span><select id="reference-calendar"><option value="g">${calendarName('g')}</option><option value="h">${calendarName('h')}</option></select></label><div class="date-fields"><label>${t('Day')}<input id="reference-day" inputmode="numeric" value="${number(d)}" required></label><label>${t('Month')}<select id="reference-month"></select></label><label>${t('Year')}<input id="reference-year" inputmode="numeric" value="${number(y).replace(/[٬,]/g,'')}" required></label></div><p id="reference-error" class="form-error" role="alert"></p><div class="dialog-actions">${button('reference-today','Back to today')}${button('reference-apply','Show family','primary','submit')}</div></form>`);
-  $('#reference-calendar').value=initialCalendar;let c=initialCalendar;function fill(month){$('#reference-month').innerHTML=months(c).map((n,i)=>`<option value="${i+1}">${n}</option>`).join('');$('#reference-month').value=String(month)}fill(m);
-  const read=()=>referenceDay(c,parseDigits($('#reference-year').value),parseDigits($('#reference-month').value),parseDigits($('#reference-day').value));
-  $('#reference-calendar').onchange=e=>{try{const day=read();c=e.target.value;const [y,m,d]=calendars[c].parts(day);$('#reference-year').value=number(y).replace(/[٬,]/g,'');$('#reference-day').value=number(d);fill(m);$('#reference-error').textContent=''}catch{$('#reference-calendar').value=c;$('#reference-error').textContent=t('Invalid reference date.')}};
-  $('#reference-form').onsubmit=e=>{e.preventDefault();try{state.reference=read();state.view='people';close();render()}catch{$('#reference-error').textContent=t('Invalid reference date.')}};
+  modal('Family on this date',`<p class="hint">${t('Explore ages in the past or future. Birth dates and family links will not change.')}</p><form id="reference-form" novalidate><label class="form-field"><span>${t('Calendar')}</span><select id="reference-calendar"><option value="g">${calendarName('g')}</option><option value="h">${calendarName('h')}</option></select></label><div class="date-fields"><label>${t('Day')}<input id="reference-day" inputmode="numeric" maxlength="2" autocomplete="off" value="${number(d)}" required></label><label>${t('Month')}<select id="reference-month" required></select></label><label>${t('Year')}<input id="reference-year" inputmode="numeric" maxlength="4" autocomplete="off" value="${number(y).replace(/[٬,]/g,'')}" required></label></div><p id="reference-error" class="form-error" role="alert"></p><div class="dialog-actions">${button('reference-today','Back to today')}${button('reference-apply','Show family','primary','submit')}</div></form>`);
+  $('#reference-calendar').value=initialCalendar;let c=initialCalendar;
+  const fields=$$('#reference-form input,#reference-form select');
+  fields.forEach(field=>field.setAttribute('aria-describedby','reference-error'));
+  function clearErrors(){fields.forEach(field=>field.removeAttribute('aria-invalid'));$('#reference-error').textContent=''}
+  function showError(issue){
+   clearErrors();let message=t('Invalid reference date.');
+   if(issue.code==='year')message=t('Enter a year from {min} to {max}.',{min:number(issue.min).replace(/[٬,]/g,''),max:number(issue.max).replace(/[٬,]/g,'')});
+   if(issue.code==='month')message=t('Choose a month.');
+   if(issue.code==='day')message=t('Enter a day from 1 to {max}.',{max:number(issue.max)});
+   if(issue.code==='bounds')message=t('Choose a date from {from} to {to}.',{from:date(MIN,c),to:date(MAX,c)});
+   $('#reference-error').textContent=message;const field=$('#reference-'+(issue.field||'day'));field.setAttribute('aria-invalid','true');field.focus();
+  }
+  function fill(month){$('#reference-month').innerHTML=months(c).map((n,i)=>`<option value="${i+1}">${n}</option>`).join('');$('#reference-month').value=String(month)}fill(m);
+  const read=()=>{const result=checkReferenceDate(c,parseDigits($('#reference-year').value),parseDigits($('#reference-month').value),parseDigits($('#reference-day').value));if(!result.valid)throw result;return result.day};
+  $('#reference-form').addEventListener('input',clearErrors);
+  $('#reference-calendar').onchange=e=>{try{const day=read();c=e.target.value;const [y,m,d]=calendars[c].parts(day);$('#reference-year').value=number(y).replace(/[٬,]/g,'');$('#reference-day').value=number(d);fill(m);clearErrors()}catch(issue){$('#reference-calendar').value=c;showError(issue)}};
+  $('#reference-form').onsubmit=e=>{e.preventDefault();try{state.reference=read();state.view='people';close();render()}catch(issue){showError(issue)}};
   $('#reference-today').onclick=()=>{state.reference=null;state.view='people';close();render()};
  }
 
  $('#milestones-button').onclick=()=>{modal('Milestones',`<p class="hint">${t('Milestones use the birthday calendar selected in the agenda.')}</p><div class="milestone-options">${MILESTONES.map(n=>`<label><input type="checkbox" value="${n}" ${state.milestones.includes(n)?'checked':''}>${number(n)}</label>`).join('')}</div><div class="dialog-actions">${button('clear-milestones','All birthdays')}${button('apply-milestones','Apply','primary')}</div>`);$('#clear-milestones').onclick=()=>{state.milestones=[];close();render()};$('#apply-milestones').onclick=()=>{state.milestones=$$('.milestone-options input:checked').map(i=>+i.value);close();render()}};
  function renderTimeline(){
   const panel=$('#timeline-panel');panel.hidden=state.view!=='timeline';if(panel.hidden)return;
-  const restoreModeFocus=document.activeElement?.id==='timeline-mode';
-  const records=visible();let events;
+  const restoreModeFocus=document.activeElement?.id==='timeline-mode',records=visible(),year=calendars[state.primaryCalendar].parts(state.now)[0];
+  let events=[];
   if(state.timelineMode==='births')events=[...records].sort((a,b)=>a.day-b.day).map(p=>({day:p.day,person:p}));
-  else{try{const {start,end}=yearBounds(state.primaryCalendar,calendars[state.primaryCalendar].parts(state.now)[0]);events=eventsBetween(records,start,end,state.birthdayCalendar)}catch{events=[]}}
-  $('#timeline-content').innerHTML=`<label class="form-field"><span>${t('Timeline')}</span><select id="timeline-mode"><option value="births">${t('Birth history')}</option><option value="birthdays">${t('Birthdays in this year')}</option></select></label><ol class="family-timeline">${events.map(e=>`<li><strong dir="auto">${esc(e.person.name)}</strong><span>${date(e.day,state.primaryCalendar)} · ${date(e.day,state.primaryCalendar==='g'?'h':'g')}${e.calendar?' · '+calendarName(e.calendar)+' · '+t('Turning {age}',{age:number(e.turns)}):''}</span></li>`).join('')}</ol>${events.length?'':`<p class="hint">${t('No matching names')}</p>`}`;
-  $('#timeline-mode').value=state.timelineMode;$('#timeline-mode').onchange=e=>{state.timelineMode=e.target.value;renderTimeline()};
+  else{try{const {start,end}=yearBounds(state.primaryCalendar,year);events=eventsBetween(records,start,end,'both')}catch{events=[]}}
+  const summary=state.timelineMode==='births'?t('People: {count}',{count:number(records.length)}):t('{count} birthdays · {year} · Both calendars',{count:number(events.length),year:number(year).replace(/[٬,]/g,'')+(state.primaryCalendar==='h'?(language()==='ar'?' هـ':' AH'):'')});
+  const empty=!records.length?t('No matching names'):t('No birthdays in this year');
+  $('#timeline-content').innerHTML=`<label class="form-field"><span>${t('Timeline')}</span><select id="timeline-mode"><option value="births">${t('Birth history')}</option><option value="birthdays">${t('Birthdays in this year')}</option></select></label><p id="timeline-summary" class="hint" role="status">${summary}</p><ol class="family-timeline">${events.map(e=>`<li><button type="button" class="timeline-person-open" data-person="${e.person.id}" data-event-key="${e.person.id}:${e.calendar||'history'}:${e.day}" aria-label="${esc(t('Details for {name}',{name:e.person.name}))}"><strong dir="auto">${esc(e.person.name)}</strong><span>${date(e.day,state.primaryCalendar)} · ${date(e.day,state.primaryCalendar==='g'?'h':'g')}${e.calendar?' · '+calendarName(e.calendar)+' · '+t('Turning {age}',{age:number(e.turns)}):''}</span>${icon('next')}</button></li>`).join('')}</ol>${events.length?'':`<p class="hint">${empty}</p>`}`;
+  $('#timeline-mode').value=state.timelineMode;$('#timeline-mode').onchange=e=>{state.timelineMode=e.target.value;persist();renderTimeline()};
   if(restoreModeFocus)$('#timeline-mode').focus({preventScroll:true});
  }
  function refresh(){

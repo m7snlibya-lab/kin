@@ -1,4 +1,13 @@
 export const featureMessages={
+ "Enter a year from {min} to {max}.":"أدخل سنة من {min} إلى {max}.",
+ "Choose a month.":"اختر شهرًا.",
+ "Enter a day from 1 to {max}.":"أدخل يومًا من ١ إلى {max}.",
+ "Choose a date from {from} to {to}.":"اختر تاريخًا من {from} إلى {to}.",
+ "No people match. Clear your search or group to choose birthdays.":"لا يوجد أفراد مطابقون. ألغِ البحث أو المجموعة لاختيار أعياد الميلاد.",
+ "No birthdays match these ages. Choose Show all ages to include them.":"لا توجد أعياد ميلاد بالأعمار المختارة. اختر «عرض كل الأعمار» لإدراجها.",
+ "No birthdays in this range. Try the full year in both calendars.":"لا توجد أعياد ميلاد في هذه الفترة. جرّب سنة كاملة بالتقويمين.",
+ "{count} birthdays · {year} · Both calendars":"أعياد الميلاد: {count} · {year} · التقويمان",
+ "No birthdays in this year":"لا توجد أعياد ميلاد في هذه السنة",
  "On this device":"على هذا الجهاز",
  "People: {count}":"الأفراد: {count}",
  "No milestone birthdays in this view":"لا توجد أعياد ميلاد بالأعمار المختارة",

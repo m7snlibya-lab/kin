@@ -4,7 +4,7 @@ import {t,language,setLanguage,number,quantity,months,calendarName,date,weekday,
 import {helpSections} from './help.js';
 import QRCode from './vendor/qr.js';
 import {createBackup,readBackup,MAX_BACKUP_BYTES} from './backup.js';
-import {listBirthdays,createCalendar} from './birthdays.js';
+import {birthdayScope,createCalendar} from './birthdays.js';
 import {$,$$,esc,button,createDialogs,mountSelection,setBusy,download} from './ui.js';
 import {createFamilyStore} from './family-store.js';
 import {state} from './state.js';
@@ -89,23 +89,23 @@ function renderAgenda(){
  $$('[data-month-calendar]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.monthCalendar===state.birthdayMonthCalendar)));
  if(monthView){renderBirthdayMonths();return}
  const agendaPeople=workbench.visible();
- state.agendaEvents=listBirthdays(agendaPeople,{from:state.now,days:state.birthdayRange,calendar:state.birthdayCalendar}).filter(e=>!state.milestones.length||state.milestones.includes(e.turns));
+ const scope=birthdayScope(agendaPeople,{from:state.now,days:state.birthdayRange,calendar:state.birthdayCalendar,milestones:state.milestones});
+ state.agendaEvents=scope.events;
 
  $('#milestones-button').textContent=state.milestones.length?t('Milestones ({count})',{count:number(state.milestones.length)}):t('Milestones');
  $('#milestones-button').setAttribute('aria-pressed',String(!!state.milestones.length));
  const agendaCalendar=state.birthdayCalendar==='both'?state.primaryCalendar:state.birthdayCalendar;
  $('#agenda-summary').textContent=t('{count} birthdays · {from} — {to}',{count:number(state.agendaEvents.length),from:date(state.now,agendaCalendar),to:date(Math.min(MAX,state.now+state.birthdayRange-1),agendaCalendar)})+(state.milestones.length?' · '+t('Milestone ages: {ages}',{ages:state.milestones.map(n=>number(n)).join(language()==='ar'?'، ':', ')}):'');
- let month='';$('#birthday-list').innerHTML=state.agendaEvents.length?state.agendaEvents.map((e,index)=>{const [year,m,day]=calendars[agendaCalendar].parts(e.day),key=year+'-'+m;let heading='';if(month!==key){month=key;heading=`<h3 class="agenda-month">${icon(agendaCalendar==='g'?'sun':'moon')}${months(agendaCalendar)[m-1]} ${number(year).replace(/[٬,]/g,'')}${agendaCalendar==='h'?(language()==='ar'?' هـ':' AH'):''}</h3>`}return heading+`<article class="agenda-event"><div class="agenda-day" aria-hidden="true"><strong>${number(day)}</strong><span>${weekday(e.day)}</span></div><div class="agenda-person"><span class="sr-only">${date(e.day,agendaCalendar)} · ${weekday(e.day)}</span><h4><button type="button" class="agenda-person-open" data-person="${e.person.id}" data-event-key="${e.person.id}:${e.calendar}:${e.day}" aria-label="${esc(t('Details for {name}',{name:e.person.name}))}"><bdi>${esc(e.person.name)}</bdi>${icon('next')}</button></h4><p class="agenda-occurrence">${icon(e.calendar==='g'?'sun':'moon')}${t('{calendar} birthday · {age}',{calendar:calendarName(e.calendar),age:t('Turning {age}',{age:quantity(e.turns,'year')})})}</p><p class="agenda-dates">${[agendaCalendar,agendaCalendar==='g'?'h':'g'].map(c=>`<span data-event-date="${c}">${icon(c==='g'?'sun':'moon')}<span class="sr-only">${calendarName(c)} · </span><bdi>${date(e.day,c)}</bdi></span>`).join('')}</p><button class="quiet" data-agenda-card="${index}">${t('Create birthday card')}</button></div><strong class="agenda-countdown ${e.inDays===0?'is-today':''}">${e.inDays===0?t('Today!'):t('{days} away',{days:quantity(e.inDays,'day')})}</strong></article>`}).join(''):agendaEmpty(agendaPeople);
+ let month='';$('#birthday-list').innerHTML=state.agendaEvents.length?state.agendaEvents.map((e,index)=>{const [year,m,day]=calendars[agendaCalendar].parts(e.day),key=year+'-'+m;let heading='';if(month!==key){month=key;heading=`<h3 class="agenda-month">${icon(agendaCalendar==='g'?'sun':'moon')}${months(agendaCalendar)[m-1]} ${number(year).replace(/[٬,]/g,'')}${agendaCalendar==='h'?(language()==='ar'?' هـ':' AH'):''}</h3>`}return heading+`<article class="agenda-event"><div class="agenda-day" aria-hidden="true"><strong>${number(day)}</strong><span>${weekday(e.day)}</span></div><div class="agenda-person"><span class="sr-only">${date(e.day,agendaCalendar)} · ${weekday(e.day)}</span><h4><button type="button" class="agenda-person-open" data-person="${e.person.id}" data-event-key="${e.person.id}:${e.calendar}:${e.day}" aria-label="${esc(t('Details for {name}',{name:e.person.name}))}"><bdi>${esc(e.person.name)}</bdi>${icon('next')}</button></h4><p class="agenda-occurrence">${icon(e.calendar==='g'?'sun':'moon')}${t('{calendar} birthday · {age}',{calendar:calendarName(e.calendar),age:t('Turning {age}',{age:quantity(e.turns,'year')})})}</p><p class="agenda-dates">${[agendaCalendar,agendaCalendar==='g'?'h':'g'].map(c=>`<span data-event-date="${c}">${icon(c==='g'?'sun':'moon')}<span class="sr-only">${calendarName(c)} · </span><bdi>${date(e.day,c)}</bdi></span>`).join('')}</p><button class="quiet" data-agenda-card="${index}">${t('Create birthday card')}</button></div><strong class="agenda-countdown ${e.inDays===0?'is-today':''}">${e.inDays===0?t('Today!'):t('{days} away',{days:quantity(e.inDays,'day')})}</strong></article>`}).join(''):agendaEmpty(scope);
  $('#clear-agenda-scope')?.addEventListener('click',()=>comfort.resetFilters());
  $('#clear-agenda-ages')?.addEventListener('click',()=>{state.milestones=[];render();$('#milestones-button').focus()});
  $('#broaden-birthdays')?.addEventListener('click',()=>{state.birthdayRange=365;state.birthdayCalendar='both';state.milestones=[];render();$('#birthday-range').focus()});
  $$('[data-agenda-card]').forEach(b=>b.onclick=()=>workbench.showCard(state.agendaEvents[+b.dataset.agendaCard]));
 }
-function agendaEmpty(people){
- if(!people.length)return `<div class="empty search-empty"><h3>${t('No matching names')}</h3><p>${t('Remove a filter above or reset to see everyone.')}</p>${button('clear-agenda-scope','Reset filters')}</div>`;
- if(state.milestones.length)return `<div class="empty search-empty"><h3>${t('No milestone birthdays in this view')}</h3><p>${t('Try all ages without changing your people, dates or calendar.')}</p>${button('clear-agenda-ages','Show all ages')}</div>`;
- const restricted=state.birthdayRange!==365||state.birthdayCalendar!=='both';
- return `<div class="empty search-empty"><h3>${t('No birthdays in this view')}</h3><p>${t(restricted?'Try a longer range, both calendars, or another name.':'No birthdays fall in this date range. Birth dates have not changed.')}</p>${restricted?button('broaden-birthdays','Show all birthdays in the next 365 days'):''}</div>`;
+function agendaEmpty(scope){
+ if(scope.reason==='people')return `<div class="empty search-empty"><h3>${t('No matching names')}</h3><p>${t('Remove a filter above or reset to see everyone.')}</p>${button('clear-agenda-scope','Reset filters')}</div>`;
+ if(scope.reason==='ages')return `<div class="empty search-empty"><h3>${t('No milestone birthdays in this view')}</h3><p>${t('Try all ages without changing your people, dates or calendar.')}</p>${button('clear-agenda-ages','Show all ages')}</div>`;
+ return `<div class="empty search-empty"><h3>${t('No birthdays in this view')}</h3><p>${t(scope.canBroaden?'Try a longer range, both calendars, or another name.':'No birthdays fall in this date range. Birth dates have not changed.')}</p>${scope.canBroaden?button('broaden-birthdays','Show all birthdays in the next 365 days'):''}</div>`;
 }
 function renderBirthdayMonths(){
  const records=workbench.visible();
@@ -124,8 +124,16 @@ $('#birthday-range').onchange=e=>{state.birthdayRange=Number(e.target.value);wor
 function openCalendarExport(){
  if(state.demo)return toast('Example data is not saved. Start your own family first.');
  const monthView=state.birthdayView==='months',days=monthView?365:state.birthdayRange,calendar=monthView?state.birthdayMonthCalendar:state.birthdayCalendar;
- const events=listBirthdays(workbench.visible(),{from:state.now,days,calendar}).filter(e=>monthView||!state.milestones.length||state.milestones.includes(e.turns));
- if(!events.length){toast('No birthdays to export. Adjust the birthday range or family filters.');$(monthView?'#search-toggle':'#birthday-range').focus();return;}
+ const scope=birthdayScope(workbench.visible(),{from:state.now,days,calendar,milestones:monthView?[]:state.milestones}),events=scope.events;
+ if(!events.length){
+  let target;
+  if(scope.reason==='people'){toast('No people match. Clear your search or group to choose birthdays.');target=$(monthView?'#clear-month-view':'#clear-agenda-scope')}
+  else if(scope.reason==='ages'){toast('No birthdays match these ages. Choose Show all ages to include them.');target=$('#clear-agenda-ages')}
+  else if(scope.canBroaden&&!monthView){toast('No birthdays in this range. Try the full year in both calendars.');target=$('#broaden-birthdays')}
+  else{toast('No birthdays fall in this date range. Birth dates have not changed.');target=$('#back-today')}
+  const fallback=$(monthView?'#month-calendar-controls [aria-pressed="true"]':'#birthday-range');
+  (target?.getClientRects().length?target:fallback).focus();return;
+ }
  const summary=t('{count} birthdays · {from} — {to}',{count:number(events.length),from:date(state.now,calendar==='both'?state.primaryCalendar:calendar),to:date(Math.min(MAX,state.now+days-1),calendar==='both'?state.primaryCalendar:calendar)});
  modal('Export calendar',`<p class="form-preview">${esc(summary)}</p>${monthView?`<p class="hint">${t('From By month, this adds the next 365 days in your selected calendar. Your month view stays unchanged.')}</p>`:''}<p class="hint">${t('Only the birthdays in your current view will be exported. The file contains these names and birthday dates:')}</p><div class="check-list">${[...new Set(events.map(e=>e.person.name))].map(name=>`<p class="check-row" dir="auto">${esc(name)}</p>`).join('')}</div>${events.some(e=>e.calendar==='g')?`<label class="check-row"><input id="repeat-gregorian" type="checkbox" checked>${t('Repeat Gregorian birthdays every year')}</label><p class="hint">${t('Yearly repeats continue beyond this date range. February 29 birthdays use the last day of February.')}</p>`:''}<p class="hint">${t('Hijri birthdays are dated events for the selected range. Future edits in Kin do not sync. Re-importing may create duplicates; remove older imports when replacing them.')}</p><div class="dialog-actions">${button('cancel-export','Cancel')}${button('download-calendar','Download calendar','primary')}</div>`);
  $('#cancel-export').onclick=close;
@@ -180,7 +188,7 @@ const updateImport=()=>{$('#confirm-merge').disabled=!existing.length&&!$$('.mer
 $('#confirm-merge').onclick=async()=>{try{const rows=merge(existing,plan,$$('.resolve-conflict:checked').map(x=>x.value),$$('.merge-person:checked').map(x=>x.value));if(await commit(rows,{message:'Family saved.'}))close()}catch(e){$('#merge-error').textContent=errorText(e)}};$('#cancel-merge').onclick=close;
 $('#view-link')?.addEventListener('click',()=>{sharedReturn=returnContext;state.people=incoming;state.demo=false;state.viewOnly=true;state.view='people';state.reference=null;state.search=state.group='';$('#family-search').value='';close();render();notice('Viewing a shared snapshot. Your saved circle has not changed.',()=>review(incoming,true),existing.length?'Merge with my family':'Keep this family')});if(fromURL)$('#modal').onclose=()=>{if(!state.viewOnly)history.replaceState(null,'',location.pathname+(state.people.length?encode(state.people):''));$('#modal').onclose=null}
 }
-function help(){modal('A little guide to Kin',`<p class="hint app-version">Kin · 1.13.1</p><div class="prose">${helpSections.map(([tag,key])=>`<${tag}>${t(key)}</${tag}>`).join('')}<p><a href="https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Fragment" target="_blank" rel="noreferrer">${t('How URL fragments work')}${icon('external')}</a></p></div>`)}
+function help(){modal('A little guide to Kin',`<p class="hint app-version">Kin · 1.14.0</p><div class="prose">${helpSections.map(([tag,key])=>`<${tag}>${t(key)}</${tag}>`).join('')}<p><a href="https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Fragment" target="_blank" rel="noreferrer">${t('How URL fragments work')}${icon('external')}</a></p></div>`)}
 $('#toast-dismiss').onclick=()=>{$('#toast').hidden=true;$('#dialog-feedback')?.remove()};
 $('#skip-content').onclick=()=>$('#main-content').focus();
 $('#add-button').onclick=()=>editPerson();$('#import-button').onclick=importDialog;$('#share-button').onclick=()=>share();$('#backup-button').onclick=()=>share(true);$('#sort').onchange=e=>{state.sort=e.target.value;render()};$('#family-search').oninput=e=>{state.search=e.target.value;render()};$('#about-button').onclick=help;

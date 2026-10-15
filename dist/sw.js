@@ -1,4 +1,4 @@
-const VERSION='1.13.1';
+const VERSION='1.14.0';
 // CacheStorage is shared by every application on this origin. Keep releases
 // and cleanup isolated to this installation's path.
 const SCOPE=new URL('./',self.location.href);

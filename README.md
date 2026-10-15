@@ -30,6 +30,13 @@ Run the algorithm checks with `node tests.mjs`. Tests cover 100,406 date convers
 - First-time family review uses plain View/Keep choices without irrelevant conflict statistics. Import/backup wording does not offer a viewing choice where none exists. Keeping an empty selection is disabled on an empty device; sharing is hidden until there are people to share.
 - Regression coverage includes real offline font loading, missing-font fallback, Arabic forms, enlarged text, shared-return safety and calendar presentation.
 
+## Clearer actions and recovery (1.14.0)
+
+- Timeline's yearly birthday view always includes both calendars, with an explicit year/count summary. It no longer inherits an invisible calendar filter from Birthdays. Timeline rows open person details; editing returns to the same occurrence, and the selected Timeline mode is remembered locally.
+- One shared birthday-scope helper drives browsing and export feedback. A broader-year recovery is offered only if it actually contains birthdays. Empty exports focus the relevant name/group, age or range recovery without changing the user's choices.
+- Reference-date errors identify the invalid year, month or day, explain valid calendar bounds, and associate localized feedback with the input. Invalid calendar conversions preserve the entered values; Arabic/Persian/Western digits remain supported.
+- Regression tests reproduce the live-audit findings, historical empty ranges, leap-day validation, Timeline navigation and remembered preferences. Family records, link format and export privacy rules remain unchanged.
+
 ## Everyday refinements (1.13.1)
 
 - Birthday names open person details directly, including after changing the calendar or range. Editing returns to the same birthday event; shared snapshots remain read-only and unsaved.

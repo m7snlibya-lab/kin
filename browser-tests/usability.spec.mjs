@@ -259,6 +259,53 @@ test('milestone recovery preserves the selected calendar and range',async({page}
 test('reference years before any births explain an empty year without an ineffective reset',async({page})=>{
  const original=page.url();await page.locator('#reference-open').click();await page.locator('#reference-year').fill('1980');await page.locator('#reference-month').selectOption('1');await page.locator('#reference-day').fill('1');await page.locator('#reference-apply').click();await page.locator('#birthdays-tab').click();
  await expect(page.locator('#birthday-list')).toContainText('Birth dates have not changed.');await expect(page.locator('#broaden-birthdays,#clear-agenda-ages,#clear-agenda-scope')).toHaveCount(0);await expect(page.locator('#birthday-range')).toHaveValue('365');expect(page.url()).toBe(original);
+ await page.locator('#birthday-range').selectOption('30');await expect(page.locator('#broaden-birthdays')).toHaveCount(0);
+ await page.locator('#ics-open').click();await expect(page.locator('#back-today')).toBeFocused();await expect(page.locator('#toast-text')).toContainText('Birth dates have not changed.');await expect(page.locator('#birthday-range')).toHaveValue('30');
+});
+
+test('timeline birthdays explicitly include both calendars independently of the agenda',async({page})=>{
+ const original=page.url();await page.locator('#birthdays-tab').click();await page.locator('#birthday-calendar').selectOption('h');await page.locator('#birthday-range').selectOption('30');
+ await page.locator('#milestones-button').click();await page.locator('.milestone-options input[value="100"]').check();await page.locator('#apply-milestones').click();await page.locator('#people-tab').click();await page.locator('#timeline-tab').click();await page.locator('#timeline-mode').selectOption('birthdays');
+ const before=await page.locator('.family-timeline li').count();expect(before).toBeGreaterThanOrEqual(4);await expect(page.locator('#timeline-summary')).toContainText('Both calendars');
+ await page.locator('#birthdays-tab').click();await expect(page.locator('#birthday-calendar')).toHaveValue('h');await expect(page.locator('#birthday-range')).toHaveValue('30');await expect(page.locator('#milestones-button')).toHaveAttribute('aria-pressed','true');
+ await page.locator('#birthday-calendar').selectOption('both');await page.locator('#people-tab').click();await page.locator('#timeline-tab').click();await expect(page.locator('.family-timeline li')).toHaveCount(before);
+ await page.reload();await expect(page.locator('#timeline-mode')).toHaveValue('birthdays');await expect(page.locator('#timeline-summary')).toContainText('Both calendars');expect(page.url()).toBe(original);
+});
+
+test('timeline rows open details and editing preserves the occurrence and view',async({page},info)=>{
+ await page.locator('#timeline-tab').click();await page.locator('#timeline-mode').selectOption('birthdays');
+ const row=page.locator('.timeline-person-open[data-person="cDAwMDAy"]').last(),key=await row.getAttribute('data-event-key');await row.click();await expect(page.locator('#modal .calendar-age')).toHaveCount(2);
+ await page.locator('#modal [data-edit]').click();await page.locator('#person-name').fill('Omar Timeline');await page.locator('#save-person').click();await expect(page.locator('[data-event-key="'+key+'"]:visible')).toBeFocused();await expect(page.locator('#timeline-mode')).toHaveValue('birthdays');
+ await page.locator('#language-button').click();await page.setViewportSize({width:320,height:850});await page.evaluate(()=>document.documentElement.style.fontSize='200%');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+ await expect(page.locator('#timeline-summary')).toContainText('التقويمان');await page.screenshot({path:info.outputPath('timeline-ar-large.png'),fullPage:true});
+});
+
+test('empty exports point to the matching recovery in both birthday views',async({page})=>{
+ const original=page.url();await page.locator('#birthdays-tab').click();await page.locator('#birthday-calendar').selectOption('h');await page.locator('#birthday-range').selectOption('90');
+ for(const view of ['upcoming','month']){
+  await page.locator('#'+view+'-view').click();await fillSearch(page,'Nobody in this family');await page.locator('#ics-open').click();
+  const reset=page.locator(view==='month'?'#clear-month-view':'#clear-agenda-scope');await expect(reset).toBeFocused();await expect(page.locator('#toast-text')).toContainText('No people match.');await reset.click();
+  await expect(page.locator('#family-search')).toHaveValue('');await expect(page.locator('#birthday-range')).toHaveValue('90');await expect(page.locator('#birthday-calendar')).toHaveValue('h');
+ }
+ expect(page.url()).toBe(original);
+});
+
+test('range export feedback focuses a useful broader view without resetting the family search',async({page})=>{
+ await page.clock.install({time:new Date('2026-01-01T12:00:00+03:00')});const original=page.url();await fillSearch(page,'Omar');await page.locator('#birthdays-tab').click();await page.locator('#birthday-calendar').selectOption('g');await page.locator('#birthday-range').selectOption('30');
+ await page.locator('#ics-open').click();await expect(page.locator('#broaden-birthdays')).toBeFocused();await expect(page.locator('#toast-text')).toContainText('full year in both calendars');await page.locator('#broaden-birthdays').click();await expect(page.locator('.agenda-event').first()).toBeVisible();await expect(page.locator('#family-search')).toHaveValue('Omar');expect(page.url()).toBe(original);
+});
+
+test('reference date errors identify the field, preserve values and prevent invalid conversion',async({page})=>{
+ const original=page.url();await page.locator('#reference-open').click();await page.locator('#reference-year').fill('2025');await page.locator('#reference-month').selectOption('2');await page.locator('#reference-day').fill('31');await page.locator('#reference-apply').click();
+ await expect(page.locator('#reference-day')).toBeFocused();await expect(page.locator('#reference-day')).toHaveAttribute('aria-invalid','true');await expect(page.locator('#reference-day')).toHaveAttribute('aria-describedby','reference-error');await expect(page.locator('#reference-error')).toHaveText('Enter a day from 1 to 28.');
+ await page.locator('#reference-calendar').selectOption('h');await expect(page.locator('#reference-calendar')).toHaveValue('g');await expect(page.locator('#reference-day')).toHaveValue('31');await expect(page.locator('#reference-year')).toHaveValue('2025');await expect(page.locator('#reference-day')).toBeFocused();
+ await page.locator('#reference-day').fill('28');await expect(page.locator('#reference-day')).not.toHaveAttribute('aria-invalid','true');await expect(page.locator('#reference-error')).toBeEmpty();await page.locator('#reference-apply').click();await expect(page.locator('#reference-banner')).toContainText('28 February 2025');expect(page.url()).toBe(original);
+});
+
+test('reference date validation is localized for empty years and leap-day errors',async({page})=>{
+ await page.locator('#language-button').click();const original=page.url();await page.locator('#reference-open').click();await page.locator('#reference-year').fill('');await page.locator('#reference-apply').click();await expect(page.locator('#reference-year')).toBeFocused();await expect(page.locator('#reference-error')).toContainText('أدخل سنة من');
+ await page.locator('#reference-year').fill('٢٠٢٤');await page.locator('#reference-month').selectOption('2');await page.locator('#reference-day').fill('٣٠');await page.locator('#reference-apply').click();await expect(page.locator('#reference-day')).toBeFocused();await expect(page.locator('#reference-error')).toHaveText('أدخل يومًا من ١ إلى ٢٩.');
+ await page.locator('#reference-day').fill('٢٩');await page.locator('#reference-apply').click();await expect(page.locator('#reference-banner')).toContainText('٢٩ فبراير ٢٠٢٤');expect(page.url()).toBe(original);
 });
 
 test('preferred calendar comes first in device dates without losing equal prominence',async({page})=>{
@@ -516,8 +563,8 @@ test('empty birthday recovery is actionable and calendar export explains an empt
  await expect(page.locator('#milestones-button')).toHaveAttribute('aria-pressed','true');
  await expect(page.locator('#agenda-summary')).toContainText('Milestone ages:');await expect(page.locator('#clear-agenda-ages')).toBeVisible();await expect(page.locator('#broaden-birthdays')).toHaveCount(0);
  await page.locator('#birthdays-tab').click();await page.locator('#ics-open').click();
- await expect(page.locator('#toast-text')).toHaveText('No birthdays to export. Adjust the birthday range or family filters.');
- await expect(page.locator('#birthday-range')).toBeFocused();await page.locator('#clear-agenda-ages').click();
+ await expect(page.locator('#toast-text')).toHaveText('No birthdays match these ages. Choose Show all ages to include them.');
+ await expect(page.locator('#clear-agenda-ages')).toBeFocused();await page.locator('#clear-agenda-ages').click();
  await expect(page.locator('#birthday-range')).toHaveValue('30');await expect(page.locator('#birthday-calendar')).toHaveValue('both');await expect(page.locator('#milestones-button')).toBeFocused();
  await expect(page.locator('#milestones-button')).toHaveAttribute('aria-pressed','false');await expect(page.locator('#family-search')).toHaveValue('Amina');
  if(await page.locator('#broaden-birthdays').count())await page.locator('#broaden-birthdays').click();

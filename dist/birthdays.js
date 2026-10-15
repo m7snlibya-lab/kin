@@ -6,6 +6,16 @@ export function listBirthdays(records,{from=today(),days=90,calendar='both'}={})
  if(!Number.isInteger(days)||days<1||days>366)throw Error('Invalid birthday range.');
  return eventsBetween(records,from,Math.min(from+days-1,MAX),calendar);
 }
+// Keep empty-scope guidance consistent between browsing and exporting.
+export function birthdayScope(records,{from=today(),days=365,calendar='both',milestones=[]}={}){
+ const events=listBirthdays(records,{from,days,calendar}).filter(e=>!milestones.length||milestones.includes(e.turns));
+ if(events.length)return {events,reason:null,canBroaden:false};
+ if(!records.length)return {events,reason:'people',canBroaden:false};
+ if(milestones.length)return {events,reason:'ages',canBroaden:false};
+ const restricted=days!==365||calendar!=='both';
+ const canBroaden=restricted&&listBirthdays(records,{from,days:365,calendar:'both'}).length>0;
+ return {events,reason:'range',canBroaden};
+}
 const text=value=>String(value).replace(/\\/g,'\\\\').replace(/\r\n|\r|\n/g,'\\n').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,'');
 const dateCode=day=>new Date(day*86400000).toISOString().slice(0,10).replaceAll('-','');
 const utf8=new TextEncoder();

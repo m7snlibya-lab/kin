@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import './dist/vendor/pako.min.js';
 import {calendars,encode} from './dist/core.js';
-import {listBirthdays,createCalendar,foldLine} from './dist/birthdays.js';
+import {listBirthdays,birthdayScope,createCalendar,foldLine} from './dist/birthdays.js';
 const g=(y,m,d)=>calendars.g.toDay(y,m,d);
 const person={id:'YmlydGgx',name:'آمنة 🌷',day:calendars.h.toDay(1400,9,1),calendar:'h'};
 const hash=encode([person]);
@@ -12,6 +12,15 @@ assert.equal(listBirthdays([leap],{from:g(2023,2,27),days:2,calendar:'g'})[0].da
 assert.equal(listBirthdays([leap],{from:g(2024,2,28),days:1,calendar:'g'}).length,0);
 assert.equal(listBirthdays([leap],{from:g(2024,2,29),days:1,calendar:'g'})[0].turns,24);
 assert.equal(listBirthdays([]).length,0);assert.throws(()=>listBirthdays([person],{days:0}));assert.throws(()=>listBirthdays([person],{calendar:'unknown'}));
+assert.equal(birthdayScope([],{from:g(2024,1,1),days:30}).reason,'people');
+const narrow=birthdayScope([leap],{from:g(2024,1,1),days:30,calendar:'g'});
+assert.equal(narrow.reason,'range');assert.equal(narrow.canBroaden,true);
+const historical=birthdayScope([leap],{from:g(1980,1,1),days:30,calendar:'g'});
+assert.equal(historical.canBroaden,false,'Do not offer a larger range that still has no events');
+const ageScope=birthdayScope([leap],{from:g(2024,2,29),days:1,calendar:'g',milestones:[100]});
+assert.equal(ageScope.reason,'ages');assert.equal(ageScope.canBroaden,false);
+assert.equal(birthdayScope([leap],{from:g(2024,2,29),days:1,calendar:'g',milestones:[24]}).reason,null);
+assert.equal(encode([person]),hash,'Scope inspection must not mutate the family');
 const stamp=new Date('2026-09-16T12:34:56Z');const ics=createCalendar(events,{stamp});assert.ok(ics.startsWith('BEGIN:VCALENDAR\r\n'));assert.ok(ics.endsWith('END:VCALENDAR\r\n'));assert.equal((ics.match(/BEGIN:VEVENT/g)||[]).length,2);assert.ok(ics.includes('DTSTART;VALUE=DATE:20240311\r\n'));assert.ok(ics.includes('DTEND;VALUE=DATE:20240312\r\n'));assert.ok(ics.includes('DTSTAMP:20260916T123456Z'));assert.ok(!ics.includes('RRULE'));assert.ok(!ics.includes('TZID'));assert.ok(!ics.includes('URL:'));assert.ok(!ics.includes('ATTENDEE'));assert.ok(ics.includes('TRANSP:TRANSPARENT'));
 assert.equal(new Set([...ics.matchAll(/UID:([^\r]+)/g)].map(x=>x[1])).size,2);
 const longName='آمنة، العائلة 🌷 '.repeat(20)+';comma,slash\\line\nBEGIN:VEVENT';const dangerous=createCalendar([{...events[0],person:{...person,name:longName}}],{stamp});assert.equal((dangerous.match(/^BEGIN:VEVENT\r?$/gm)||[]).length,1);assert.ok(dangerous.replace(/\r\n /g,'').includes('\\nBEGIN:VEVENT'));

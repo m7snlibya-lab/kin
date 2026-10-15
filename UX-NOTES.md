@@ -4,6 +4,16 @@
 
 Make the next useful action obvious without making the family list feel like a settings screen. Keep readable labels alongside icons; both calendar ages remain equally visible. Do not change family links or saved data when someone changes how they browse.
 
+## Opportunity-led implementation — 1.14.0
+
+The live-site review exposed subtle friction beyond the passing regression suite. This release addresses all four findings and two related opportunities:
+
+- **No hidden Timeline calendar filter.** Birthdays in this year explicitly includes both calendars. Date presentation/year boundaries follow the visible date-calendar preference, while family group/search still scopes the people consistently. Agenda range, milestone and calendar choices remain untouched when navigating away.
+- **Actionable Timeline rows.** The whole row opens person details with a visible directional cue. Returning from editing restores the exact occurrence where possible. Timeline mode is a device preference, so reload does not unexpectedly replace the selected view.
+- **One empty-scope interpretation.** Browsing and calendar exports use the same helper. No matching people points to scope recovery; selected ages points to all ages; restricted periods offer a broader year only if it finds birthdays. Historical periods with no births do not offer a useless broader-year button. Export feedback moves focus to the matching recovery rather than an unrelated selector.
+- **Localized field-level date validation.** The reference-date form identifies and focuses the invalid field, marks it for assistive technology, and explains the calendar's actual limits. Required-input and leap-day errors use app-localized feedback rather than browser-language bubbles. Invalid conversion keeps both values and the original calendar intact.
+- **Preserve the small-family design.** These changes do not add another filter menu or a settings layer. Both calendar ages, source birth dates, local groups, safe sharing and private export selection retain their existing behavior.
+
 ## Everyday refinement — 1.13.1
 
 The next pass targets repetition and recovery, not another navigation rewrite:
