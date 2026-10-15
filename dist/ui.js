@@ -23,8 +23,9 @@ export function createDialogs(state){
   if($('#modal').open)return;
   const visible=el=>el?.isConnected&&el!==document.body&&el.getClientRects().length&&!el.disabled;
   const findVisible=selector=>$$(selector).find(visible);
-  const editId=opener?.dataset?.edit,personId=opener?.dataset?.person;
-  const target=visible(opener)?opener:editId?findVisible('[data-edit="'+editId+'"]'):personId?findVisible('[data-person="'+personId+'"]'):null;
+  const editId=opener?.dataset?.edit,personId=opener?.dataset?.person,eventKey=opener?.dataset?.eventKey;
+  const eventTarget=eventKey?findVisible('[data-event-key="'+CSS.escape(eventKey)+'"]'):null;
+  const target=visible(opener)?opener:eventTarget|| (editId?findVisible('[data-edit="'+editId+'"]'):personId?findVisible('[data-person="'+personId+'"]'):null);
   (visible(returnTo)?returnTo:target||findVisible('[role="tab"][aria-selected="true"]')||$('#add-button')).focus();
  }
  function confirmLeave(){if(state.saving)return false;if(state.pendingDraft?.()&&!window.confirm(t('Discard your unsaved changes?')))return false;state.pendingDraft=null;return true}

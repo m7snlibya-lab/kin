@@ -4,6 +4,16 @@
 
 Make the next useful action obvious without making the family list feel like a settings screen. Keep readable labels alongside icons; both calendar ages remain equally visible. Do not change family links or saved data when someone changes how they browse.
 
+## Everyday refinement — 1.13.1
+
+The next pass targets repetition and recovery, not another navigation rewrite:
+
+- Remove repeated device information from the bottom of every family view. Put dual today/reference dates, offline status and installation together in Manage family. Keep the preferred calendar first with identical typography for both dates.
+- Keep the backup reminder on the roster, where data changes happen. In temporary-storage mode, retain it across views. A dismissed or completed reminder must not leave an empty bordered panel.
+- Treat birthday names as people, not inert headings: one tap opens details and editing returns to that exact occurrence. Delegate detail opening so newly rendered rows keep working after changing range/calendar. Preserve read-only snapshot safety.
+- Move the specialist milestone action out of the main date-controls box and beside the agenda summary. Show a simple family total unless a search/group makes the shown/total comparison useful.
+- Distinguish three empty states. No matching people offers scope recovery; no milestone ages offers all ages without changing other choices; an empty date period offers a broader range only when that can change the result. Past reference years before any births remain clearly empty without an ineffective reset button.
+
 ## Navigation review and redesign — 1.13.0
 
 ### Assessment

@@ -4,7 +4,7 @@ export const helpSections=[
  ['h3','Private by design, readable by anyone with the link'],
  ['p','Your family data is decoded on your device. It is not sent to the app’s server. The link is compressed, not encrypted: anyone who receives it can read it. Keep copies somewhere you trust.'],
  ['h3','Offline, after the first visit'],
- ['p','Wait for “Ready for offline” before disconnecting. Calculations, editing, importing and QR generation then work without a connection. Installing is optional. If browser data is cleared or the cache is evicted, reconnect once to reload Kin, then open your saved link. A different device needs its own first online visit.'],
+ ['p','In Manage family, wait for “Ready for offline” before disconnecting. Calculations, editing, importing and QR generation then work without a connection. Installing is optional. If browser data is cleared or the cache is evicted, reconnect once to reload Kin, then open your saved link. A different device needs its own first online visit.'],
  ['h3','Which Hijri calendar?'],
  ['p','Kin uses a frozen Umm al-Qura month table (AH 1300–1600), so the same date produces the same result across devices. Local moon sightings may differ. Hijri is itself a lunar calendar; other calendar systems can be added later.'],
  ['h3','What does an exact age mean?'],

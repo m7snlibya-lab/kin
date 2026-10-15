@@ -1,4 +1,11 @@
 export const featureMessages={
+ "On this device":"على هذا الجهاز",
+ "People: {count}":"الأفراد: {count}",
+ "No milestone birthdays in this view":"لا توجد أعياد ميلاد بالأعمار المختارة",
+ "Try all ages without changing your people, dates or calendar.":"اعرض كل الأعمار دون تغيير الأفراد أو الفترة أو التقويم.",
+ "Show all ages":"عرض كل الأعمار",
+ "No birthdays fall in this date range. Birth dates have not changed.":"لا توجد أعياد ميلاد في هذه الفترة. لم تتغير تواريخ الميلاد.",
+ "Show all birthdays in the next 365 days":"عرض جميع أعياد الميلاد خلال ٣٦٥ يومًا",
  "Manage family":"إدارة العائلة",
  "Explore your family":"اكتشف عائلتك",
  "Keep birthdays":"احفظ أعياد الميلاد",

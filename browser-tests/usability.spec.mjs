@@ -160,7 +160,7 @@ test('old display preferences keep the month default sensible without reviving t
 
 test('sorting and result counts are visible without opening filters',async({page})=>{
  const original=page.url();
- await expect(page.locator('#sort')).toBeVisible();await expect(page.locator('#results-summary')).toHaveText('Showing 2 of 2 people');
+ await expect(page.locator('#sort')).toBeVisible();await expect(page.locator('#results-summary')).toHaveText('People: 2');
  await page.locator('#sort').selectOption('name');await expect(page.locator('.person-card h3').first()).toHaveText('Amina أحمد');
  await fillSearch(page,'Omar');await expect(page.locator('#results-summary')).toHaveText('Showing 1 of 2 people');
  await page.locator('[data-layout="table"]').click();await expect(page.locator('[data-layout="table"]')).toHaveAttribute('aria-pressed','true');await page.locator('#clear-filters').click();
@@ -225,6 +225,48 @@ test('month calendar exports preserve browsing, explain their range and restore 
  await page.locator('#cancel-export').click();await expect(page.locator('#ics-open')).toBeFocused();await expect(page.locator('#month-view')).toHaveAttribute('aria-pressed','true');await expect(page.locator('[data-month-calendar="h"]')).toHaveAttribute('aria-pressed','true');
  await page.locator('#print-open').click();await expect(page.locator('#download-pdf')).toBeEnabled();await expect(page.locator('#doc-layout-calendar')).toHaveValue('h');await expect(page.locator('#doc-birthdays')).toHaveValue('h');
  await page.locator('#close-modal').click();await expect(page.locator('#print-open')).toBeFocused();await expect(page.locator('#birthday-month-view')).toBeVisible();expect(page.url()).toBe(original);
+});
+
+test('birthday names open details after range changes and edits return to the same event',async({page})=>{
+ await page.locator('#birthdays-tab').click();await page.locator('#birthday-range').selectOption('30');await page.locator('#birthday-range').selectOption('365');
+ await page.locator('#birthday-calendar').selectOption('g');await page.locator('#birthday-calendar').selectOption('both');
+ const occurrence=page.locator('.agenda-person-open[data-person="cDAwMDAy"]').last(),key=await occurrence.getAttribute('data-event-key');
+ await occurrence.click();await expect(page.locator('#modal .calendar-age')).toHaveCount(2);await page.locator('#close-modal').click();await expect(occurrence).toBeFocused();
+ await occurrence.click();await page.locator('#modal [data-edit]').click();await page.locator('#person-name').fill('Omar Updated');await page.locator('#save-person').click();
+ const returned=page.locator('[data-event-key="'+key+'"]');await expect(returned).toBeFocused();await expect(returned).toHaveText('Omar Updated');await expect(page.locator('#birthday-panel')).toBeVisible();await expect(page.locator('#birthday-range')).toHaveValue('365');
+});
+
+test('birthday details in a shared snapshot stay read-only and unsaved',async({page})=>{
+ await page.evaluate(()=>localStorage.clear());await page.goto('about:blank');await page.goto('./'+encode(records));await page.locator('#view-link').click();
+ await page.locator('#birthdays-tab').click();await page.locator('.agenda-person-open').first().click();await expect(page.locator('#modal .calendar-age')).toHaveCount(2);await expect(page.locator('#modal [data-edit]')).toHaveCount(0);
+ await page.locator('#close-modal').click();await expect(page.locator('.agenda-person-open').first()).toBeFocused();expect(await page.evaluate(()=>localStorage.getItem('kin.family.v1:'+location.pathname))).toBeNull();
+});
+
+test('empty birthday family scope can recover without changing date choices',async({page})=>{
+ const original=page.url();await page.locator('#birthdays-tab').click();await page.locator('#birthday-calendar').selectOption('h');await page.locator('#birthday-range').selectOption('90');await fillSearch(page,'Nobody matches this');
+ await expect(page.locator('#clear-agenda-scope')).toBeVisible();await expect(page.locator('#broaden-birthdays,#clear-agenda-ages')).toHaveCount(0);
+ await page.locator('#clear-agenda-scope').click();await expect(page.locator('#family-search')).toHaveValue('');await expect(page.locator('#family-search')).toBeFocused();await expect(page.locator('#birthday-calendar')).toHaveValue('h');await expect(page.locator('#birthday-range')).toHaveValue('90');expect(page.url()).toBe(original);
+});
+
+test('milestone recovery preserves the selected calendar and range',async({page})=>{
+ const original=page.url();await fillSearch(page,'Omar');await page.locator('#birthdays-tab').click();await page.locator('#birthday-calendar').selectOption('h');await page.locator('#birthday-range').selectOption('365');
+ await page.locator('#milestones-button').click();await page.locator('.milestone-options input[value="100"]').check();await page.locator('#apply-milestones').click();
+ await expect(page.locator('#birthday-list')).toContainText('No milestone birthdays');await page.locator('#clear-agenda-ages').click();
+ await expect(page.locator('#birthday-calendar')).toHaveValue('h');await expect(page.locator('#birthday-range')).toHaveValue('365');await expect(page.locator('#family-search')).toHaveValue('Omar');await expect(page.locator('#milestones-button')).toBeFocused();
+ await expect(page.locator('.agenda-event').first()).toBeVisible();expect(page.url()).toBe(original);
+});
+
+test('reference years before any births explain an empty year without an ineffective reset',async({page})=>{
+ const original=page.url();await page.locator('#reference-open').click();await page.locator('#reference-year').fill('1980');await page.locator('#reference-month').selectOption('1');await page.locator('#reference-day').fill('1');await page.locator('#reference-apply').click();await page.locator('#birthdays-tab').click();
+ await expect(page.locator('#birthday-list')).toContainText('Birth dates have not changed.');await expect(page.locator('#broaden-birthdays,#clear-agenda-ages,#clear-agenda-scope')).toHaveCount(0);await expect(page.locator('#birthday-range')).toHaveValue('365');expect(page.url()).toBe(original);
+});
+
+test('preferred calendar comes first in device dates without losing equal prominence',async({page})=>{
+ const original=page.url();await page.locator('#tools-tab').click();await page.locator('[data-primary-calendar="h"]').click();
+ await expect(page.locator('.today-date').first().locator('.today-value')).toHaveAttribute('id','today-h');
+ await page.locator('#language-button').click();await expect(page.locator('#device-status-title')).toHaveText('على هذا الجهاز');
+ await page.setViewportSize({width:320,height:850});await page.evaluate(()=>document.documentElement.style.fontSize='200%');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+ await page.locator('#people-tab').click();await expect(page.locator('#device-status')).toBeHidden();await expect(page.locator('#results-summary')).toHaveText('الأفراد: ٢');expect(page.url()).toBe(original);
 });
 
 test('context actions fit narrow RTL screens and enlarged text',async({page},info)=>{
@@ -349,10 +391,14 @@ test('personal facts stay embedded in cards and the table without expanders',asy
  expect(page.url()).toBe(original);
 });
 
-test('today and offline installation are embedded while long guidance remains in Help',async({page})=>{
+test('device information has one home while family screens stay focused',async({page})=>{
  const original=page.url();for(const lang of ['en','ar']){
   if(lang==='ar')await page.locator('#language-button').click();
+  await page.locator('#people-tab').click();await expect(page.locator('#today-g')).toBeHidden();await expect(page.locator('#offline-label')).toBeHidden();
+  await page.locator('#birthdays-tab').click();await expect(page.locator('#install-button')).toBeHidden();await expect(page.locator('.workspace>aside')).toBeHidden();
+  await page.locator('#tools-tab').click();
   await expect(page.locator('#today-g')).toBeVisible();await expect(page.locator('#today-h')).toBeVisible();
+  await expect(page.locator('#device-status #family-overview')).toHaveCount(1);
   await expect(page.locator('#family-overview summary,.saving-guide,.link-note')).toHaveCount(0);
   await expect(page.locator('#install-button')).toBeVisible();await expect(page.locator('#offline-label')).toBeVisible();
  }
@@ -468,12 +514,13 @@ test('empty birthday recovery is actionable and calendar export explains an empt
  await page.locator('#birthday-range').selectOption('30');await page.locator('#milestones-button').click();
  await page.locator('.milestone-options input').last().check();await page.locator('#apply-milestones').click();
  await expect(page.locator('#milestones-button')).toHaveAttribute('aria-pressed','true');
- await expect(page.locator('#agenda-summary')).toContainText('Milestone ages:');await expect(page.locator('#broaden-birthdays')).toBeVisible();
+ await expect(page.locator('#agenda-summary')).toContainText('Milestone ages:');await expect(page.locator('#clear-agenda-ages')).toBeVisible();await expect(page.locator('#broaden-birthdays')).toHaveCount(0);
  await page.locator('#birthdays-tab').click();await page.locator('#ics-open').click();
  await expect(page.locator('#toast-text')).toHaveText('No birthdays to export. Adjust the birthday range or family filters.');
- await expect(page.locator('#birthday-range')).toBeFocused();await page.locator('#broaden-birthdays').click();
- await expect(page.locator('#birthday-range')).toHaveValue('365');await expect(page.locator('#birthday-calendar')).toHaveValue('both');
+ await expect(page.locator('#birthday-range')).toBeFocused();await page.locator('#clear-agenda-ages').click();
+ await expect(page.locator('#birthday-range')).toHaveValue('30');await expect(page.locator('#birthday-calendar')).toHaveValue('both');await expect(page.locator('#milestones-button')).toBeFocused();
  await expect(page.locator('#milestones-button')).toHaveAttribute('aria-pressed','false');await expect(page.locator('#family-search')).toHaveValue('Amina');
+ if(await page.locator('#broaden-birthdays').count())await page.locator('#broaden-birthdays').click();
  await expect(page.locator('.agenda-event').first()).toBeVisible();expect(page.url()).toBe(original);
 });
 
@@ -552,6 +599,7 @@ test('failed startup offers a localized retry without exposing the English shell
 });
 
 test('today dates have equal typography and localized labels in both directions',async({page},info)=>{
+ await page.locator('#tools-tab').click();
  for(const lang of ['en','ar']){
   if(lang==='ar')await page.locator('#language-button').click();
   for(const width of [1100,393,320]){

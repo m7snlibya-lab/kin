@@ -30,6 +30,13 @@ Run the algorithm checks with `node tests.mjs`. Tests cover 100,406 date convers
 - First-time family review uses plain View/Keep choices without irrelevant conflict statistics. Import/backup wording does not offer a viewing choice where none exists. Keeping an empty selection is disabled on an empty device; sharing is hidden until there are people to share.
 - Regression coverage includes real offline font loading, missing-font fallback, Arabic forms, enlarged text, shared-return safety and calendar presentation.
 
+## Everyday refinements (1.13.1)
+
+- Birthday names open person details directly, including after changing the calendar or range. Editing returns to the same birthday event; shared snapshots remain read-only and unsaved.
+- Empty birthday lists distinguish no matching people, no milestone ages and no events in the chosen period. Recovery clears only the relevant restriction; it does not unnecessarily reset the calendar, range or family search.
+- Milestones sits beside the birthday summary rather than occupying a full-width row in the date controls. The ordinary family count is a short total; scoped searches and groups keep the shown/total comparison.
+- Today’s two dates, offline readiness and app installation have one home in Manage family. The preferred calendar appears first without giving it stronger typography. Backup reminders remain actionable on People and stay visible across views if family storage is unavailable; dismissing a reminder leaves no empty footer panel.
+
 ## Task-led navigation (1.13.0)
 
 People now has direct Compare ages, On another date and Timeline actions. Birthdays has direct Print calendar and Add to calendar app actions. The category/chooser dialogs are removed. Manage family replaces the vague Tools destination and contains groups, backup, import, the default date calendar and Help. Existing saved view preferences still work.

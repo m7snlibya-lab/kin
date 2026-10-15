@@ -82,8 +82,13 @@ export function createComfort(state,{device,render}){
  offline.classList.add('offline-summary');aside.prepend(offline);
  // Long explanations remain available through Help, not repeated on the family page.
  $('.link-note').remove();$('.aside-details').remove();
- aside.append($('#install-button'));
- aside.prepend($('#backup-reminder'));aside.prepend(overview);
+ // Device information has one home; keep only an actionable backup reminder
+ // below the roster instead of repeating a settings footer in every family view.
+ $('#tools-panel').insertAdjacentHTML('beforeend',`<section id="device-status" class="device-status" aria-labelledby="device-status-title"><h3 id="device-status-title" data-i18n="On this device">${t('On this device')}</h3></section>`);
+ $('#device-status').append(overview,offline,$('#install-button'));
+ aside.prepend($('#backup-reminder'));
+ $('#agenda-summary').insertAdjacentHTML('beforebegin','<div id="agenda-summary-row" class="agenda-summary-row"></div>');
+ $('#agenda-summary-row').append($('#agenda-summary'),$('#milestones-button'));
 
  $('#close-modal').innerHTML=`<span aria-hidden="true">${icon('close')}</span> <span data-i18n="Close">${t('Close')}</span>`;
 
@@ -121,6 +126,10 @@ export function createComfort(state,{device,render}){
   $('.view-tabs').hidden=false;
   $('#tools-panel').hidden=state.view!=='tools';
   const tools=state.view==='tools';
+  const showReminder=!$('#backup-reminder').hidden&&(state.view==='people'||state.storageAvailable===false);
+  aside.hidden=!showReminder;
+  const dateItem=overview.querySelector('.date-item');
+  [state.primaryCalendar,state.primaryCalendar==='g'?'h':'g'].forEach(c=>dateItem.append($('#today-'+c).closest('.today-date')));
   $('#management-hint').textContent=t(state.demo?'Example family':state.viewOnly?'Shared family · view only':!state.people.length?'No account needed':state.storageAvailable===false?'Your family is in this link. Keep a backup before closing.':'Your family stays on this device. Keep a copy before changing devices.');
   $('.page-heading h1').textContent=t(state.view==='birthdays'?'Birthdays':state.view==='timeline'?'Timeline':tools?'Manage family':'Your people');
   $('#people').classList.toggle('list-layout',state.layout==='list');
@@ -146,7 +155,7 @@ export function createComfort(state,{device,render}){
   const searchHost=state.view==='birthdays'?$('#birthday-search-slot'):searchHome;
   if($('#search-toggle').parentElement!==searchHost)searchHost.prepend($('#search-toggle'));
   $('#results-summary').hidden=state.view!=='people';
-  $('#results-summary').textContent=t('Showing {shown} of {total} people',{shown:$('#list-count').textContent,total:number(state.people.length)});
+  $('#results-summary').textContent=state.search||state.group?t('Showing {shown} of {total} people',{shown:$('#list-count').textContent,total:number(state.people.length)}):t('People: {count}',{count:number(state.people.length)});
   const groups=$('#family-groups'),ids=new Set(state.people.map(p=>p.id));
   groups.hidden=!state.people.length||!device.value.groups.length||tools;
   groups.setAttribute('aria-label',t('Family groups'));
