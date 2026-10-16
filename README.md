@@ -1,5 +1,11 @@
 # Kin — Family, through time
 
+Security and privacy boundaries, release protections, and verification commands
+are documented in [SECURITY.md](SECURITY.md). Release 1.14.1 adds bounded import
+hardening, consistent settings validation, embedded-app protection and a
+deployment-blocking source security analysis without changing existing family
+links or backups.
+
 An installable, static, offline-first SPA for family ages and birthdays in Gregorian and Hijri (Umm al-Qura) calendars. No account, backend database, API calls, analytics, external fonts, or remote QR service are required by the application.
 
 Live app: **[m7snlibya-lab.github.io/kin](https://m7snlibya-lab.github.io/kin/)**

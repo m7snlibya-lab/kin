@@ -1,0 +1,11 @@
+name: Kin security checks
+queries:
+  - uses: security-extended
+paths:
+  - dist
+  - scripts
+  - .github
+paths-ignore:
+  - dist/vendor/pako.min.js
+  - dist/vendor/pdf-lib.min.js
+  - dist/hijri-data.js

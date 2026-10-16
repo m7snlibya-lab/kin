@@ -680,3 +680,5 @@ button:active:not(:disabled) { background-color:var(--lavender); }
 @media(max-width:800px) { .calendar-dialog { width:100%; max-width:100%; } }
 
 
+/* Never expose the family interface inside an embedding page, even at startup. */
+html[data-embedded] body > :not(#embedded-notice){display:none!important}

@@ -7,7 +7,7 @@ process.env.TZ=testTimezone;
 
 export default defineConfig({
   testDir:'./browser-tests',
-  testMatch:'**/{app,features,usability}.spec.mjs',
+  testMatch:'**/{app,features,usability,security}.spec.mjs',
   fullyParallel:true,
   forbidOnly:!!process.env.CI,
   retries:process.env.CI ? 1 : 0,

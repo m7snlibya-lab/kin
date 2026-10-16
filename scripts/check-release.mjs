@@ -41,5 +41,12 @@ assert.equal(manifest.start_url,'./');assert.equal(manifest.scope,'./');
 for(const icon of manifest.icons)await readFile(resolve(root,icon.src));
 const html=await read('index.html');
 assert.match(html,/<meta http-equiv="Content-Security-Policy"/,'Static release needs its content security policy');
+// Vendored runtime files must match lockfile-audited packages. Only line endings
+// and trailing whitespace may differ; no hand-edited third-party runtime code.
+for(const name of ['pako','pdf-lib']){
+ const bundled=(await read(`vendor/${name}.min.js`)).replaceAll('\r\n','\n').trim();
+ const upstream=(await readFile(`node_modules/${name}/dist/${name}.min.js`,'utf8')).replaceAll('\r\n','\n').trim();
+ assert.equal(bundled,upstream,`Vendored ${name} differs from its audited dependency`);
+}
 for(const [,asset] of html.matchAll(/(?:src|href)="(\.\/[^\"]+)"/g))await readFile(resolve(root,asset));
 console.log(`PASS: Kin ${version} release version, offline coverage, module imports and install assets.`);

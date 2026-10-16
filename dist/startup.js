@@ -1,6 +1,20 @@
 // Blocking head script: resolve presentation before the English HTML can paint.
 (()=>{
  const root=document.documentElement;
+ // Do not read even presentation storage when another page embeds Kin.
+ if(window.self!==window.top){
+  root.dataset.embedded='true';
+  // A sandboxed frame can block module scripts through CORS. Keep this notice
+  // in the classic startup script so the safe exit still explains itself.
+  const arabic=(navigator.language||'').toLowerCase().startsWith('ar');
+  root.lang=arabic?'ar':'en';root.dir=arabic?'rtl':'ltr';
+  document.addEventListener('DOMContentLoaded',()=>{
+   const notice=document.createElement('section');notice.id='embedded-notice';notice.className='startup-recovery';
+   const message=document.createElement('p');message.textContent=arabic?'لحماية بيانات عائلتك، افتح كِن في نافذة مستقلة.':'To protect your family data, open Kin in its own window.';
+   const link=document.createElement('a');link.className='button primary';link.href=location.href;link.target='_blank';link.rel='noopener noreferrer';
+   link.textContent=arabic?'فتح كِن':'Open Kin';notice.append(message,link);document.body.replaceChildren(notice);
+  },{once:true});return;
+ }
  let lang=(navigator.language||'').toLowerCase().startsWith('ar')?'ar':'en';
  try{const saved=localStorage.getItem('kin.language');if(saved==='ar'||saved==='en')lang=saved}catch{}
  root.lang=lang;root.dir=lang==='ar'?'rtl':'ltr';root.dataset.booting='true';

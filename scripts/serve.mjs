@@ -5,12 +5,18 @@ import {extname, resolve, sep} from 'node:path';
 
 // Serve the checked-in release at the same subdirectory used by GitHub Pages.
 const root = fileURLToPath(new URL('../dist/', import.meta.url));
+const html=await readFile(resolve(root,'index.html'),'utf8');
+const policy=html.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/)[1]+"; frame-ancestors 'none'";
 const port = Number(process.env.PORT || 4173);
 const types = {'.html':'text/html; charset=utf-8', '.js':'text/javascript; charset=utf-8',
   '.css':'text/css; charset=utf-8', '.json':'application/json',
   '.webmanifest':'application/manifest+json', '.svg':'image/svg+xml', '.png':'image/png', '.txt':'text/plain', '.ttf':'font/ttf', '.woff2':'font/woff2'};
 
 createServer(async (request, response) => {
+  response.setHeader('Content-Security-Policy',policy);
+  response.setHeader('X-Frame-Options','DENY');
+  response.setHeader('Referrer-Policy','no-referrer');
+  response.setHeader('X-Content-Type-Options','nosniff');
   if (!['GET', 'HEAD'].includes(request.method)) {
     response.writeHead(405, {Allow:'GET, HEAD'}).end();
     return;

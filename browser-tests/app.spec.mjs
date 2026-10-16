@@ -246,6 +246,9 @@ test('keyboard skip control keeps the saved family URL intact', async ({page}) =
   await addPerson(page);
   const url=page.url();
   await page.reload();
+  // The guarded entry point imports the app asynchronously. Wait for the
+  // loading screen to give way to the keyboard controls, not just page load.
+  await expect(page.locator('#skip-content')).toBeVisible();
   await page.keyboard.press('Tab');
   await expect(page.locator('#skip-content')).toBeFocused();
   await page.keyboard.press('Enter');
