@@ -42,10 +42,18 @@ test('untrusted names stay literal in import review, cards, list, table and mont
 });
 
 test('family data never leaves in HTTP requests or referrers',async({page,baseURL})=>{
- const requests=[];page.on('request',request=>requests.push({url:request.url(),referrer:request.headers().referer||''}));
+ const requests=[];page.on('request',request=>requests.push({url:request.url(),referrer:request.headers().referer||'',method:request.method(),body:request.postData()}));
  await keep(page);await page.locator('#share-button').click();await expect(page.locator('#share-url')).toHaveValue(new URL('./',baseURL).href+hash);
  expect(requests.length).toBeGreaterThan(0);
- for(const request of requests){expect(new URL(request.url).origin).toBe(new URL(baseURL).origin);expect(request.url).not.toContain('#k1');expect(request.referrer).toBe('')}
+ const publicReferrers=['',...['readable.css','style.css'].map(path=>new URL(path,baseURL).href)];
+ for(const request of requests){
+  expect(new URL(request.url).origin).toBe(new URL(baseURL).origin);
+  expect(decodeURIComponent(request.url)).not.toContain('#k1');expect(request.referrer).not.toContain('#k1');
+  expect(['GET','HEAD']).toContain(request.method);expect(request.body).toBeNull();
+  // A CSS-initiated font request can name its public stylesheet on Pages,
+  // where only the document (not the CSS response) has no-referrer policy.
+  expect(publicReferrers).toContain(request.referrer);
+ }
 });
 
 test('corrupted settings cannot break initial rendering or cross-tab saves',async({page})=>{
