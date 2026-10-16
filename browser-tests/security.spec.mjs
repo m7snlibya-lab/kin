@@ -1,6 +1,7 @@
 import {test,expect} from '@playwright/test';
 import '../dist/vendor/pako.min.js';
 import {encode,calendars} from '../dist/core.js';
+import {createBackup} from '../dist/backup.js';
 const name='<img src=x onerror=alert(1)>',records=[{id:'cDAwMDAx',name,calendar:'g',day:calendars.g.toDay(2000,1,1)}];
 const hash=encode(records);
 async function keep(page){await page.goto('./'+hash);await page.locator('#confirm-merge').click();await expect(page.locator('#modal')).toBeHidden()}
@@ -64,4 +65,97 @@ test('corrupted settings cannot break initial rendering or cross-tab saves',asyn
  await page.locator('[data-layout="table"]').click();await expect(page.locator('#people')).toContainText(name);
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('kin.device.v1:'+location.pathname)));
  expect(saved.groups).toEqual([]);expect(saved.preferences.layout).toBe('table');expect(Object.hasOwn(saved.preferences,'constructor')).toBe(false);expect(errors).toEqual([]);
+});
+
+// These tests deliberately bypass CSP ONLY in isolated test contexts. Escaping
+// must hold on its own; a blocked inline handler is not proof of safe rendering.
+test.describe('XSS defenses independently of CSP',()=>{
+ test.use({bypassCSP:true,serviceWorkers:'block'});
+ const payloads=[
+  '<img src=x onerror=globalThis.__kinXss++>',
+  '"><svg onload=globalThis.__kinXss++>',
+  '</option><img src=x onerror=globalThis.__kinXss++>',
+  '</textarea><svg onload=globalThis.__kinXss++>',
+  '<a href="javascript:globalThis.__kinXss++">tap</a>',
+  '&lt;img src=x onerror=globalThis.__kinXss++&gt;',
+  '<math><mtext><img src=x onerror=globalThis.__kinXss++>',
+  '" autofocus onfocus="globalThis.__kinXss++',
+  '</script><script>globalThis.__kinXss++</script>',
+  '<iframe srcdoc="<script>parent.__kinXss++</script>">',
+  '<form id=modal><input name=close>',
+  '${globalThis.__kinXss++}',
+  '{{constructor.constructor("globalThis.__kinXss++")()}}'
+ ];
+ const hostile=payloads.map((name,i)=>({id:Buffer.from('x'+String(i).padStart(5,'0')).toString('base64url'),name,calendar:i%2?'h':'g',day:calendars.g.toDay(1980+i,1+i%12,1)}));
+ const errors=new WeakMap();
+ async function safe(page){
+  expect(await page.evaluate(()=>({
+   executions:globalThis.__kinXss,
+   handlers:[...document.querySelectorAll('*')].flatMap(el=>[...el.attributes].filter(a=>/^on/i.test(a.name)).map(a=>a.name)),
+   injected:document.querySelectorAll('iframe,object,embed,script:not([src]),main img,#modal-body img,a[href^="javascript:"]').length,
+   dialogs:document.querySelectorAll('#modal').length
+  }))).toEqual({executions:0,handlers:[],injected:0,dialogs:1});
+ }
+ async function namesAt(page,selector){
+  const text=await page.locator(selector).textContent();for(const name of payloads)expect(text).toContain(name);await safe(page);
+ }
+ async function locale(page,value){await page.evaluate(value=>localStorage.setItem('kin.language',value),value)}
+ test.beforeEach(async({page})=>{
+  errors.set(page,[]);page.on('pageerror',error=>errors.get(page).push(error.message));
+  await page.addInitScript(()=>{globalThis.__kinXss=0});
+  await page.goto('./');await expect(page.locator('#today-g')).not.toBeEmpty();
+  // Positive control: prove an unescaped handler really executes in this context.
+  expect(await page.evaluate(()=>new Promise(resolve=>{
+   const img=document.createElement('img');img.setAttribute('onerror','globalThis.__kinXss++');
+   img.addEventListener('error',()=>queueMicrotask(()=>{img.remove();resolve(globalThis.__kinXss);globalThis.__kinXss=0}),{once:true});
+   img.src='data:,';document.body.append(img);
+  }))).toBe(1);
+ });
+ test.afterEach(async({page})=>{await safe(page);expect(errors.get(page)).toEqual([])});
+
+ test('shared and stored payloads remain text in all views and text/attribute contexts',async({page})=>{
+  test.setTimeout(120000);
+  for(const language of ['en','ar']){
+   await locale(page,language);await page.goto('./'+encode(hostile));await page.reload();await expect(page.locator('#today-g')).not.toBeEmpty();
+   if(await page.locator('#confirm-merge').isVisible()){await namesAt(page,'#modal-body');await page.locator('#confirm-merge').click()}
+   await page.locator('#people-tab').click();await page.locator('[data-layout="cards"]').click();await namesAt(page,'#people');
+   await page.locator('[data-edit="'+hostile[0].id+'"]').click();await expect(page.locator('#person-name')).toHaveValue(payloads[0]);await safe(page);await page.locator('#cancel-person').click();
+   for(const layout of ['list','table','cards']){await page.locator(`[data-layout="${layout}"]`).click();await namesAt(page,'#people')}
+   await page.locator('#compare-open').click();await namesAt(page,'#compare-a');await safe(page);await page.locator('#close-modal').click();
+   await page.locator('#timeline-tab').click();await page.locator('#timeline-mode').selectOption('births');await namesAt(page,'#timeline-content');
+   await page.locator('#people-tab').click();await page.locator('#share-button').click();await namesAt(page,'#share-selection');await page.locator('#close-modal').click();
+   await page.locator('#birthdays-tab').click();await page.locator('#upcoming-view').click();await page.locator('#birthday-range').selectOption('365');await page.locator('#birthday-calendar').selectOption('both');await namesAt(page,'#birthday-list');
+   await page.locator('#ics-open').click();await namesAt(page,'#modal-body');await page.locator('#cancel-export').click();
+   await page.locator('#month-view').click();for(const calendar of ['g','h']){await page.locator(`[data-month-calendar="${calendar}"]`).click();await namesAt(page,'#birthday-month-view')}
+   await page.locator('#print-open').click();await expect(page.locator('#download-pdf')).toBeEnabled({timeout:20000});await namesAt(page,'#document-selection');await safe(page);await page.locator('#close-modal').click();
+   await page.reload();await expect(page.locator('#today-g')).not.toBeEmpty();await safe(page);
+  }
+ });
+
+ test('backup conflicts, persisted group labels and search cannot inject markup or clobber controls',async({page})=>{
+  test.setTimeout(120000);
+  const groupId='"><svg onload=globalThis.__kinXss++>';
+  for(const language of ['en','ar']){
+   await locale(page,language);
+   await page.evaluate(({groupId,people,names})=>{
+    localStorage.setItem('kin.device.v1:'+location.pathname,JSON.stringify({version:1,groups:names.map((name,i)=>({id:i?'group'+i:groupId,name,members:people.map(p=>p.id)})),preferences:{view:'people',layout:'cards'}}));
+   },{groupId,people:hostile,names:payloads});
+   const original=hostile.map(p=>({...p,name:'Safe '+p.id}));await page.goto('./'+encode(original));await page.reload();
+   await expect(page.locator('#confirm-merge')).toBeVisible();
+   await page.locator('.resolve-conflict').evaluateAll(inputs=>inputs.forEach(input=>{input.checked=true}));
+   await page.locator('#confirm-merge').click();await expect(page.locator('#modal')).toBeHidden();
+   await page.locator('#people-tab').click();await expect(page.getByRole('heading',{name:original[0].name,exact:true})).toBeVisible();
+   await page.locator('#tools-tab').click();await page.locator('#import-button').click();
+   await page.locator('#backup-file').setInputFiles({name:'synthetic-xss.json',mimeType:'application/json',buffer:Buffer.from(createBackup(hostile))});
+   await expect(page.locator('.conflict')).toHaveCount(hostile.length);await namesAt(page,'#modal-body');
+   await page.locator('.resolve-conflict').evaluateAll(inputs=>inputs.forEach(input=>{input.checked=true}));
+   await page.locator('#confirm-merge').click();await page.locator('#people-tab').click();await namesAt(page,'#people');await namesAt(page,'#family-groups');
+   const group=page.locator('#family-groups [data-browse-group]').nth(1);await expect(group).toHaveAttribute('data-browse-group',groupId);await group.click();await safe(page);
+   await page.locator('#tools-tab').click();await page.locator('#manage-groups').click();await namesAt(page,'#modal-body');
+   await page.locator('[data-group]').first().click();await expect(page.locator('#group-name')).toHaveValue(payloads[0]);await safe(page);await page.locator('#close-modal').click();
+   await page.locator('#people-tab').click();if(await page.locator('.search-field').isHidden())await page.locator('#search-toggle').click();
+   for(const query of payloads){await page.locator('#family-search').fill(query);await expect(page.locator('.filter-chip')).toContainText(query);await safe(page)}
+   await page.locator('#family-search').fill('');await page.reload();await expect(page.locator('#today-g')).not.toBeEmpty();await namesAt(page,'#people');await namesAt(page,'#family-groups');
+  }
+ });
 });

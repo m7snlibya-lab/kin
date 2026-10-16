@@ -55,6 +55,36 @@ local checks. CodeQL runs in the GitHub workflow. Passing checks and a zero
 dependency-audit count do not prove that all vulnerabilities have been found.
 This is a source/dependency/browser review, not an independent penetration test.
 
+## Targeted XSS and injection review
+
+The additional October 17 review follows [OWASP's XSS prevention guidance](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html):
+output encoding is the primary protection; CSP is a separate defensive layer.
+Names, search queries and group labels are treated as text, including inside
+quoted HTML attributes. Record IDs from shared data have a restricted format.
+Imported links are decoded locally, not fetched or opened as supplied URLs.
+
+Retained browser regressions exercise 13 hostile payload forms in English and
+Arabic across desktop/mobile Chromium, Firefox and WebKit. They cover HTML/SVG
+and MathML tags, quote breaking, closing tags, entity-encoded payloads,
+`javascript:` links, nested frames, inline scripts, template expressions and DOM
+clobbering. Entry paths include URL fragments, persisted family/device data and
+real JSON backup-file conflict reviews. Rendering paths include cards, lists,
+tables, months, agenda, timeline, edit fields, comparison options, sharing,
+calendar-export review, print selection/preview, group editing and search chips.
+
+The dedicated tests bypass CSP **only in isolated test contexts**, with service
+workers blocked. A positive control first proves that a real unescaped inline
+handler executes there. Attack payloads must then remain literal text, execute
+no code, create no injected handlers/frames/scripts/images or JavaScript links,
+and leave the real dialog control intact. Production CSP is not relaxed.
+No exploitable XSS path was found in the reviewed/tested flows; this does not
+constitute a guarantee against every possible payload or future regression.
+
+Traditional server-side SQL injection, authenticated CSRF and server-side request
+forgery do not have their usual entry points in this app: it has no database,
+authenticated mutation endpoint or server-side URL fetching. That assessment must
+be revisited if a backend, accounts or remote integrations are introduced.
+
 ## Hosting boundaries and remaining operational decisions
 
 GitHub Pages does not provide configurable security response headers here.
